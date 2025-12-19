@@ -14,7 +14,8 @@
     "prepare": "husky",
     "precommit": "npm run prettier && npm run lint",
     "postinstall": "husky install",
-    "retrieve:pkgs": "sf project retrieve start -n \"Apex SOQL Builder\" --target-metadata-dir packages -z"
+    "retrieve:pkgs": "sf project retrieve start -n \"Apex SOQL Builder\" --target-metadata-dir packages -z",
+    "scratch": "sf org create scratch --definition-file config/project-scratch-def.json --alias trigger-weaver --duration-days 7 --set-default --json"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.5.0",

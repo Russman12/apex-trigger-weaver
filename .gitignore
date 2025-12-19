@@ -48,3 +48,5 @@ scripts/*
 tests/*
 
 packages/*
+
+/scratchpad/*
