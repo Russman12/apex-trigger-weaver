@@ -3,10 +3,9 @@
  * the contact's name changes
  */
 public with sharing class ContactTWAccNameMismatch extends TW_Action {
-  public ContactTWAccNameMismatch() {
-    super(ContactTWAccNameMismatch.class);
-  }
-
+  /**
+   * Select the parent account with its name field
+   */
   protected override void afterUpdateSetup(TW_QuerySelectionable selection) {
     selection.addParentField(new List<Schema.SObjectField>{ Contact.AccountId, Account.Name });
   }

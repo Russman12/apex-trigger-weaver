@@ -111,7 +111,10 @@ public virtual class TW_Handler {
     }
 
     for (Trigger_Weaver__mdt tw : tws) {
-      this.actions.add((TW_Action) System.Type.forName(tw.DeveloperName).newInstance());
+      System.Type t = System.Type.forName(tw.DeveloperName);
+      TW_Action action = (TW_Action) t.newInstance();
+      action.setType(t);
+      this.actions.add(action);
     }
 
     return this;

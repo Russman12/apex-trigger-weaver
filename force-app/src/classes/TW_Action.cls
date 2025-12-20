@@ -3,18 +3,10 @@
  * @group Framework
  */
 public abstract class TW_Action {
-  private final System.Type t;
+  private System.Type t;
 
   @TestVisible
   private TW_Context ctx;
-
-  /**
-   * @description Creates a new TW_Action instance.
-   * @param t The type of the trigger weaver action.
-   */
-  protected TW_Action(System.Type t) {
-    this.t = t;
-  }
 
   /**
    * @description Returns the DML queue used to enqueue DML operations.
@@ -50,6 +42,13 @@ public abstract class TW_Action {
    */
   public System.Type getType() {
     return this.t;
+  }
+
+  /**
+   * @description assigns the type of this instance.
+   */
+  public void setType(System.Type t) {
+    this.t = t;
   }
 
   /**

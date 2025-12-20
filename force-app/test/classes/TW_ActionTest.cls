@@ -167,19 +167,12 @@ public with sharing class TW_ActionTest {
   }
 
   private class MyEmptyAction extends TW_Action {
-    private MyEmptyAction() {
-      super(MyEmptyAction.class);
-    }
   }
 
   private class MyAction extends TW_Action {
     private Map<String, Object> methodCalls = new Map<String, Object>();
 
     private Boolean filterReturnVal = true;
-
-    private MyAction() {
-      super(MyAction.class);
-    }
 
     protected override void beforeInsertSetup() {
       methodCalls.put('beforeInsertSetup', null);

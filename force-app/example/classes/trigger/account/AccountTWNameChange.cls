@@ -3,10 +3,6 @@
  * of all child contacts whenever the account name changes.
  */
 public with sharing class AccountTWNameChange extends TW_Action {
-  public AccountTWNameChange() {
-    super(AccountTWNameChange.class);
-  }
-
   /**
    * Add child contacts to the query with Name
    */
