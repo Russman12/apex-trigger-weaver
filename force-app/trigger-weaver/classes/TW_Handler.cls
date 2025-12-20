@@ -33,23 +33,23 @@ public virtual class TW_Handler {
   }
 
   /**
-   * @description Bypasses given trigger functionality to prevent multiple executions.
-   * @param function Function to bypass.
+   * @description Bypasses given trigger weaver action to prevent multiple executions.
+   * @param action TW_Action to bypass.
    */
-  public static void addBypass(System.Type function) {
-    bypasses.add(function);
+  public static void addBypass(System.Type action) {
+    bypasses.add(action);
   }
 
   /**
-   * @description Removes given trigger functionality from bypasses allowing it to be executed multiple times.
-   * @param function Function to bypass.
+   * @description Removes given trigger weaver action from bypasses allowing it to be executed multiple times.
+   * @param action TW_Action to bypass.
    */
-  public static void removeBypass(System.Type function) {
-    bypasses.remove(function);
+  public static void removeBypass(System.Type action) {
+    bypasses.remove(action);
   }
 
   /**
-   * @description Removes all bypasses allowing all trigger functionality to be executed multiple times.
+   * @description Removes all bypasses allowing all trigger weaver actions to be executed multiple times.
    */
   public static void clearBypasses() {
     bypasses.clear();
@@ -64,7 +64,7 @@ public virtual class TW_Handler {
     return new TW_Handler(sObjType);
   }
 
-  private List<TW_Function> twFunctions = new List<TW_Function>();
+  private List<TW_Action> actions = new List<TW_Action>();
   private final TW_Queryable query;
   private final TW_DMLQueueable dmlQueue;
   private final SObjectType sObjType;
@@ -75,7 +75,6 @@ public virtual class TW_Handler {
 
   private TW_Handler(Schema.SObjectType sObjType) {
     this.sObjType = sObjType;
-    Schema.SObjectField idField = sObjType.getDescribe().fields.getMap().get('Id');
 
     this.query = this.newQueryable();
     query.fromSObject(sObjType);
@@ -84,7 +83,7 @@ public virtual class TW_Handler {
     this.dmlQueue = this.newQueueable();
     this.queriedRecordsMap = new Map<Id, SObject>();
 
-    this.ctx = new TW_Context(idField, queriedRecordsMap, this.newQueueable());
+    this.ctx = new TW_Context(queriedRecordsMap, this.newQueueable());
     this.queryBinds = new Map<String, Object>();
   }
 
@@ -104,8 +103,8 @@ public virtual class TW_Handler {
     return new TW_DMLQueue();
   }
 
-  public TW_Handler register(TW_Function function) {
-    twFunctions.add(function);
+  public TW_Handler register(TW_Action action) {
+    actions.add(action);
 
     return this;
   }
@@ -117,23 +116,23 @@ public virtual class TW_Handler {
     }
 
     for (Trigger_Weaver__mdt tw : tws) {
-      register((TW_Function) System.Type.forName(tw.DeveloperName).newInstance());
+      register((TW_Action) System.Type.forName(tw.DeveloperName).newInstance());
     }
 
     return this;
   }
 
   /**
-   * @description Executes all registered trigger weaver functions.
+   * @description Executes all registered trigger weaver actions.
    */
   public void execute() {
-    for (TW_Function function : this.twFunctions) {
-      if (bypasses.contains(function.getType())) {
+    for (TW_Action action : this.actions) {
+      if (bypasses.contains(action.getType())) {
         continue;
       }
 
-      function.setContext(this.ctx);
-      function.executePreProcess(this.selection);
+      action.setContext(this.ctx);
+      action.executePreProcess(this.selection);
     }
 
     if (this.selection.isSet() && this.ctx.isQueryContext() && this.ctx.filteredRecords().size() > 0) {
@@ -142,11 +141,11 @@ public virtual class TW_Handler {
       this.queriedRecordsMap.putAll(new Map<Id, SObject>(queryResults));
     }
 
-    for (TW_Function function : twFunctions) {
-      if (bypasses.contains(function.getType())) {
+    for (TW_Action action : actions) {
+      if (bypasses.contains(action.getType())) {
         continue;
       }
-      function.execute();
+      action.execute();
     }
 
     this.ctx.getDMLQueue().flush();

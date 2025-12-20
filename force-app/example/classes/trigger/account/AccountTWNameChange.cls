@@ -2,7 +2,7 @@
  * This functionality sets the account description to be a comman delimited list
  * of all child contacts whenever the account name changes.
  */
-public with sharing class AccountTWNameChange extends TW_Function {
+public with sharing class AccountTWNameChange extends TW_Action {
   public AccountTWNameChange() {
     super(AccountTWNameChange.class);
   }
@@ -25,7 +25,7 @@ public with sharing class AccountTWNameChange extends TW_Function {
   /**
    * Concatinate Contact names and set as Account Description
    */
-  protected override List<SObject> beforeUpdate(SObject oldRecord, SObject newRecord, SObject queriedRecord) {
+  protected override void beforeUpdate(SObject oldRecord, SObject newRecord, SObject queriedRecord) {
     Account newAccount = (Account) newRecord;
     Account queriedAccount = (Account) queriedRecord;
 
@@ -34,7 +34,5 @@ public with sharing class AccountTWNameChange extends TW_Function {
       contactNames.add(c.Name);
     }
     newAccount.Description = String.join(contactNames, ', ');
-
-    return null;
   }
 }

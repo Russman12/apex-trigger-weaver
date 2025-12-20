@@ -1,6 +1,6 @@
 /**
  * @description Contains functionality relating to the global trigger execution. Data and functions
- * contained within this class should be common to all trigger weaver functions part of the running
+ * contained within this class should be common to all trigger weaver actions part of the running
  * execution context.
  * @group Framework
  */

@@ -12,8 +12,7 @@
  * ```
  */
 public class TW_Query implements TW_Queryable {
-  private final TW_QuerySelection selection;
-
+  private final TW_QuerySelection selection = new TW_QuerySelection();
   private Schema.SObjectType sObjType;
 
   /**
@@ -29,7 +28,6 @@ public class TW_Query implements TW_Queryable {
    */
   public void fromSObject(Schema.SObjectType sObjType) {
     this.sObjType = sObjType;
-    this.selection = new TW_QuerySelection(sObjType);
   }
 
   /**

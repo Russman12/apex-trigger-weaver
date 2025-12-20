@@ -1,5 +1,5 @@
 /**
- * @description Represents functionality that is pass to
+ * @description Defines how related fields are selected.
  */
 public interface TW_QuerySelectionable {
   /**

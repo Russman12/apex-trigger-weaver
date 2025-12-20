@@ -2,7 +2,7 @@
  * Sets the parent account to match the contact's full name when
  * the contact's name changes
  */
-public with sharing class ContactTWAccNameMismatch extends TW_Function {
+public with sharing class ContactTWAccNameMismatch extends TW_Action {
   public ContactTWAccNameMismatch() {
     super(ContactTWAccNameMismatch.class);
   }
@@ -23,7 +23,7 @@ public with sharing class ContactTWAccNameMismatch extends TW_Function {
   /**
    * If parent account name does not match the contact's full name, update it
    */
-  protected override List<SObject> afterUpdate(SObject oldRecord, SObject newRecord, SObject queriedRecord) {
+  protected override void afterUpdate(SObject oldRecord, SObject newRecord, SObject queriedRecord) {
     Contact oldContact = (Contact) oldRecord;
     Contact newContact = (Contact) newRecord;
     Contact queriedContact = (Contact) queriedRecord;
@@ -31,7 +31,5 @@ public with sharing class ContactTWAccNameMismatch extends TW_Function {
     if (queriedContact.Account.Name != newContact.Name) {
       this.getDMLQueue().enqueueUpdate(new Account(Id = newContact.AccountId, Name = ContactBusinessLogic.fullName(newContact)));
     }
-
-    return null;
   }
 }

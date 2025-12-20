@@ -1,17 +1,17 @@
 /**
- * @description Contains common functionality relating to a specific trigger weaver function.
+ * @description Contains common functionality relating to a specific trigger weaver action.
  * @group Framework
  */
-public abstract class TW_Function {
+public abstract class TW_Action {
   private final System.Type t;
 
   private TW_Context ctx;
 
   /**
-   * @description Creates a new TW_Function instance.
-   * @param t The type of the trigger weaver function.
+   * @description Creates a new TW_Action instance.
+   * @param t The type of the trigger weaver action.
    */
-  protected TW_Function(System.Type t) {
+  protected TW_Action(System.Type t) {
     this.t = t;
   }
 
@@ -24,7 +24,7 @@ public abstract class TW_Function {
   }
 
   /**
-   * @description Sets the context for the trigger weaver function.
+   * @description Sets the context for the trigger weaver action.
    * @param ctx The context to set.
    */
   public void setContext(TW_Context ctx) {
@@ -35,7 +35,7 @@ public abstract class TW_Function {
   }
 
   /**
-   * @description Returns the context for the trigger weaver function.
+   * @description Returns the context for the trigger weaver action.
    * @return The context.
    */
   public TW_Context getContext() {
@@ -51,7 +51,7 @@ public abstract class TW_Function {
   }
 
   /**
-   * @description Returns all filtered records for a given functionality.
+   * @description Returns all filtered records for a given trigger weaver action.
    * @return Filtered records.
    */
   public List<SObject> filteredRecords() {
@@ -62,42 +62,42 @@ public abstract class TW_Function {
   }
 
   /**
-   * @description Logic that executes once for the function before primary before insert logic.
+   * @description Logic that executes once for the action before primary before insert logic.
    */
   protected virtual void beforeInsertPreProcess() {
   }
   /**
-   * @description Logic that executes once for the function before primary after insert logic.
+   * @description Logic that executes once for the action before primary after insert logic.
    * @param TW_QuerySelectionable selection The selection that will be used to query related records.
    */
   protected virtual void afterInsertPreProcess(TW_QuerySelectionable selection) {
   }
   /**
-   * @description Logic that executes once for the function before primary before update logic.
+   * @description Logic that executes once for the action before primary before update logic.
    * @param TW_QuerySelectionable selection The selection that will be used to query related records.
    */
   protected virtual void beforeUpdatePreProcess(TW_QuerySelectionable selection) {
   }
   /**
-   * @description Logic that executes once for the function before primary after update logic.
+   * @description Logic that executes once for the action before primary after update logic.
    * @param TW_QuerySelectionable selection The selection that will be used to query related records.
    */
   protected virtual void afterUpdatePreProcess(TW_QuerySelectionable selection) {
   }
   /**
-   * @description Logic that executes once for the function before primary before delete logic.
+   * @description Logic that executes once for the action before primary before delete logic.
    * @param TW_QuerySelectionable selection The selection that will be used to query related records.
    */
   protected virtual void beforeDeletePreProcess(TW_QuerySelectionable selection) {
   }
   /**
-   * @description Logic that executes once for the function before primary after delete logic.
+   * @description Logic that executes once for the action before primary after delete logic.
    * @param TW_QuerySelectionable selection The selection that will be used to query related records.
    */
   protected virtual void afterDeletePreProcess(TW_QuerySelectionable selection) {
   }
   /**
-   * @description Logic that executes once for the function before primary after undelete logic.
+   * @description Logic that executes once for the action before primary after undelete logic.
    * @param TW_QuerySelectionable selection The selection that will be used to query related records.
    */
   protected virtual void afterUndeletePreProcess(TW_QuerySelectionable selection) {
@@ -229,7 +229,7 @@ public abstract class TW_Function {
   }
 
   /**
-   * @description Executes the pre-process logic for the trigger weaver function.
+   * @description Executes the pre-process logic for the trigger weaver action.
    * @param TW_QuerySelectionable selection The selection that will be used to query related records.
    */
   public void executePreProcess(TW_QuerySelectionable selection) {
@@ -300,7 +300,7 @@ public abstract class TW_Function {
   }
 
   /**
-   * @description Executes primary functionality for trigger weaver function for each record which meets filter criteria.
+   * @description Executes primary functionality for trigger weaver action for each record which meets filter criteria.
    */
   public void execute() {
     if (this.ctx == null) {
