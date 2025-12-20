@@ -85,6 +85,7 @@ public virtual class TW_Handler {
 
     this.ctx = new TW_Context(queriedRecordsMap, this.newQueueable());
     this.queryBinds = new Map<String, Object>();
+    this.autoRegister();
   }
 
   /**
@@ -103,20 +104,14 @@ public virtual class TW_Handler {
     return new TW_DMLQueue();
   }
 
-  public TW_Handler register(TW_Action action) {
-    actions.add(action);
-
-    return this;
-  }
-
-  public TW_Handler autoRegister() {
+  private TW_Handler autoRegister() {
     List<Trigger_Weaver__mdt> tws = getActiveTWSForSObj(this.sObjType);
     if (tws == null) {
       return this;
     }
 
     for (Trigger_Weaver__mdt tw : tws) {
-      register((TW_Action) System.Type.forName(tw.DeveloperName).newInstance());
+      this.actions.add((TW_Action) System.Type.forName(tw.DeveloperName).newInstance());
     }
 
     return this;
@@ -132,7 +127,7 @@ public virtual class TW_Handler {
       }
 
       action.setContext(this.ctx);
-      action.executePreProcess(this.selection);
+      action.executeSetup(this.selection);
     }
 
     if (this.selection.isSet() && this.ctx.isQueryContext() && this.ctx.filteredRecords().size() > 0) {

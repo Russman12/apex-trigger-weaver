@@ -1,16 +1,23 @@
 {
+  "name": "trigger-weaver",
+  "namespace": "",
+  "sfdcLoginUrl": "https://login.salesforce.com",
+  "sourceApiVersion": "62.0",
   "packageDirectories": [
     {
-      "path": "force-app/trigger-weaver",
+      "path": "force-app/src",
       "default": true,
-      "package": "Trigger Weaver"
+      "package": "Trigger Weaver",
+      "unpackagedMetadata": {
+        "path": "force-app/test"
+      }
+    },
+    {
+      "path": "force-app/test",
+      "dependencies": [{ "apex-mockery": "04tDn0000011O0VIAU" }]
     },
     {
       "path": "force-app/example"
     }
-  ],
-  "name": "trigger-weaver",
-  "namespace": "",
-  "sfdcLoginUrl": "https://login.salesforce.com",
-  "sourceApiVersion": "62.0"
+  ]
 }

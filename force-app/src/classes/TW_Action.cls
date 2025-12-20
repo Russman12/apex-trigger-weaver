@@ -5,6 +5,7 @@
 public abstract class TW_Action {
   private final System.Type t;
 
+  @TestVisible
   private TW_Context ctx;
 
   /**
@@ -19,6 +20,7 @@ public abstract class TW_Action {
    * @description Returns the DML queue used to enqueue DML operations.
    * @return DML queue.
    */
+  @TestVisible
   protected TW_DMLQueueable getDMLQueue() {
     return this.ctx.getDMLQueue();
   }
@@ -64,97 +66,50 @@ public abstract class TW_Action {
   /**
    * @description Logic that executes once for the action before primary before insert logic.
    */
-  protected virtual void beforeInsertPreProcess() {
+  @TestVisible
+  protected virtual void beforeInsertSetup() {
   }
   /**
    * @description Logic that executes once for the action before primary after insert logic.
    * @param TW_QuerySelectionable selection The selection that will be used to query related records.
    */
-  protected virtual void afterInsertPreProcess(TW_QuerySelectionable selection) {
+  @TestVisible
+  protected virtual void afterInsertSetup(TW_QuerySelectionable selection) {
   }
   /**
    * @description Logic that executes once for the action before primary before update logic.
    * @param TW_QuerySelectionable selection The selection that will be used to query related records.
    */
-  protected virtual void beforeUpdatePreProcess(TW_QuerySelectionable selection) {
+  @TestVisible
+  protected virtual void beforeUpdateSetup(TW_QuerySelectionable selection) {
   }
   /**
    * @description Logic that executes once for the action before primary after update logic.
    * @param TW_QuerySelectionable selection The selection that will be used to query related records.
    */
-  protected virtual void afterUpdatePreProcess(TW_QuerySelectionable selection) {
+  @TestVisible
+  protected virtual void afterUpdateSetup(TW_QuerySelectionable selection) {
   }
   /**
    * @description Logic that executes once for the action before primary before delete logic.
    * @param TW_QuerySelectionable selection The selection that will be used to query related records.
    */
-  protected virtual void beforeDeletePreProcess(TW_QuerySelectionable selection) {
+  @TestVisible
+  protected virtual void beforeDeleteSetup(TW_QuerySelectionable selection) {
   }
   /**
    * @description Logic that executes once for the action before primary after delete logic.
    * @param TW_QuerySelectionable selection The selection that will be used to query related records.
    */
-  protected virtual void afterDeletePreProcess(TW_QuerySelectionable selection) {
+  @TestVisible
+  protected virtual void afterDeleteSetup(TW_QuerySelectionable selection) {
   }
   /**
    * @description Logic that executes once for the action before primary after undelete logic.
    * @param TW_QuerySelectionable selection The selection that will be used to query related records.
    */
-  protected virtual void afterUndeletePreProcess(TW_QuerySelectionable selection) {
-  }
-
-  /**
-   * @description Primary logic that executes for each record before insert.
-   * @param SObject newRecord The new record from trigger.
-   */
-  protected virtual void beforeInsert(SObject newRecord) {
-  }
-  /**
-   * @description Primary logic that executes for each record after insert.
-   * @param SObject newRecord The new record from trigger.
-   * @param SObject queriedRecord The record with queried data applied.
-   * @return List of records to insert.
-   */
-  protected virtual void afterInsert(SObject newRecord, SObject queriedRecord) {
-  }
-  /**
-   * @description Primary logic that executes for each record before update.
-   * @param SObject oldRecord The old record from trigger.
-   * @param SObject newRecord The new record from trigger.
-   * @param SObject queriedRecord The record with queried data applied.
-   * @return List of records to insert.
-   */
-  protected virtual void beforeUpdate(SObject oldRecord, SObject newRecord, SObject queriedRecord) {
-  }
-  /**
-   * @description Primary logic that executes for each record after update.
-   * @param SObject oldRecord The old record from trigger.
-   * @param SObject newRecord The new record from trigger.
-   * @param SObject queriedRecord The record with queried data applied.
-   */
-  protected virtual void afterUpdate(SObject oldRecord, SObject newRecord, SObject queriedRecord) {
-  }
-  /**
-   * @description Primary logic that executes for each record before delete.
-   * @param SObject oldRecord The old record from trigger.
-   * @param SObject newRecord The new record from trigger.
-   * @param SObject queriedRecord The record with queried data applied.
-   */
-  protected virtual void beforeDelete(SObject oldRecord, SObject queriedRecord) {
-  }
-  /**
-   * @description Primary logic that executes for each record after delete.
-   * @param SObject oldRecord The old record from trigger.
-   * @param SObject queriedRecord The record with queried data applied.
-   */
-  protected virtual void afterDelete(SObject oldRecord, SObject queriedRecord) {
-  }
-  /**
-   * @description Primary logic that executes for each record before delete.
-   * @param SObject newRecord The new record from trigger.
-   * @param SObject queriedRecord The record with queried data applied.
-   */
-  protected virtual void afterUndelete(SObject newRecord, SObject queriedRecord) {
+  @TestVisible
+  protected virtual void afterUndeleteSetup(TW_QuerySelectionable selection) {
   }
 
   /**
@@ -164,6 +119,7 @@ public abstract class TW_Action {
    * @param SObject newRecord The new record from trigger.
    * @return Boolean indicating whether the record should be processed.
    */
+  @TestVisible
   protected virtual Boolean beforeInsertFilter(SObject newRecord) {
     return true;
   }
@@ -174,6 +130,7 @@ public abstract class TW_Action {
    * @param SObject newRecord The new record from trigger.
    * @return Boolean indicating whether the record should be processed.
    */
+  @TestVisible
   protected virtual Boolean afterInsertFilter(SObject newRecord) {
     return true;
   }
@@ -184,6 +141,7 @@ public abstract class TW_Action {
    * @param SObject newRecord The new record from trigger.
    * @return Boolean indicating whether the record should be processed.
    */
+  @TestVisible
   protected virtual Boolean beforeUpdateFilter(SObject oldRecord, SObject newRecord) {
     return true;
   }
@@ -194,6 +152,7 @@ public abstract class TW_Action {
    * @param SObject newRecord The new record from trigger.
    * @return Boolean indicating whether the record should be processed.
    */
+  @TestVisible
   protected virtual Boolean afterUpdateFilter(SObject oldRecord, SObject newRecord) {
     return true;
   }
@@ -204,6 +163,7 @@ public abstract class TW_Action {
    * @param SObject newRecord The new record from trigger.
    * @return Boolean indicating whether the record should be processed.
    */
+  @TestVisible
   protected virtual Boolean beforeDeleteFilter(SObject oldRecord) {
     return true;
   }
@@ -214,6 +174,7 @@ public abstract class TW_Action {
    * @param SObject newRecord The new record from trigger.
    * @return Boolean indicating whether the record should be processed.
    */
+  @TestVisible
   protected virtual Boolean afterDeleteFilter(SObject oldRecord) {
     return true;
   }
@@ -224,22 +185,85 @@ public abstract class TW_Action {
    * @param SObject newRecord The new record from trigger.
    * @return Boolean indicating whether the record should be processed.
    */
+  @TestVisible
   protected virtual Boolean afterUndeleteFilter(SObject newRecord) {
     return true;
   }
 
   /**
-   * @description Executes the pre-process logic for the trigger weaver action.
-   * @param TW_QuerySelectionable selection The selection that will be used to query related records.
+   * @description Primary logic that executes for each record before insert.
+   * @param SObject newRecord The new record from trigger.
    */
-  public void executePreProcess(TW_QuerySelectionable selection) {
+  @TestVisible
+  protected virtual void beforeInsert(SObject newRecord) {
+  }
+  /**
+   * @description Primary logic that executes for each record after insert.
+   * @param SObject newRecord The new record from trigger.
+   * @param SObject queriedRecord The record with queried data applied.
+   * @return List of records to insert.
+   */
+  @TestVisible
+  protected virtual void afterInsert(SObject newRecord, SObject queriedRecord) {
+  }
+  /**
+   * @description Primary logic that executes for each record before update.
+   * @param SObject oldRecord The old record from trigger.
+   * @param SObject newRecord The new record from trigger.
+   * @param SObject queriedRecord The record with queried data applied.
+   * @return List of records to insert.
+   */
+  @TestVisible
+  protected virtual void beforeUpdate(SObject oldRecord, SObject newRecord, SObject queriedRecord) {
+  }
+  /**
+   * @description Primary logic that executes for each record after update.
+   * @param SObject oldRecord The old record from trigger.
+   * @param SObject newRecord The new record from trigger.
+   * @param SObject queriedRecord The record with queried data applied.
+   */
+  @TestVisible
+  protected virtual void afterUpdate(SObject oldRecord, SObject newRecord, SObject queriedRecord) {
+  }
+  /**
+   * @description Primary logic that executes for each record before delete.
+   * @param SObject oldRecord The old record from trigger.
+   * @param SObject newRecord The new record from trigger.
+   * @param SObject queriedRecord The record with queried data applied.
+   */
+  @TestVisible
+  protected virtual void beforeDelete(SObject oldRecord, SObject queriedRecord) {
+  }
+  /**
+   * @description Primary logic that executes for each record after delete.
+   * @param SObject oldRecord The old record from trigger.
+   * @param SObject queriedRecord The record with queried data applied.
+   */
+  @TestVisible
+  protected virtual void afterDelete(SObject oldRecord, SObject queriedRecord) {
+  }
+  /**
+   * @description Primary logic that executes for each record after undelete.
+   * @param SObject newRecord The new record from trigger.
+   * @param SObject queriedRecord The record with queried data applied.
+   */
+  @TestVisible
+  protected virtual void afterUndelete(SObject newRecord, SObject queriedRecord) {
+  }
+
+  /**
+   * @description Primary logic that executes for each record after delete.
+   * @param SObject oldRecord The old record from trigger.
+   * @param SObject queriedRecord The record with queried data applied.
+   */
+  public void executeSetup(TW_QuerySelectionable selection) {
     if (this.ctx == null) {
       throw new InvalidContextException('Context must be set to perform this action. Run setContext(TW_Context ctx) first');
     }
 
     switch on this.ctx.getOperation() {
       when BEFORE_INSERT {
-        this.beforeInsertPreProcess();
+        this.beforeInsertSetup();
         for (SObject newRecord : this.ctx.getNew()) {
           if (this.beforeInsertFilter(newRecord)) {
             ctx.addFilteredRecord(this.t, newRecord);
@@ -247,7 +271,7 @@ public abstract class TW_Action {
         }
       }
       when AFTER_INSERT {
-        this.afterInsertPreProcess(selection);
+        this.afterInsertSetup(selection);
         for (SObject newRecord : this.ctx.getNew()) {
           if (this.afterInsertFilter(newRecord)) {
             ctx.addFilteredRecord(this.t, newRecord);
@@ -255,7 +279,7 @@ public abstract class TW_Action {
         }
       }
       when BEFORE_UPDATE {
-        this.beforeUpdatePreProcess(selection);
+        this.beforeUpdateSetup(selection);
         for (SObject newRecord : this.ctx.getNew()) {
           SObject oldRecord = this.ctx.getOldMap().get(newRecord.Id);
           if (this.beforeUpdateFilter(oldRecord, newRecord)) {
@@ -264,7 +288,7 @@ public abstract class TW_Action {
         }
       }
       when AFTER_UPDATE {
-        this.afterUpdatePreProcess(selection);
+        this.afterUpdateSetup(selection);
         for (SObject newRecord : this.ctx.getNew()) {
           SObject oldRecord = this.ctx.getOldMap().get(newRecord.Id);
           if (this.afterUpdateFilter(oldRecord, newRecord)) {
@@ -273,7 +297,7 @@ public abstract class TW_Action {
         }
       }
       when BEFORE_DELETE {
-        this.beforeDeletePreProcess(selection);
+        this.beforeDeleteSetup(selection);
         for (SObject oldRecord : this.ctx.getOld()) {
           if (this.beforeDeleteFilter(oldRecord)) {
             ctx.addFilteredRecord(this.t, oldRecord);
@@ -281,7 +305,7 @@ public abstract class TW_Action {
         }
       }
       when AFTER_DELETE {
-        this.afterDeletePreProcess(selection);
+        this.afterDeleteSetup(selection);
         for (SObject oldRecord : this.ctx.getOld()) {
           if (this.afterDeleteFilter(oldRecord)) {
             ctx.addFilteredRecord(this.t, oldRecord);
@@ -289,7 +313,7 @@ public abstract class TW_Action {
         }
       }
       when AFTER_UNDELETE {
-        this.afterUndeletePreProcess(selection);
+        this.afterUndeleteSetup(selection);
         for (SObject newRecord : this.ctx.getNew()) {
           if (this.afterUndeleteFilter(newRecord)) {
             ctx.addFilteredRecord(this.t, newRecord);
@@ -298,7 +322,6 @@ public abstract class TW_Action {
       }
     }
   }
-
   /**
    * @description Executes primary functionality for trigger weaver action for each record which meets filter criteria.
    */

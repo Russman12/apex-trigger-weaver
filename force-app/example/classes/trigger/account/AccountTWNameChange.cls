@@ -10,7 +10,7 @@ public with sharing class AccountTWNameChange extends TW_Action {
   /**
    * Add child contacts to the query with Name
    */
-  protected override void beforeUpdatePreProcess(TW_QuerySelectionable selection) {
+  protected override void beforeUpdateSetup(TW_QuerySelectionable selection) {
     selection.addField(Account.Name);
     selection.addChildField(Contact.AccountId, Contact.Name);
   }
