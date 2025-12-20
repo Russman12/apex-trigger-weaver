@@ -29,7 +29,7 @@ public with sharing class ContactTWAccNameMismatch extends TW_Function {
     Contact queriedContact = (Contact) queriedRecord;
 
     if (queriedContact.Account.Name != newContact.Name) {
-      updateRecord(new Account(Id = queriedContact.Account.Id, Name = ContactBusinessLogic.fullName(newContact)));
+      this.getDMLQueue().enqueueUpdate(new Account(Id = newContact.AccountId, Name = ContactBusinessLogic.fullName(newContact)));
     }
 
     return null;

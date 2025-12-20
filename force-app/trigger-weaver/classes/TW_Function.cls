@@ -1,12 +1,14 @@
 public abstract class TW_Function {
   private final System.Type t;
 
-  private final List<SObject> updateRecords = new List<SObject>();
-
   private TW_Context ctx;
 
   protected TW_Function(System.Type t) {
     this.t = t;
+  }
+
+  protected TW_DMLQueueable getDMLQueue() {
+    return this.ctx.getDMLQueue();
   }
 
   public void setContext(TW_Context ctx) {
@@ -214,14 +216,6 @@ public abstract class TW_Function {
         }
       }
     }
-  }
-
-  protected void updateRecord(SObject rec) {
-    this.updateRecords.add(rec);
-  }
-
-  public List<SObject> getUpdates() {
-    return this.updateRecords.deepClone(true);
   }
 
   public class InvalidContextException extends Exception {

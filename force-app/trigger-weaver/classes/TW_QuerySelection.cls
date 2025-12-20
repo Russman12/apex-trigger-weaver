@@ -66,8 +66,14 @@ public with sharing class TW_QuerySelection implements TW_QuerySelectionable {
 
   private String getParentRelationshipName(Schema.SObjectField[] relationshipPath) {
     String[] pathStrs = new List<String>{};
-    for (Schema.SObjectField field : relationshipPath) {
-      pathStrs.add(field.getDescribe().getName());
+
+    for (Integer i = 0; i < relationshipPath.size(); i++) {
+      Schema.SObjectField field = relationshipPath[i];
+      if (i < relationshipPath.size() - 1) {
+        pathStrs.add(field.getDescribe().getRelationshipName());
+      } else {
+        pathStrs.add(field.getDescribe().getName());
+      }
     }
     return String.join(pathStrs, '.');
   }

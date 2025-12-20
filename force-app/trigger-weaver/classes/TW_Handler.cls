@@ -1,5 +1,4 @@
 public virtual class TW_Handler {
-  //TODO: handle DML operations
   private static final Set<System.TriggerOperation> QUERY_CONTEXTS = new Set<System.TriggerOperation>{
     System.TriggerOperation.AFTER_INSERT,
     System.TriggerOperation.BEFORE_UPDATE,
@@ -58,6 +57,7 @@ public virtual class TW_Handler {
 
   private List<TW_Function> twFunctions = new List<TW_Function>();
   private final TW_Queryable query;
+  private final TW_DMLQueueable dmlQueue;
   private final SObjectType sObjType;
   private final TW_Context ctx;
   private final Map<String, Object> queryBinds;
@@ -72,14 +72,19 @@ public virtual class TW_Handler {
     query.fromSObject(sObjType);
 
     this.selection = query.getSelection();
+    this.dmlQueue = this.newQueueable();
     this.queriedRecordsMap = new Map<Id, SObject>();
 
-    this.ctx = new TW_Context(idField, queriedRecordsMap, selection);
+    this.ctx = new TW_Context(idField, queriedRecordsMap, this.newQueueable());
     this.queryBinds = new Map<String, Object>();
   }
 
-  protected TW_Queryable newQueryable() {
+  protected virtual TW_Queryable newQueryable() {
     return new TW_Query();
+  }
+
+  protected virtual TW_DMLQueueable newQueueable() {
+    return new TW_DMLQueue();
   }
 
   public TW_Handler register(TW_Function function) {
@@ -124,12 +129,6 @@ public virtual class TW_Handler {
       function.execute();
     }
 
-    List<SObject> updates = new List<SObject>();
-    for (TW_Function function : twFunctions) {
-      updates.addAll(function.getUpdates());
-    }
-
-    updates.sort();
-    update updates;
+    this.ctx.getDMLQueue().flush();
   }
 }

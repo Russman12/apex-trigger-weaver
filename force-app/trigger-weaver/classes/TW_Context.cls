@@ -22,9 +22,9 @@ public with sharing class TW_Context {
 
   private final Map<System.Type, List<SObject>> filteredRecords;
   private final List<SObject> globalFilteredRecords;
-  private final TW_QuerySelectionable querySelections;
+  private final TW_DMLQueueable dmlQueue;
 
-  public TW_Context(Schema.SObjectField idField, Map<Id, SObject> queriedRecordsMap, TW_QuerySelectionable querySelection) {
+  public TW_Context(Schema.SObjectField idField, Map<Id, SObject> queriedRecordsMap, TW_DMLQueueable dmlQueue) {
     //throw execption if not in trigger context
     if (!Trigger.isExecuting) {
       throw new InvalidContextException('Unable to create TW_Handler outside of a trigger context');
@@ -37,8 +37,7 @@ public with sharing class TW_Context {
     this.operation = Trigger.operationType;
     this.filteredRecords = new Map<System.Type, List<SObject>>();
     this.globalFilteredRecords = new List<SObject>();
-    this.querySelections = querySelection;
-
+    this.dmlQueue = dmlQueue;
     this.queriedRecordsMap = queriedRecordsMap;
   }
 
@@ -68,6 +67,10 @@ public with sharing class TW_Context {
 
   public Map<Id, SObject> getQueriedRecordMap() {
     return this.queriedRecordsMap.deepClone();
+  }
+
+  public TW_DMLQueueable getDMLQueue() {
+    return this.dmlQueue;
   }
 
   public List<SObject> filteredRecords() {
