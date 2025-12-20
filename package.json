@@ -5,7 +5,7 @@
   "description": "Salesforce App",
   "scripts": {
     "lint": "npm run lint:apex && npm run lint:doc",
-    "lint:apex": "sf scanner run --target 'force-app/**/*.cls' --format table --category 'trigger-weaver' --engine pmd",
+    "lint:apex": "sf code-analyzer run --target 'force-app/**/*.cls' --rule-selector 'pmd:trigger-weaver'",
     "lint:doc": "write-good README.md --parse",
     "test": "sf apex run test --result-format human --output-dir ./tests/apex --test-level RunLocalTests --wait 20",
     "test:coverage": "sf apex run test --result-format human --output-dir ./tests/apex --test-level RunLocalTests --code-coverage --detailed-coverage --wait 20",
@@ -13,7 +13,6 @@
     "prettier:verify": "prettier --check \"**/*.{cls,cmp,component,css,html,js,json,md,page,trigger,xml,yaml,yml}\"",
     "prepare": "husky",
     "precommit": "npm run prettier && npm run lint",
-    "postinstall": "husky install",
     "retrieve:pkgs": "sf project retrieve start -n \"Apex SOQL Builder\" --target-metadata-dir packages -z",
     "scratch": "sf org create scratch --definition-file config/project-scratch-def.json --alias trigger-weaver --duration-days 7 --set-default --json"
   },

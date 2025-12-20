@@ -22,9 +22,9 @@ public with sharing class TW_Context {
 
   private final Map<System.Type, List<SObject>> filteredRecords;
   private final List<SObject> globalFilteredRecords;
-  private final Map<System.Type, ASB_Select> querySelections;
+  private final TW_QuerySelectionable querySelections;
 
-  public TW_Context(Schema.SObjectField idField, Map<Id, SObject> queriedRecordsMap) {
+  public TW_Context(Schema.SObjectField idField, Map<Id, SObject> queriedRecordsMap, TW_QuerySelectionable querySelection) {
     //throw execption if not in trigger context
     if (!Trigger.isExecuting) {
       throw new InvalidContextException('Unable to create TW_Handler outside of a trigger context');
@@ -37,22 +37,9 @@ public with sharing class TW_Context {
     this.operation = Trigger.operationType;
     this.filteredRecords = new Map<System.Type, List<SObject>>();
     this.globalFilteredRecords = new List<SObject>();
-    this.querySelections = new Map<System.Type, ASB_Select>();
+    this.querySelections = querySelection;
 
     this.queriedRecordsMap = queriedRecordsMap;
-  }
-
-  public void addQuerySelection(Type t, ASB_Select selection) {
-    System.debug('adding?');
-    this.querySelections.put(t, selection);
-  }
-
-  public Map<Type, ASB_Select> getQuerySelections() {
-    return this.querySelections;
-  }
-
-  public ASB_Select getQuerySelection(Type t) {
-    return this.querySelections.get(t);
   }
 
   public Boolean isQueryContext() {

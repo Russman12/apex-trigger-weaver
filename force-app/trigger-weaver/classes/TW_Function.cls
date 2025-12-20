@@ -33,17 +33,17 @@ public abstract class TW_Function {
 
   protected virtual void beforeInsertPreProcess() {
   }
-  protected virtual void afterInsertPreProcess(ASB_Select selection) {
+  protected virtual void afterInsertPreProcess(TW_QuerySelectionable selection) {
   }
-  protected virtual void beforeUpdatePreProcess(ASB_Select selection) {
+  protected virtual void beforeUpdatePreProcess(TW_QuerySelectionable selection) {
   }
-  protected virtual void afterUpdatePreProcess(ASB_Select selection) {
+  protected virtual void afterUpdatePreProcess(TW_QuerySelectionable selection) {
   }
-  protected virtual void beforeDeletePreProcess(ASB_Select selection) {
+  protected virtual void beforeDeletePreProcess(TW_QuerySelectionable selection) {
   }
-  protected virtual void afterDeletePreProcess(ASB_Select selection) {
+  protected virtual void afterDeletePreProcess(TW_QuerySelectionable selection) {
   }
-  protected virtual void afterUndeletePreProcess(ASB_Select selection) {
+  protected virtual void afterUndeletePreProcess(TW_QuerySelectionable selection) {
   }
 
   protected virtual List<SObject> beforeInsert(SObject newRecord) {
@@ -90,12 +90,11 @@ public abstract class TW_Function {
     return true;
   }
 
-  public void executePreProcess() {
+  public void executePreProcess(TW_QuerySelectionable selection) {
     if (this.ctx == null) {
       throw new InvalidContextException('Context must be set to perform this action. Run setContext(TW_Context ctx) first');
     }
 
-    ASB_Select selection = ASB_Select.make();
     switch on this.ctx.getOperation() {
       when BEFORE_INSERT {
         this.beforeInsertPreProcess();
@@ -127,7 +126,6 @@ public abstract class TW_Function {
         for (SObject newRecord : this.ctx.getNew()) {
           SObject oldRecord = this.ctx.getOldMap().get(newRecord.Id);
           if (this.afterUpdateFilter(oldRecord, newRecord)) {
-            System.debug('adding');
             ctx.addFilteredRecord(this.t, newRecord);
           }
         }
@@ -156,11 +154,6 @@ public abstract class TW_Function {
           }
         }
       }
-    }
-    System.debug(selection.clauseString());
-    if (selection.hasElements()) {
-      System.debug('has elements');
-      this.ctx.addQuerySelection(this.t, selection);
     }
   }
 

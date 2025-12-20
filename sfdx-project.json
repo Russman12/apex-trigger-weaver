@@ -6,8 +6,7 @@
       "package": "Trigger Weaver"
     },
     {
-      "path": "force-app/example",
-      "default": false
+      "path": "force-app/example"
     }
   ],
   "name": "trigger-weaver",

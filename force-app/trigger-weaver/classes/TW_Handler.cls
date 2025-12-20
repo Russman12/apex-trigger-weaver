@@ -1,4 +1,4 @@
-public class TW_Handler {
+public virtual class TW_Handler {
   //TODO: handle DML operations
   private static final Set<System.TriggerOperation> QUERY_CONTEXTS = new Set<System.TriggerOperation>{
     System.TriggerOperation.AFTER_INSERT,
@@ -9,7 +9,7 @@ public class TW_Handler {
     System.TriggerOperation.AFTER_UNDELETE
   };
 
-  private static final String BIND_NAME = 'records';
+  private static final String BIND_NAME = 'recordIds';
   private static final Set<Type> bypasses = new Set<Type>();
   private static Map<Schema.SObjectType, List<Trigger_Weaver__mdt>> activeTWSBySObj;
   private static List<Trigger_Weaver__mdt> getActiveTWSForSObj(Schema.SObjectType sObjType) {
@@ -33,7 +33,7 @@ public class TW_Handler {
    * Adds method with given name to bypasses.
    * @param functionName add function to bypasses
    */
-  public static void addBypass(Type function) {
+  public static void addBypass(System.Type function) {
     bypasses.add(function);
   }
 
@@ -41,7 +41,7 @@ public class TW_Handler {
    * Removes method with given name from bypasses.
    * @param functionName add function to bypasses
    */
-  public static void removeBypass(Type function) {
+  public static void removeBypass(System.Type function) {
     bypasses.remove(function);
   }
 
@@ -52,28 +52,34 @@ public class TW_Handler {
     bypasses.clear();
   }
 
+  public static TW_Handler make(Schema.SObjectType sObjType) {
+    return new TW_Handler(sObjType);
+  }
+
   private List<TW_Function> twFunctions = new List<TW_Function>();
-  private final ASB soql;
+  private final TW_Queryable query;
   private final SObjectType sObjType;
   private final TW_Context ctx;
   private final Map<String, Object> queryBinds;
   private final Map<Id, SObject> queriedRecordsMap;
-  private final ASB_Select selection;
-
-  public static TW_Handler make(Schema.SObjectType sObjType) {
-    return new TW_Handler(sObjType);
-  }
+  private final TW_QuerySelectionable selection;
 
   private TW_Handler(Schema.SObjectType sObjType) {
     this.sObjType = sObjType;
     Schema.SObjectField idField = sObjType.getDescribe().fields.getMap().get('Id');
 
-    this.selection = ASB_Select.make().field(idField);
-    this.soql = ASB.sObject(sObjType).filter(ASB_Where.field(idField).isIn().bind(BIND_NAME)).selection(this.selection);
+    this.query = this.newQueryable();
+    query.fromSObject(sObjType);
+
+    this.selection = query.getSelection();
     this.queriedRecordsMap = new Map<Id, SObject>();
 
-    this.ctx = new TW_Context(idField, queriedRecordsMap);
+    this.ctx = new TW_Context(idField, queriedRecordsMap, selection);
     this.queryBinds = new Map<String, Object>();
+  }
+
+  protected TW_Queryable newQueryable() {
+    return new TW_Query();
   }
 
   public TW_Handler register(TW_Function function) {
@@ -102,16 +108,13 @@ public class TW_Handler {
       }
 
       function.setContext(this.ctx);
-      function.executePreProcess();
-
-      ASB_Select funcSelect = this.ctx.getQuerySelection(function.getType());
-      if (funcSelect != null) {
-        this.selection.combine(funcSelect);
-      }
+      function.executePreProcess(this.selection);
     }
-    if (!this.ctx.getQuerySelections().isEmpty() && this.ctx.isQueryContext() && this.ctx.filteredRecords().size() > 0) {
+
+    if (this.selection.isSet() && this.ctx.isQueryContext() && this.ctx.filteredRecords().size() > 0) {
       this.queryBinds.put(BIND_NAME, this.ctx.filteredRecords());
-      this.queriedRecordsMap.putAll(new Map<Id, SObject>(this.soql.query(this.queryBinds)));
+      List<SObject> queryResults = this.query.run(this.queryBinds);
+      this.queriedRecordsMap.putAll(new Map<Id, SObject>(queryResults));
     }
 
     for (TW_Function function : twFunctions) {
