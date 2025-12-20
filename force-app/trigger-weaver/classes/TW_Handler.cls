@@ -1,3 +1,7 @@
+/**
+ * @description Contains functionality relating to the global trigger execution.
+ * @group Framework
+ */
 public virtual class TW_Handler {
   private static final Set<System.TriggerOperation> QUERY_CONTEXTS = new Set<System.TriggerOperation>{
     System.TriggerOperation.AFTER_INSERT,
@@ -29,28 +33,33 @@ public virtual class TW_Handler {
   }
 
   /**
-   * Adds method with given name to bypasses.
-   * @param functionName add function to bypasses
+   * @description Bypasses given trigger functionality to prevent multiple executions.
+   * @param function Function to bypass.
    */
   public static void addBypass(System.Type function) {
     bypasses.add(function);
   }
 
   /**
-   * Removes method with given name from bypasses.
-   * @param functionName add function to bypasses
+   * @description Removes given trigger functionality from bypasses allowing it to be executed multiple times.
+   * @param function Function to bypass.
    */
   public static void removeBypass(System.Type function) {
     bypasses.remove(function);
   }
 
   /**
-   * Removes all bypasses
+   * @description Removes all bypasses allowing all trigger functionality to be executed multiple times.
    */
   public static void clearBypasses() {
     bypasses.clear();
   }
 
+  /**
+   * @description Creates a new TW_Handler instance.
+   * @param sObjType The SObject type to handle.
+   * @return TW_Handler instance.
+   */
   public static TW_Handler make(Schema.SObjectType sObjType) {
     return new TW_Handler(sObjType);
   }
@@ -79,10 +88,18 @@ public virtual class TW_Handler {
     this.queryBinds = new Map<String, Object>();
   }
 
+  /**
+   * @description Creates a new TW_Queryable instance. This method can be overridden to provide a custom query implementation.
+   * @return Default TW_Query instance.
+   */
   protected virtual TW_Queryable newQueryable() {
     return new TW_Query();
   }
 
+  /**
+   * @description Creates new TW_DMLQueueable instance. This method can be overridden to provide a custom queueable implementation.
+   * @return Default TW_DMLQueue instance.
+   */
   protected virtual TW_DMLQueueable newQueueable() {
     return new TW_DMLQueue();
   }
@@ -106,6 +123,9 @@ public virtual class TW_Handler {
     return this;
   }
 
+  /**
+   * @description Executes all registered trigger weaver functions.
+   */
   public void execute() {
     for (TW_Function function : this.twFunctions) {
       if (bypasses.contains(function.getType())) {
