@@ -162,7 +162,10 @@ public with sharing class TW_QuerySelection implements TW_QuerySelectionable {
   }
 
   private String getChildRelationshipName(Schema.SObjectField relationshipField) {
-    for (Schema.ChildRelationship cr : relationshipField.getDescribe().getReferenceTo()[0].getDescribe().getChildRelationships()) {
+    System.debug(System.Limits.getCpuTime());
+    List<Schema.ChildRelationship> rels = relationshipField.getDescribe().getReferenceTo()[0].getDescribe().getChildRelationships();
+    System.debug(System.Limits.getCpuTime());
+    for (Schema.ChildRelationship cr : rels) {
       if (cr.getField() == relationshipField) {
         return String.valueOf(cr.getRelationshipName());
       }

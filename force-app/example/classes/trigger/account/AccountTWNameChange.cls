@@ -15,7 +15,7 @@ public with sharing class AccountTWNameChange extends TW_Action {
    * Filter where the name has changed
    */
   protected override Boolean beforeUpdateFilter(SObject oldRecord, SObject newRecord) {
-    return ((Account) oldRecord).Name != ((Account) newRecord).Name;
+    return anyChanged(new List<Schema.SObjectField>{ Account.Name, Account.Id });
   }
 
   /**

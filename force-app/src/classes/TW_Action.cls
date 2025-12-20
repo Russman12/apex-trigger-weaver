@@ -7,6 +7,7 @@ public abstract class TW_Action {
 
   @TestVisible
   private TW_Context ctx;
+  private SObject currentRecord;
 
   /**
    * @description Returns the DML queue used to enqueue DML operations.
@@ -49,6 +50,59 @@ public abstract class TW_Action {
    */
   public void setType(System.Type t) {
     this.t = t;
+  }
+
+  /**
+   * @description Returns true if the field has changed for the current record. Returns false if
+   * not update context.
+   * @param field Field to check.
+   * @return True if the field has changed.
+   */
+  protected Boolean isChanged(Schema.SObjectField field) {
+    System.TriggerOperation ctxOp = this.ctx.getOperation();
+    if (ctxOp == System.TriggerOperation.BEFORE_UPDATE || ctxOp == System.TriggerOperation.BEFORE_UPDATE) {
+      return this.ctx.getOldMap().get(this.currentRecord.Id).get(field) != this.currentRecord.get(field);
+    }
+    return false;
+  }
+
+  /**
+   * @description Returns true if any of the provided fields have changed for the current record.
+   * Returns false if not update context.
+   * @param fields Fields to check.
+   * @return True if any of the fields have changed.
+   */
+  protected Boolean anyChanged(Schema.SObjectField[] fields) {
+    System.TriggerOperation ctxOp = this.ctx.getOperation();
+    if (ctxOp == System.TriggerOperation.BEFORE_UPDATE || ctxOp == System.TriggerOperation.BEFORE_UPDATE) {
+      SObject oldRec = this.ctx.getOldMap().get(this.currentRecord.Id);
+      for (Schema.SObjectField field : fields) {
+        if (oldRec.get(field) != this.currentRecord.get(field)) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  /**
+   * @description Returns true if all of the provided fields have changed for the current record.
+   * Returns false if not update context.
+   * @param fields Fields to check.
+   * @return True if all of the fields have changed.
+   */
+  protected Boolean allChanged(Schema.SObjectField[] fields) {
+    System.TriggerOperation ctxOp = this.ctx.getOperation();
+    if (ctxOp == System.TriggerOperation.BEFORE_UPDATE || ctxOp == System.TriggerOperation.BEFORE_UPDATE) {
+      SObject oldRec = this.ctx.getOldMap().get(this.currentRecord.Id);
+      for (Schema.SObjectField field : fields) {
+        if (oldRec.get(field) == this.currentRecord.get(field)) {
+          return false;
+        }
+      }
+      return true;
+    }
+    return false;
   }
 
   /**
@@ -280,6 +334,7 @@ public abstract class TW_Action {
       when BEFORE_UPDATE {
         this.beforeUpdateSetup(selection);
         for (SObject newRecord : this.ctx.getNew()) {
+          this.currentRecord = newRecord;
           SObject oldRecord = this.ctx.getOldMap().get(newRecord.Id);
           if (this.beforeUpdateFilter(oldRecord, newRecord)) {
             ctx.addFilteredRecord(this.t, newRecord);
@@ -289,6 +344,7 @@ public abstract class TW_Action {
       when AFTER_UPDATE {
         this.afterUpdateSetup(selection);
         for (SObject newRecord : this.ctx.getNew()) {
+          this.currentRecord = newRecord;
           SObject oldRecord = this.ctx.getOldMap().get(newRecord.Id);
           if (this.afterUpdateFilter(oldRecord, newRecord)) {
             ctx.addFilteredRecord(this.t, newRecord);
@@ -345,6 +401,7 @@ public abstract class TW_Action {
       }
       when BEFORE_UPDATE {
         for (SObject newRecord : this.ctx.filteredRecords()) {
+          this.currentRecord = newRecord;
           SObject oldRecord = this.ctx.getOldMap().get(newRecord.Id);
           if (this.beforeUpdateFilter(oldRecord, newRecord)) {
             this.beforeUpdate(oldRecord, newRecord, this.ctx.getQueriedRecordMap().get(newRecord.Id));
@@ -353,6 +410,7 @@ public abstract class TW_Action {
       }
       when AFTER_UPDATE {
         for (SObject newRecord : this.ctx.filteredRecords()) {
+          this.currentRecord = newRecord;
           SObject oldRecord = this.ctx.getOldMap().get(newRecord.Id);
           if (this.afterUpdateFilter(oldRecord, newRecord)) {
             this.afterUpdate(oldRecord, newRecord, this.ctx.getQueriedRecordMap().get(newRecord.Id));
