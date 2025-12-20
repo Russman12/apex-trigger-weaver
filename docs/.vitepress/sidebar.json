@@ -1,0 +1,57 @@
+[
+  {
+    "text": "API Reference",
+    "items": [
+      {
+        "text": "Miscellaneous",
+        "items": [
+          {
+            "text": "TW_Context",
+            "link": "miscellaneous/TW_Context.md"
+          },
+          {
+            "text": "TW_DMLQueue",
+            "link": "miscellaneous/TW_DMLQueue.md"
+          },
+          {
+            "text": "TW_DMLQueueable",
+            "link": "miscellaneous/TW_DMLQueueable.md"
+          },
+          {
+            "text": "TW_Function",
+            "link": "miscellaneous/TW_Function.md"
+          },
+          {
+            "text": "TW_Handler",
+            "link": "miscellaneous/TW_Handler.md"
+          },
+          {
+            "text": "TW_Query",
+            "link": "miscellaneous/TW_Query.md"
+          },
+          {
+            "text": "TW_Queryable",
+            "link": "miscellaneous/TW_Queryable.md"
+          },
+          {
+            "text": "TW_QuerySelection",
+            "link": "miscellaneous/TW_QuerySelection.md"
+          },
+          {
+            "text": "TW_QuerySelectionable",
+            "link": "miscellaneous/TW_QuerySelectionable.md"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "text": "Object Reference",
+    "items": [
+      {
+        "text": "Trigger_Weaver__mdt",
+        "link": "custom-objects/Trigger_Weaver__mdt.md"
+      }
+    ]
+  }
+]

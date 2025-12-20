@@ -14,7 +14,11 @@
     "prepare": "husky",
     "precommit": "npm run prettier && npm run lint",
     "retrieve:pkgs": "sf project retrieve start -n \"Apex SOQL Builder\" --target-metadata-dir packages -z",
-    "scratch": "sf org create scratch --definition-file config/project-scratch-def.json --alias trigger-weaver --duration-days 7 --set-default --json"
+    "scratch": "sf org create scratch --definition-fikle config/project-scratch-def.json --alias trigger-weaver --duration-days 7 --set-default --json",
+    "docs:apexdocs": "apexdocs markdown -s force-app/trigger-weaver",
+    "docs:build": "npm run docs:apexdocs && vitepress build docs",
+    "docs:dev": "npm run docs:apexdocs && vitepress dev docs",
+    "docs:preview": "vitepress preview docs"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.5.0",
@@ -23,6 +27,10 @@
     "husky": "^9.1.6",
     "prettier": "^3.3.3",
     "prettier-plugin-apex": "^2.2.0",
+    "vitepress": "^1.6.4",
     "write-good": "^1.0.8"
+  },
+  "dependencies": {
+    "@cparra/apexdocs": "^3.16.1"
   }
 }
