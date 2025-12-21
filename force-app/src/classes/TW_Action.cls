@@ -44,6 +44,22 @@ public abstract class TW_Action {
   }
 
   /**
+   * @description Returns the old records for the current trigger context.
+   * @return Old records.
+   */
+  public List<SObject> oldRecords() {
+    return this.ctx.getOld();
+  }
+
+  /**
+   * @description Returns the new records for the current trigger context.
+   * @return New records.
+   */
+  public List<SObject> newRecords() {
+    return this.ctx.getOld();
+  }
+
+  /**
    * @description Returns true if the field has changed for the current record. Returns false if
    * not update context.
    * @param field Field to check.
