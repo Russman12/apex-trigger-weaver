@@ -97,17 +97,6 @@ public abstract class TW_Action {
   }
 
   /**
-   * @description Returns all filtered records for a given trigger weaver action.
-   * @return Filtered records.
-   */
-  public List<SObject> filteredRecords() {
-    if (this.ctx == null) {
-      throw new InvalidContextException('Context must be set to perform this action. Run setContext(TW_Context ctx) first');
-    }
-    return ctx.filteredRecords(this.t);
-  }
-
-  /**
    * @description Logic that executes once for the action before primary before insert logic.
    */
   @TestVisible
