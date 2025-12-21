@@ -41,7 +41,7 @@ export default {
   markdown: defineMarkdownConfig({
     sourceDir: 'force-app/src',
     includeMetadata: false,
-    scope: ['global', 'public', 'protected', 'private', 'namespaceaccessible'],
+    scope: ['global', 'public', 'protected'],
     sortAlphabetically: true,
     namespace: 'apexdocs',
     transformReference: (reference) => {
@@ -63,6 +63,14 @@ export default {
 
       // Update sidebar
       const sidebar = [
+        {
+          text: "Getting Started",
+          link: "/getting-started.md"
+        },   
+        {
+          text: "Technical Details",
+          link: "/technical-details.md"
+        },
         {
           text: 'API Reference',
           items: Array.from(extractGroups(apexOnlyDocs)).map(([groupName, groupDocs]) => ({
