@@ -12,8 +12,7 @@ public virtual class TW_Handler {
     System.TriggerOperation.AFTER_UNDELETE
   };
 
-  private static final String BIND_NAME = 'recordIds';
-  private static final Set<Type> bypasses = new Set<Type>();
+  private static final Set<Type> BYPASSES = new Set<Type>();
   private static Map<Schema.SObjectType, List<TW_Action__mdt>> activeTWSBySObj;
 
   private static List<TW_Action__mdt> getActiveTWSForSObj(Schema.SObjectType sObjType) {
@@ -38,7 +37,7 @@ public virtual class TW_Handler {
    * @param action TW_Action to bypass.
    */
   public static void addBypass(System.Type action) {
-    bypasses.add(action);
+    BYPASSES.add(action);
   }
 
   /**
@@ -46,14 +45,14 @@ public virtual class TW_Handler {
    * @param action TW_Action to bypass.
    */
   public static void removeBypass(System.Type action) {
-    bypasses.remove(action);
+    BYPASSES.remove(action);
   }
 
   /**
    * @description Removes all bypasses allowing all trigger weaver actions to be executed multiple times.
    */
   public static void clearBypasses() {
-    bypasses.clear();
+    BYPASSES.clear();
   }
 
   /**
@@ -128,7 +127,7 @@ public virtual class TW_Handler {
    */
   public void execute() {
     for (TW_Action action : this.actions) {
-      if (bypasses.contains(action.getType())) {
+      if (BYPASSES.contains(action.getType())) {
         continue;
       }
 
@@ -137,13 +136,12 @@ public virtual class TW_Handler {
     }
 
     if (this.selection.isSet() && this.ctx.isQueryContext() && this.ctx.filteredRecords().size() > 0) {
-      this.queryBinds.put(BIND_NAME, this.ctx.filteredRecords());
-      List<SObject> queryResults = this.query.run(this.queryBinds);
+      List<SObject> queryResults = this.query.run(this.ctx.filteredRecords());
       this.queriedRecordsMap.putAll(new Map<Id, SObject>(queryResults));
     }
 
     for (TW_Action action : actions) {
-      if (bypasses.contains(action.getType())) {
+      if (BYPASSES.contains(action.getType())) {
         continue;
       }
       this.executor.execute(action, this.ctx);

@@ -49,13 +49,12 @@ public class TW_Query implements TW_Queryable {
   /**
    * @description Runs the query and returns the results.
    *
-   * @param queryParams The query parameters.
+   * @param records The records to query.
    * @return The query results.
-   *
    */
-  public SObject[] run(Map<String, Object> queryParams) {
-    String queryStr = this.selection.toClauseString() + ' FROM ' + this.sObjType.getDescribe().getName() + ' WHERE Id IN :recordIds';
+  public SObject[] run(List<SObject> records) {
+    String queryStr = this.selection.toClauseString() + ' FROM ' + this.sObjType.getDescribe().getName() + ' WHERE Id IN :records';
 
-    return Database.queryWithBinds(queryStr, queryParams, AccessLevel.SYSTEM_MODE);
+    return Database.queryWithBinds(queryStr, new Map<String, Object>{ 'records' => records }, AccessLevel.SYSTEM_MODE);
   }
 }

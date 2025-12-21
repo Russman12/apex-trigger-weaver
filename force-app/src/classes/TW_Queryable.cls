@@ -14,8 +14,8 @@ public interface TW_Queryable {
   void fromSObject(Schema.SObjectType sObjType);
   /**
    * @description Runs the query and returns the results.
-   * @param queryParams The query parameters.
+   * @param records The records to query.
    * @return The query results.
    */
-  SObject[] run(Map<String, Object> queryParams);
+  SObject[] run(List<SObject> records);
 }
