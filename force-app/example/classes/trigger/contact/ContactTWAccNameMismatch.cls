@@ -6,14 +6,14 @@ public with sharing class ContactTWAccNameMismatch extends TW_Action {
   /**
    * Select the parent account with its name field
    */
-  protected override void afterUpdateSetup(TW_QuerySelectionable selection) {
+  public override void afterUpdateSetup(TW_QuerySelectionable selection) {
     selection.addParentField(new List<Schema.SObjectField>{ Contact.AccountId, Account.Name });
   }
 
   /**
    * Only execute when FirstName or LastName has changed
    */
-  protected override Boolean afterUpdateFilter(SObject oldRecord, SObject newRecord) {
+  public override Boolean afterUpdateFilter(SObject oldRecord, SObject newRecord) {
     Contact oldContact = (Contact) oldRecord;
     Contact newContact = (Contact) newRecord;
     return oldContact.FirstName != newContact.FirstName || oldContact.LastName != newContact.LastName;
@@ -22,7 +22,7 @@ public with sharing class ContactTWAccNameMismatch extends TW_Action {
   /**
    * If parent account name does not match the contact's full name, update it
    */
-  protected override void afterUpdate(SObject oldRecord, SObject newRecord, SObject queriedRecord) {
+  public override void afterUpdate(SObject oldRecord, SObject newRecord, SObject queriedRecord) {
     Contact oldContact = (Contact) oldRecord;
     Contact newContact = (Contact) newRecord;
     Contact queriedContact = (Contact) queriedRecord;

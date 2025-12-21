@@ -67,6 +67,7 @@ public virtual class TW_Handler {
   private List<TW_Action> actions = new List<TW_Action>();
   private final TW_Queryable query;
   private final TW_DMLQueueable dmlQueue;
+  private final TW_ActionExecutor executor;
   private final SObjectType sObjType;
   private final TW_Context ctx;
   private final Map<String, Object> queryBinds;
@@ -81,6 +82,7 @@ public virtual class TW_Handler {
 
     this.selection = query.getSelection();
     this.dmlQueue = this.newQueueable();
+    this.executor = new TW_ActionExecutor();
     this.queriedRecordsMap = new Map<Id, SObject>();
 
     this.ctx = new TW_Context(queriedRecordsMap, this.newQueueable());
@@ -129,8 +131,8 @@ public virtual class TW_Handler {
         continue;
       }
 
-      action.setContext(this.ctx);
-      action.executeSetup(this.selection);
+      // Action orchestration handled by executor; context is set within executor
+      this.executor.executeSetup(action, this.ctx, this.selection);
     }
 
     if (this.selection.isSet() && this.ctx.isQueryContext() && this.ctx.filteredRecords().size() > 0) {
@@ -143,7 +145,7 @@ public virtual class TW_Handler {
       if (bypasses.contains(action.getType())) {
         continue;
       }
-      action.execute();
+      this.executor.execute(action, this.ctx);
     }
 
     this.ctx.getDMLQueue().flush();

@@ -6,7 +6,7 @@ public with sharing class AccountTWNameChange extends TW_Action {
   /**
    * Add child contacts to the query with Name
    */
-  protected override void beforeUpdateSetup(TW_QuerySelectionable selection) {
+  public override void beforeUpdateSetup(TW_QuerySelectionable selection) {
     selection.addField(Account.Name);
     selection.addChildField(Contact.AccountId, Contact.Name);
   }
@@ -14,14 +14,14 @@ public with sharing class AccountTWNameChange extends TW_Action {
   /**
    * Filter where the name has changed
    */
-  protected override Boolean beforeUpdateFilter(SObject oldRecord, SObject newRecord) {
+  public override Boolean beforeUpdateFilter(SObject oldRecord, SObject newRecord) {
     return anyChanged(new List<Schema.SObjectField>{ Account.Name, Account.Id });
   }
 
   /**
    * Concatinate Contact names and set as Account Description
    */
-  protected override void beforeUpdate(SObject oldRecord, SObject newRecord, SObject queriedRecord) {
+  public override void beforeUpdate(SObject oldRecord, SObject newRecord, SObject queriedRecord) {
     Account newAccount = (Account) newRecord;
     Account queriedAccount = (Account) queriedRecord;
 

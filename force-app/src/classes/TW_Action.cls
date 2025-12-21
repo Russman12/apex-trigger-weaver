@@ -7,14 +7,13 @@ public abstract class TW_Action {
 
   @TestVisible
   private TW_Context ctx;
-  private SObject currentRecord;
 
   /**
    * @description Returns the DML queue used to enqueue DML operations.
    * @return DML queue.
    */
   @TestVisible
-  protected TW_DMLQueueable getDMLQueue() {
+  public TW_DMLQueueable getDMLQueue() {
     return this.ctx.getDMLQueue();
   }
 
@@ -27,14 +26,6 @@ public abstract class TW_Action {
       throw new InvalidContextException('Context can only be set once');
     }
     this.ctx = ctx;
-  }
-
-  /**
-   * @description Returns the context for the trigger weaver action.
-   * @return The context.
-   */
-  public TW_Context getContext() {
-    return this.ctx;
   }
 
   /**
@@ -61,7 +52,7 @@ public abstract class TW_Action {
   protected Boolean isChanged(Schema.SObjectField field) {
     System.TriggerOperation ctxOp = this.ctx.getOperation();
     if (ctxOp == System.TriggerOperation.BEFORE_UPDATE || ctxOp == System.TriggerOperation.BEFORE_UPDATE) {
-      return this.ctx.getOldMap().get(this.currentRecord.Id).get(field) != this.currentRecord.get(field);
+      return this.ctx.getOldMap().get(this.ctx.currentUpdateRecord.Id).get(field) != this.ctx.currentUpdateRecord.get(field);
     }
     return false;
   }
@@ -75,9 +66,9 @@ public abstract class TW_Action {
   protected Boolean anyChanged(Schema.SObjectField[] fields) {
     System.TriggerOperation ctxOp = this.ctx.getOperation();
     if (ctxOp == System.TriggerOperation.BEFORE_UPDATE || ctxOp == System.TriggerOperation.BEFORE_UPDATE) {
-      SObject oldRec = this.ctx.getOldMap().get(this.currentRecord.Id);
+      SObject oldRec = this.ctx.getOldMap().get(this.ctx.currentUpdateRecord.Id);
       for (Schema.SObjectField field : fields) {
-        if (oldRec.get(field) != this.currentRecord.get(field)) {
+        if (oldRec.get(field) != this.ctx.currentUpdateRecord.get(field)) {
           return true;
         }
       }
@@ -94,9 +85,9 @@ public abstract class TW_Action {
   protected Boolean allChanged(Schema.SObjectField[] fields) {
     System.TriggerOperation ctxOp = this.ctx.getOperation();
     if (ctxOp == System.TriggerOperation.BEFORE_UPDATE || ctxOp == System.TriggerOperation.BEFORE_UPDATE) {
-      SObject oldRec = this.ctx.getOldMap().get(this.currentRecord.Id);
+      SObject oldRec = this.ctx.getOldMap().get(this.ctx.currentUpdateRecord.Id);
       for (Schema.SObjectField field : fields) {
-        if (oldRec.get(field) == this.currentRecord.get(field)) {
+        if (oldRec.get(field) == this.ctx.currentUpdateRecord.get(field)) {
           return false;
         }
       }
@@ -120,49 +111,49 @@ public abstract class TW_Action {
    * @description Logic that executes once for the action before primary before insert logic.
    */
   @TestVisible
-  protected virtual void beforeInsertSetup() {
+  public virtual void beforeInsertSetup() {
   }
   /**
    * @description Logic that executes once for the action before primary after insert logic.
    * @param TW_QuerySelectionable selection The selection that will be used to query related records.
    */
   @TestVisible
-  protected virtual void afterInsertSetup(TW_QuerySelectionable selection) {
+  public virtual void afterInsertSetup(TW_QuerySelectionable selection) {
   }
   /**
    * @description Logic that executes once for the action before primary before update logic.
    * @param TW_QuerySelectionable selection The selection that will be used to query related records.
    */
   @TestVisible
-  protected virtual void beforeUpdateSetup(TW_QuerySelectionable selection) {
+  public virtual void beforeUpdateSetup(TW_QuerySelectionable selection) {
   }
   /**
    * @description Logic that executes once for the action before primary after update logic.
    * @param TW_QuerySelectionable selection The selection that will be used to query related records.
    */
   @TestVisible
-  protected virtual void afterUpdateSetup(TW_QuerySelectionable selection) {
+  public virtual void afterUpdateSetup(TW_QuerySelectionable selection) {
   }
   /**
    * @description Logic that executes once for the action before primary before delete logic.
    * @param TW_QuerySelectionable selection The selection that will be used to query related records.
    */
   @TestVisible
-  protected virtual void beforeDeleteSetup(TW_QuerySelectionable selection) {
+  public virtual void beforeDeleteSetup(TW_QuerySelectionable selection) {
   }
   /**
    * @description Logic that executes once for the action before primary after delete logic.
    * @param TW_QuerySelectionable selection The selection that will be used to query related records.
    */
   @TestVisible
-  protected virtual void afterDeleteSetup(TW_QuerySelectionable selection) {
+  public virtual void afterDeleteSetup(TW_QuerySelectionable selection) {
   }
   /**
    * @description Logic that executes once for the action before primary after undelete logic.
    * @param TW_QuerySelectionable selection The selection that will be used to query related records.
    */
   @TestVisible
-  protected virtual void afterUndeleteSetup(TW_QuerySelectionable selection) {
+  public virtual void afterUndeleteSetup(TW_QuerySelectionable selection) {
   }
 
   /**
@@ -173,7 +164,7 @@ public abstract class TW_Action {
    * @return Boolean indicating whether the record should be processed.
    */
   @TestVisible
-  protected virtual Boolean beforeInsertFilter(SObject newRecord) {
+  public virtual Boolean beforeInsertFilter(SObject newRecord) {
     return true;
   }
   /**
@@ -184,7 +175,7 @@ public abstract class TW_Action {
    * @return Boolean indicating whether the record should be processed.
    */
   @TestVisible
-  protected virtual Boolean afterInsertFilter(SObject newRecord) {
+  public virtual Boolean afterInsertFilter(SObject newRecord) {
     return true;
   }
   /**
@@ -195,7 +186,7 @@ public abstract class TW_Action {
    * @return Boolean indicating whether the record should be processed.
    */
   @TestVisible
-  protected virtual Boolean beforeUpdateFilter(SObject oldRecord, SObject newRecord) {
+  public virtual Boolean beforeUpdateFilter(SObject oldRecord, SObject newRecord) {
     return true;
   }
   /**
@@ -206,7 +197,7 @@ public abstract class TW_Action {
    * @return Boolean indicating whether the record should be processed.
    */
   @TestVisible
-  protected virtual Boolean afterUpdateFilter(SObject oldRecord, SObject newRecord) {
+  public virtual Boolean afterUpdateFilter(SObject oldRecord, SObject newRecord) {
     return true;
   }
   /**
@@ -217,7 +208,7 @@ public abstract class TW_Action {
    * @return Boolean indicating whether the record should be processed.
    */
   @TestVisible
-  protected virtual Boolean beforeDeleteFilter(SObject oldRecord) {
+  public virtual Boolean beforeDeleteFilter(SObject oldRecord) {
     return true;
   }
   /**
@@ -228,7 +219,7 @@ public abstract class TW_Action {
    * @return Boolean indicating whether the record should be processed.
    */
   @TestVisible
-  protected virtual Boolean afterDeleteFilter(SObject oldRecord) {
+  public virtual Boolean afterDeleteFilter(SObject oldRecord) {
     return true;
   }
   /**
@@ -239,7 +230,7 @@ public abstract class TW_Action {
    * @return Boolean indicating whether the record should be processed.
    */
   @TestVisible
-  protected virtual Boolean afterUndeleteFilter(SObject newRecord) {
+  public virtual Boolean afterUndeleteFilter(SObject newRecord) {
     return true;
   }
 
@@ -248,7 +239,7 @@ public abstract class TW_Action {
    * @param SObject newRecord The new record from trigger.
    */
   @TestVisible
-  protected virtual void beforeInsert(SObject newRecord) {
+  public virtual void beforeInsert(SObject newRecord) {
   }
   /**
    * @description Primary logic that executes for each record after insert.
@@ -257,7 +248,7 @@ public abstract class TW_Action {
    * @return List of records to insert.
    */
   @TestVisible
-  protected virtual void afterInsert(SObject newRecord, SObject queriedRecord) {
+  public virtual void afterInsert(SObject newRecord, SObject queriedRecord) {
   }
   /**
    * @description Primary logic that executes for each record before update.
@@ -267,7 +258,7 @@ public abstract class TW_Action {
    * @return List of records to insert.
    */
   @TestVisible
-  protected virtual void beforeUpdate(SObject oldRecord, SObject newRecord, SObject queriedRecord) {
+  public virtual void beforeUpdate(SObject oldRecord, SObject newRecord, SObject queriedRecord) {
   }
   /**
    * @description Primary logic that executes for each record after update.
@@ -276,7 +267,7 @@ public abstract class TW_Action {
    * @param SObject queriedRecord The record with queried data applied.
    */
   @TestVisible
-  protected virtual void afterUpdate(SObject oldRecord, SObject newRecord, SObject queriedRecord) {
+  public virtual void afterUpdate(SObject oldRecord, SObject newRecord, SObject queriedRecord) {
   }
   /**
    * @description Primary logic that executes for each record before delete.
@@ -285,7 +276,7 @@ public abstract class TW_Action {
    * @param SObject queriedRecord The record with queried data applied.
    */
   @TestVisible
-  protected virtual void beforeDelete(SObject oldRecord, SObject queriedRecord) {
+  public virtual void beforeDelete(SObject oldRecord, SObject queriedRecord) {
   }
   /**
    * @description Primary logic that executes for each record after delete.
@@ -293,7 +284,7 @@ public abstract class TW_Action {
    * @param SObject queriedRecord The record with queried data applied.
    */
   @TestVisible
-  protected virtual void afterDelete(SObject oldRecord, SObject queriedRecord) {
+  public virtual void afterDelete(SObject oldRecord, SObject queriedRecord) {
   }
   /**
    * @description Primary logic that executes for each record after undelete.
@@ -301,144 +292,7 @@ public abstract class TW_Action {
    * @param SObject queriedRecord The record with queried data applied.
    */
   @TestVisible
-  protected virtual void afterUndelete(SObject newRecord, SObject queriedRecord) {
-  }
-
-  /**
-   * @description Primary logic that executes for each record after delete.
-   * @param SObject oldRecord The old record from trigger.
-   * @param SObject queriedRecord The record with queried data applied.
-   */
-  public void executeSetup(TW_QuerySelectionable selection) {
-    if (this.ctx == null) {
-      throw new InvalidContextException('Context must be set to perform this action. Run setContext(TW_Context ctx) first');
-    }
-
-    switch on this.ctx.getOperation() {
-      when BEFORE_INSERT {
-        this.beforeInsertSetup();
-        for (SObject newRecord : this.ctx.getNew()) {
-          if (this.beforeInsertFilter(newRecord)) {
-            ctx.addFilteredRecord(this.t, newRecord);
-          }
-        }
-      }
-      when AFTER_INSERT {
-        this.afterInsertSetup(selection);
-        for (SObject newRecord : this.ctx.getNew()) {
-          if (this.afterInsertFilter(newRecord)) {
-            ctx.addFilteredRecord(this.t, newRecord);
-          }
-        }
-      }
-      when BEFORE_UPDATE {
-        this.beforeUpdateSetup(selection);
-        for (SObject newRecord : this.ctx.getNew()) {
-          this.currentRecord = newRecord;
-          SObject oldRecord = this.ctx.getOldMap().get(newRecord.Id);
-          if (this.beforeUpdateFilter(oldRecord, newRecord)) {
-            ctx.addFilteredRecord(this.t, newRecord);
-          }
-        }
-      }
-      when AFTER_UPDATE {
-        this.afterUpdateSetup(selection);
-        for (SObject newRecord : this.ctx.getNew()) {
-          this.currentRecord = newRecord;
-          SObject oldRecord = this.ctx.getOldMap().get(newRecord.Id);
-          if (this.afterUpdateFilter(oldRecord, newRecord)) {
-            ctx.addFilteredRecord(this.t, newRecord);
-          }
-        }
-      }
-      when BEFORE_DELETE {
-        this.beforeDeleteSetup(selection);
-        for (SObject oldRecord : this.ctx.getOld()) {
-          if (this.beforeDeleteFilter(oldRecord)) {
-            ctx.addFilteredRecord(this.t, oldRecord);
-          }
-        }
-      }
-      when AFTER_DELETE {
-        this.afterDeleteSetup(selection);
-        for (SObject oldRecord : this.ctx.getOld()) {
-          if (this.afterDeleteFilter(oldRecord)) {
-            ctx.addFilteredRecord(this.t, oldRecord);
-          }
-        }
-      }
-      when AFTER_UNDELETE {
-        this.afterUndeleteSetup(selection);
-        for (SObject newRecord : this.ctx.getNew()) {
-          if (this.afterUndeleteFilter(newRecord)) {
-            ctx.addFilteredRecord(this.t, newRecord);
-          }
-        }
-      }
-    }
-  }
-  /**
-   * @description Executes primary functionality for trigger weaver action for each record which meets filter criteria.
-   */
-  public void execute() {
-    if (this.ctx == null) {
-      throw new InvalidContextException('Context must be set to perform this action. Run setContext(TW_Context ctx) first');
-    }
-    switch on this.ctx.getOperation() {
-      when BEFORE_INSERT {
-        for (SObject newRecord : this.ctx.filteredRecords()) {
-          if (this.beforeInsertFilter(newRecord)) {
-            this.beforeInsert(newRecord);
-          }
-        }
-      }
-      when AFTER_INSERT {
-        for (SObject newRecord : this.ctx.filteredRecords()) {
-          if (this.afterInsertFilter(newRecord)) {
-            this.afterInsert(newRecord, this.ctx.getQueriedRecordMap().get(newRecord.Id));
-          }
-        }
-      }
-      when BEFORE_UPDATE {
-        for (SObject newRecord : this.ctx.filteredRecords()) {
-          this.currentRecord = newRecord;
-          SObject oldRecord = this.ctx.getOldMap().get(newRecord.Id);
-          if (this.beforeUpdateFilter(oldRecord, newRecord)) {
-            this.beforeUpdate(oldRecord, newRecord, this.ctx.getQueriedRecordMap().get(newRecord.Id));
-          }
-        }
-      }
-      when AFTER_UPDATE {
-        for (SObject newRecord : this.ctx.filteredRecords()) {
-          this.currentRecord = newRecord;
-          SObject oldRecord = this.ctx.getOldMap().get(newRecord.Id);
-          if (this.afterUpdateFilter(oldRecord, newRecord)) {
-            this.afterUpdate(oldRecord, newRecord, this.ctx.getQueriedRecordMap().get(newRecord.Id));
-          }
-        }
-      }
-      when BEFORE_DELETE {
-        for (SObject oldRecord : this.ctx.filteredRecords()) {
-          if (this.beforeDeleteFilter(oldRecord)) {
-            this.beforeDelete(oldRecord, this.ctx.getQueriedRecordMap().get(oldRecord.Id));
-          }
-        }
-      }
-      when AFTER_DELETE {
-        for (SObject oldRecord : this.ctx.filteredRecords()) {
-          if (this.afterDeleteFilter(oldRecord)) {
-            this.afterDelete(oldRecord, this.ctx.getQueriedRecordMap().get(oldRecord.Id));
-          }
-        }
-      }
-      when AFTER_UNDELETE {
-        for (SObject newRecord : this.ctx.filteredRecords()) {
-          if (this.afterUndeleteFilter(newRecord)) {
-            this.afterUndelete(newRecord, this.ctx.getQueriedRecordMap().get(newRecord.Id));
-          }
-        }
-      }
-    }
+  public virtual void afterUndelete(SObject newRecord, SObject queriedRecord) {
   }
 
   public class InvalidContextException extends Exception {

@@ -25,6 +25,8 @@ public with sharing class TW_Context {
   private final List<SObject> globalFilteredRecords;
   private final TW_DMLQueueable dmlQueue;
 
+  public SObject currentUpdateRecord;
+
   /**
    * @description Creates a new TW_Context instance. Throws exception if not in trigger context.
    * @param idField The Id field of the SObject type.
