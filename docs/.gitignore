@@ -2,5 +2,4 @@
 !.gitignore
 !index-frontmatter.md
 !.vitepress
-!.vitepress/sidebar.json
 !.vitepress/config.mts
