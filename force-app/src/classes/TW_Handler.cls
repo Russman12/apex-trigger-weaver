@@ -14,15 +14,16 @@ public virtual class TW_Handler {
 
   private static final String BIND_NAME = 'recordIds';
   private static final Set<Type> bypasses = new Set<Type>();
-  private static Map<Schema.SObjectType, List<Trigger_Weaver__mdt>> activeTWSBySObj;
-  private static List<Trigger_Weaver__mdt> getActiveTWSForSObj(Schema.SObjectType sObjType) {
+  private static Map<Schema.SObjectType, List<TW_Action__mdt>> activeTWSBySObj;
+
+  private static List<TW_Action__mdt> getActiveTWSForSObj(Schema.SObjectType sObjType) {
     if (activeTWSBySObj == null) {
-      activeTWSBySObj = new Map<Schema.SObjectType, List<Trigger_Weaver__mdt>>();
-      for (Trigger_Weaver__mdt tw : Trigger_Weaver__mdt.getAll().values()) {
+      activeTWSBySObj = new Map<Schema.SObjectType, List<TW_Action__mdt>>();
+      for (TW_Action__mdt tw : TW_Action__mdt.getAll().values()) {
         if (tw.Active__c) {
           SObjectType twSObjType = ((SObject) Type.forName(tw.SObject_Name__c).newInstance()).getSObjectType();
           if (!activeTWSBySObj.containsKey(twSObjType)) {
-            activeTWSBySObj.put(twSObjType, new List<Trigger_Weaver__mdt>());
+            activeTWSBySObj.put(twSObjType, new List<TW_Action__mdt>());
           }
           activeTWSBySObj.get(twSObjType).add(tw);
         }
@@ -107,12 +108,12 @@ public virtual class TW_Handler {
   }
 
   private TW_Handler autoRegister() {
-    List<Trigger_Weaver__mdt> tws = getActiveTWSForSObj(this.sObjType);
+    List<TW_Action__mdt> tws = getActiveTWSForSObj(this.sObjType);
     if (tws == null) {
       return this;
     }
 
-    for (Trigger_Weaver__mdt tw : tws) {
+    for (TW_Action__mdt tw : tws) {
       System.Type t = System.Type.forName(tw.DeveloperName);
       TW_Action action = (TW_Action) t.newInstance();
       action.setType(t);
