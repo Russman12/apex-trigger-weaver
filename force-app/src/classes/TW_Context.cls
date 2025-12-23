@@ -30,7 +30,7 @@ public with sharing class TW_Context {
   private Map<Id, SObject> oldRecsMap = Trigger.oldMap;
   @TestVisible
   private Boolean isUpdate = Trigger.isUpdate;
-
+  @TestVisible
   private Map<Id, SObject> queriedRecords;
 
   /**
@@ -48,13 +48,13 @@ public with sharing class TW_Context {
    * ```
    */
   public TW_Context(TW_DMLQueue dmlQueue, TW_Query query) {
+    this.dmlQueue = dmlQueue;
+    this.query = query;
+
     //throw execption if not in trigger context
     if (!Trigger.isExecuting) {
       throw new InvalidContextException('Unable to create TW_Handler outside of a trigger context');
     }
-
-    this.dmlQueue = dmlQueue;
-    this.query = query;
   }
 
   @TestVisible
@@ -164,9 +164,6 @@ public with sharing class TW_Context {
    * ```
    */
   public Map<Id, SObject> getQueriedRecordMap() {
-    if (queriedRecords == null) {
-      throw new InvalidContextException('unable to retrieve queried records before setup completes');
-    }
     return queriedRecords.deepClone();
   }
 
