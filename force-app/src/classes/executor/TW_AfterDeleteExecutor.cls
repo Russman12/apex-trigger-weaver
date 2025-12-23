@@ -1,3 +1,7 @@
+/**
+ * @description Handles After Delete trigger context execution
+ * @internal
+ */
 public with sharing class TW_AfterDeleteExecutor implements TW_Executor {
   private final TW_Context ctx;
 

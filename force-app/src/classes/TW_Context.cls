@@ -2,7 +2,7 @@
  * @description Contains functionality relating to the global trigger execution. Data and functions
  * contained within this class should be common to all trigger weaver actions part of the running
  * execution context.
- * @group Framework
+ * @internal
  */
 public with sharing class TW_Context {
   private static final Set<System.TriggerOperation> QUERY_CONTEXTS = new Set<System.TriggerOperation>{
@@ -19,6 +19,9 @@ public with sharing class TW_Context {
 
   private Map<Id, SObject> queriedRecords;
 
+  /**
+   * @description The current record which is being executed.
+   */
   public SObject currentRecord;
 
   /**
@@ -41,18 +44,9 @@ public with sharing class TW_Context {
   }
 
   /**
-   * @description Returns true if the current trigger operation is a candidate for querying.
-   * @return True if the current trigger operation is a candidate for querying.
-   * @example
-   * ```
-   * TW_Context ctx = new TW_Context();
-   * Boolean isQueryContext = ctx.isQueryContext();
-   * ```
+   * @description Returns the query instance.
+   * @return The query instance.
    */
-  public Boolean isQueryContext() {
-    return QUERY_CONTEXTS.contains(Trigger.operationType);
-  }
-
   public TW_Query getQuery() {
     return query;
   }
@@ -96,10 +90,6 @@ public with sharing class TW_Context {
     return Trigger.newMap;
   }
 
-  public SObject getNew(SObject r) {
-    return Trigger.newMap.get(r.Id);
-  }
-
   /**
    * @description Returns old trigger records.
    * @return Old trigger records.
@@ -111,6 +101,15 @@ public with sharing class TW_Context {
    */
   public List<SObject> getOld() {
     return Trigger.old;
+  }
+
+  /**
+   * @description Returns old trigger record for the given record. The
+   * given record must have an Id set.
+   * @return The old record.
+   */
+  public SObject getOld(SObject r) {
+    return Trigger.oldMap.get(r.Id);
   }
 
   /**
@@ -126,12 +125,9 @@ public with sharing class TW_Context {
     return Trigger.oldMap;
   }
 
-  public SObject getOld(SObject r) {
-    return Trigger.oldMap.get(r.Id);
-  }
-
   /**
-   * @description Returns old or new records depending trigger context.
+   * @description Returns either new trigger records if set, else returns old records.
+   * @return The list of trigger records
    */
   public List<SObject> getRecords() {
     if (Trigger.new != null && !Trigger.new.isEmpty()) {
@@ -156,6 +152,17 @@ public with sharing class TW_Context {
     return queriedRecords.deepClone();
   }
 
+  /**
+   * @description Returns queried instance of the given record. Executes query if results are unset.
+   * This should only be called after the query selector is fully constructed.
+   * @return The SObject record.
+   * @example
+   * ```
+   * TW_Context ctx = new TW_Context();
+   * SObject queriedRec1 = ctx.getQueriedRecord(rec1); // executes query and returns record
+   * SObject queriedRec2 = ctx.getQueriedRecord(rec2); // returns record and does not query again
+   * ```
+   */
   public SObject getQueriedRecord(SObject rec) {
     if (queriedRecords == null) {
       queriedRecords = new Map<Id, SObject>();

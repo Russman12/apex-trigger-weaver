@@ -1,3 +1,7 @@
+/**
+ * @description Handles Before Update trigger context execution
+ * @internal
+ */
 public with sharing class TW_BeforeUpdateExecutor implements TW_Executor {
   private final TW_Context ctx;
 

@@ -1,3 +1,7 @@
+/**
+ * @description Handles Before Delete trigger context execution
+ * @internal
+ */
 public with sharing class TW_BeforeDeleteExecutor implements TW_Executor {
   private final TW_Context ctx;
 

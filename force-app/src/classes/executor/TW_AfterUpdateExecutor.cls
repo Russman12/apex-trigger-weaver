@@ -1,3 +1,7 @@
+/**
+ * @description Handles After Update trigger context execution
+ * @internal
+ */
 public with sharing class TW_AfterUpdateExecutor implements TW_Executor {
   private final TW_Context ctx;
 

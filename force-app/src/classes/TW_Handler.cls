@@ -109,7 +109,7 @@ public virtual class TW_Handler {
   }
 
   /**
-   * @description Executes all registered trigger weaver actions.
+   * @description Executes all registered trigger actions.
    */
   public void execute() {
     TW_Executor e = getExecutor(ctx.getOperation());

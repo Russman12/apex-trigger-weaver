@@ -1,3 +1,7 @@
+/**
+ * @description Handles After Insert trigger context execution
+ * @internal
+ */
 public with sharing class TW_AfterInsertExecutor implements TW_Executor {
   private final TW_Context ctx;
 
