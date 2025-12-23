@@ -38,6 +38,46 @@ public with sharing class TW_ActionTest {
   }
 
   /**
+   * Ensures oldRecords delegates to context
+   */
+  @IsTest
+  static void oldRecords() {
+    TW_Action action = new MyAction();
+    action.ctx = ctxStub;
+
+    List<SObject> records = new List<SObject>{ new Account() };
+
+    MethodSpy spy = ctxMock.spyOn('getOld');
+    spy.returns(records);
+
+    Test.startTest();
+    System.Assert.areEqual(records, action.oldRecords(), 'unexpected result returned');
+    Test.stopTest();
+
+    Expect.that(spy).hasBeenCalledTimes(1);
+  }
+
+  /**
+   * Ensures newRecords delegates to context
+   */
+  @IsTest
+  static void newRecords() {
+    TW_Action action = new MyAction();
+    action.ctx = ctxStub;
+
+    List<SObject> records = new List<SObject>{ new Account() };
+
+    MethodSpy spy = ctxMock.spyOn('getNew');
+    spy.returns(records);
+
+    Test.startTest();
+    System.Assert.areEqual(records, action.newRecords(), 'unexpected result returned');
+    Test.stopTest();
+
+    Expect.that(spy).hasBeenCalledTimes(1);
+  }
+
+  /**
    * Ensures InvalidContextException is thrown if context set more than once.
    */
   @IsTest
@@ -50,9 +90,70 @@ public with sharing class TW_ActionTest {
       action.setContext(ctxStub);
       System.Assert.fail('expected exception not thrown');
     } catch (Exception e) {
-      System.Assert.isInstanceOfType(e, TW_Action.InvalidContextException.class, 'unexpected exception thrown');
+      System.Assert.isInstanceOfType(e, TW_Action.InvalidActionException.class, 'unexpected exception thrown');
     }
     Test.stopTest();
+  }
+
+  /**
+   * Ensures isChanged delegates to context
+   */
+  @IsTest
+  static void isChanged() {
+    TW_Action action = new MyAction();
+    action.ctx = ctxStub;
+
+    MethodSpy spy = ctxMock.spyOn('isChanged');
+    spy.returns(true);
+
+    Test.startTest();
+    System.Assert.isTrue(action.isChanged(Account.Name), 'unexpected result returned');
+    Test.stopTest();
+
+    Expect.that(spy).hasBeenCalledTimes(1);
+    Expect.that(spy).hasBeenCalledWith(Account.Name);
+  }
+
+  /**
+   * Ensures anyChanged delegates to context
+   */
+  @IsTest
+  static void anyChanged() {
+    TW_Action action = new MyAction();
+    action.ctx = ctxStub;
+
+    MethodSpy spy = ctxMock.spyOn('anyChanged');
+    spy.returns(true);
+
+    SObjectField[] fields = new List<SObjectField>{ Account.Name, Account.Phone };
+
+    Test.startTest();
+    System.Assert.isTrue(action.anyChanged(fields), 'unexpected result returned');
+    Test.stopTest();
+
+    Expect.that(spy).hasBeenCalledTimes(1);
+    Expect.that(spy).hasBeenCalledWith(fields);
+  }
+
+  /**
+   * Ensures anyChanged delegates to context
+   */
+  @IsTest
+  static void allChanged() {
+    TW_Action action = new MyAction();
+    action.ctx = ctxStub;
+
+    MethodSpy spy = ctxMock.spyOn('allChanged');
+    spy.returns(true);
+
+    SObjectField[] fields = new List<SObjectField>{ Account.Name, Account.Phone };
+
+    Test.startTest();
+    System.Assert.isTrue(action.allChanged(fields), 'unexpected result returned');
+    Test.stopTest();
+
+    Expect.that(spy).hasBeenCalledTimes(1);
+    Expect.that(spy).hasBeenCalledWith(fields);
   }
 
   /**
@@ -127,85 +228,6 @@ public with sharing class TW_ActionTest {
     }
   }
 
-  private class MyEmptyAction extends TW_Action {
-  }
-
   private class MyAction extends TW_Action {
-    private Map<String, Object> methodCalls = new Map<String, Object>();
-
-    private Boolean filterReturnVal = true;
-
-    public override void beforeInsertSetup() {
-      methodCalls.put('beforeInsertSetup', null);
-    }
-    public override void afterInsertSetup(TW_QuerySelector selection) {
-      methodCalls.put('afterInsertSetup', selection);
-    }
-    public override void beforeUpdateSetup(TW_QuerySelector selection) {
-      methodCalls.put('beforeUpdateSetup', selection);
-    }
-    public override void afterUpdateSetup(TW_QuerySelector selection) {
-      methodCalls.put('afterUpdateSetup', selection);
-    }
-    public override void beforeDeleteSetup(TW_QuerySelector selection) {
-      methodCalls.put('beforeDeleteSetup', selection);
-    }
-    public override void afterDeleteSetup(TW_QuerySelector selection) {
-      methodCalls.put('afterDeleteSetup', selection);
-    }
-    public override void afterUndeleteSetup(TW_QuerySelector selection) {
-      methodCalls.put('afterUndeleteSetup', selection);
-    }
-
-    public override Boolean beforeInsertFilter(SObject newRecord) {
-      methodCalls.put('beforeInsertFilter', newRecord);
-      return this.filterReturnVal;
-    }
-    public override Boolean afterInsertFilter(SObject newRecord) {
-      methodCalls.put('afterInsertFilter', newRecord);
-      return this.filterReturnVal;
-    }
-    public override Boolean beforeUpdateFilter(SObject oldRecord, SObject newRecord) {
-      methodCalls.put('beforeUpdateFilter', new List<Object>{ oldRecord, newRecord });
-      return this.filterReturnVal;
-    }
-    public override Boolean afterUpdateFilter(SObject oldRecord, SObject newRecord) {
-      methodCalls.put('afterUpdateFilter', new List<Object>{ oldRecord, newRecord });
-      return this.filterReturnVal;
-    }
-    public override Boolean beforeDeleteFilter(SObject oldRecord) {
-      methodCalls.put('beforeDeleteFilter', oldRecord);
-      return this.filterReturnVal;
-    }
-    public override Boolean afterDeleteFilter(SObject oldRecord) {
-      methodCalls.put('afterDeleteFilter', oldRecord);
-      return this.filterReturnVal;
-    }
-    public override Boolean afterUndeleteFilter(SObject newRecord) {
-      methodCalls.put('afterUndeleteFilter', newRecord);
-      return this.filterReturnVal;
-    }
-
-    public override void beforeInsert(SObject newRecord) {
-      methodCalls.put('beforeInsert', newRecord);
-    }
-    public override void afterInsert(SObject newRecord, SObject queriedRecord) {
-      methodCalls.put('afterInsert', new List<Object>{ newRecord, queriedRecord });
-    }
-    public override void beforeUpdate(SObject oldRecord, SObject newRecord, SObject queriedRecord) {
-      methodCalls.put('beforeUpdate', new List<Object>{ oldRecord, newRecord, queriedRecord });
-    }
-    public override void afterUpdate(SObject oldRecord, SObject newRecord, SObject queriedRecord) {
-      methodCalls.put('afterUpdate', new List<Object>{ oldRecord, newRecord, queriedRecord });
-    }
-    public override void beforeDelete(SObject oldRecord, SObject queriedRecord) {
-      methodCalls.put('beforeDelete', new List<Object>{ oldRecord, queriedRecord });
-    }
-    public override void afterDelete(SObject oldRecord, SObject queriedRecord) {
-      methodCalls.put('afterDelete', new List<Object>{ oldRecord, queriedRecord });
-    }
-    public override void afterUndelete(SObject newRecord, SObject queriedRecord) {
-      methodCalls.put('afterUndelete', new List<Object>{ newRecord, queriedRecord });
-    }
   }
 }

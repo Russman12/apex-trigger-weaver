@@ -187,6 +187,51 @@ public with sharing class TW_Context {
   }
 
   /**
+   * @Returns True if the field has changed for the current record. Throws exception if not update context.
+   * @param field Field to check.
+   */
+  public Boolean isChanged(Schema.SObjectField field) {
+    if (!Trigger.isUpdate) {
+      throw new InvalidContextException('isChanged can only be called in an update context');
+    }
+    return getOld(currentRecord).get(field) != currentRecord.get(field);
+  }
+
+  /**
+   * @Returns True if any of the given fields have changed for the current record. Throws exception if not update context.
+   * @param fields Fields to check.
+   */
+  public Boolean anyChanged(List<Schema.SObjectField> fields) {
+    if (!Trigger.isUpdate) {
+      throw new InvalidContextException('isChanged can only be called in an update context');
+    }
+    SObject oldRec = getOld(currentRecord);
+    for (Schema.SObjectField field : fields) {
+      if (oldRec.get(field) != currentRecord.get(field)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * @Returns True if all of the given fields have changed for the current record. Throws exception if not update context.
+   * @param fields Fields to check.
+   */
+  public Boolean allChanged(List<Schema.SObjectField> fields) {
+    if (!Trigger.isUpdate) {
+      throw new InvalidContextException('isChanged can only be called in an update context');
+    }
+    SObject oldRec = getOld(currentRecord);
+    for (Schema.SObjectField field : fields) {
+      if (oldRec.get(field) == currentRecord.get(field)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /**
    * @description Represents an exception relating to the context.
    */
   public class InvalidContextException extends Exception {

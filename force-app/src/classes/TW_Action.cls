@@ -3,8 +3,6 @@
  * @group Framework
  */
 public abstract class TW_Action {
-  private System.Type t;
-
   @TestVisible
   private TW_Context ctx;
 
@@ -23,7 +21,7 @@ public abstract class TW_Action {
    */
   public void setContext(TW_Context ctx) {
     if (this.ctx != null) {
-      throw new InvalidContextException('Context can only be set once');
+      throw new InvalidActionException('Context can only be set once');
     }
     this.ctx = ctx;
   }
@@ -33,7 +31,7 @@ public abstract class TW_Action {
    * @return Old records.
    */
   public List<SObject> oldRecords() {
-    return this.ctx.getOld();
+    return ctx.getOld();
   }
 
   /**
@@ -41,7 +39,7 @@ public abstract class TW_Action {
    * @return New records.
    */
   public List<SObject> newRecords() {
-    return this.ctx.getOld();
+    return ctx.getNew();
   }
 
   /**
@@ -50,12 +48,9 @@ public abstract class TW_Action {
    * @param field Field to check.
    * @return True if the field has changed.
    */
+  @TestVisible
   protected Boolean isChanged(Schema.SObjectField field) {
-    System.TriggerOperation ctxOp = this.ctx.getOperation();
-    if (ctxOp == System.TriggerOperation.BEFORE_UPDATE || ctxOp == System.TriggerOperation.BEFORE_UPDATE) {
-      return this.ctx.getOldMap().get(this.ctx.currentRecord.Id).get(field) != this.ctx.currentRecord.get(field);
-    }
-    return false;
+    return ctx.isChanged(field);
   }
 
   /**
@@ -64,17 +59,9 @@ public abstract class TW_Action {
    * @param fields Fields to check.
    * @return True if any of the fields have changed.
    */
+  @TestVisible
   protected Boolean anyChanged(Schema.SObjectField[] fields) {
-    System.TriggerOperation ctxOp = this.ctx.getOperation();
-    if (ctxOp == System.TriggerOperation.BEFORE_UPDATE || ctxOp == System.TriggerOperation.BEFORE_UPDATE) {
-      SObject oldRec = this.ctx.getOldMap().get(this.ctx.currentRecord.Id);
-      for (Schema.SObjectField field : fields) {
-        if (oldRec.get(field) != this.ctx.currentRecord.get(field)) {
-          return true;
-        }
-      }
-    }
-    return false;
+    return ctx.anyChanged(fields);
   }
 
   /**
@@ -83,18 +70,9 @@ public abstract class TW_Action {
    * @param fields Fields to check.
    * @return True if all of the fields have changed.
    */
+  @TestVisible
   protected Boolean allChanged(Schema.SObjectField[] fields) {
-    System.TriggerOperation ctxOp = this.ctx.getOperation();
-    if (ctxOp == System.TriggerOperation.BEFORE_UPDATE || ctxOp == System.TriggerOperation.BEFORE_UPDATE) {
-      SObject oldRec = this.ctx.getOldMap().get(this.ctx.currentRecord.Id);
-      for (Schema.SObjectField field : fields) {
-        if (oldRec.get(field) == this.ctx.currentRecord.get(field)) {
-          return false;
-        }
-      }
-      return true;
-    }
-    return false;
+    return ctx.allChanged(fields);
   }
 
   /**
@@ -285,6 +263,6 @@ public abstract class TW_Action {
   public virtual void afterUndelete(SObject newRecord, SObject queriedRecord) {
   }
 
-  public class InvalidContextException extends Exception {
+  public class InvalidActionException extends Exception {
   }
 }
