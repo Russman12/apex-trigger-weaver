@@ -18,7 +18,7 @@
     "scratch:install": "sf package install --package 04tDn0000011O0VIAU",
     "scratch:deploy": "sf project deploy start",
     "scratch:init": "npm run scratch:install && npm run scratch:deploy",
-    "scratch:new": "npm run scratch:create && npm run scratch:init npm run retrieve:deps",
+    "scratch:new": "npm run scratch:create && npm run scratch:init && npm run retrieve:deps",
     "docs:apexdocs": "apexdocs markdown",
     "docs:build": "npm run docs:apexdocs && vitepress build docs",
     "docs:dev": "npm run docs:apexdocs && vitepress dev docs",
