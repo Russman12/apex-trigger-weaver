@@ -14,7 +14,7 @@
     "prepare": "husky",
     "precommit": "npm run prettier && npm run lint",
     "retrieve:deps": "sf project retrieve start -n \"Apex Mockery\" --target-metadata-dir pkg -z",
-    "scratch:create": "sf org create scratch --definition-fikle config/project-scratch-def.json --alias trigger-weaver --duration-days 7 --set-default --json",
+    "scratch:create": "sf org create scratch --definition-file config/project-scratch-def.json --alias trigger-weaver --duration-days 7 --set-default --json",
     "scratch:install": "sf package install --package 04tDn0000011O0VIAU",
     "scratch:deploy": "sf project deploy start",
     "scratch:init": "npm run scratch:install && npm run scratch:deploy",
