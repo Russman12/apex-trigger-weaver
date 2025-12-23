@@ -2,7 +2,6 @@
  * @description This class provides a basic implementation of a query. Queries
  * are always executed in system mode.
  * @group Default Implementation
- *
  * @example
  * ```
  * TW_Query query = new TW_Query();
@@ -21,9 +20,7 @@ public class TW_DefaultQuery implements TW_Query {
 
   /**
    * @description Returns the query selection.
-   *
    * @return The query selection.
-   *
    * @example
    * ```
    * TW_Query query = new TW_Query();
@@ -37,7 +34,6 @@ public class TW_DefaultQuery implements TW_Query {
 
   /**
    * @description Runs the query and returns the results.
-   *
    * @param records The records to query.
    * @return The query results.
    */

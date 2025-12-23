@@ -2,9 +2,7 @@
  * @description This class provides a basic TW_DMLQueueable implementation
  * that allows DML queuing. Execution is AllOrNone so if any record fails DML,
  * an exception is thrown.
- *
  * @group Default Implementation
- *
  * @example
  * ```
  * TW_DMLQueue dmlQueue = new TW_DMLQueue();
@@ -17,9 +15,7 @@ public with sharing class TW_DefaultDMLQueue implements TW_DMLQueue {
 
   /**
    * @description Enqueues a record for insert
-   *
    * @param record The record to enqueue for insert
-   *
    * @example
    * ```
    * TW_DMLQueue dmlQueue = new TW_DMLQueue();
@@ -37,9 +33,7 @@ public with sharing class TW_DefaultDMLQueue implements TW_DMLQueue {
 
   /**
    * @description Enqueues a record for update
-   *
    * @param record The record to enqueue for update
-   *
    * @example
    * ```
    * TW_DMLQueue dmlQueue = new TW_DMLQueue();
@@ -57,9 +51,7 @@ public with sharing class TW_DefaultDMLQueue implements TW_DMLQueue {
 
   /**
    * @description Enqueues a record for delete
-   *
    * @param record The record to enqueue for delete
-   *
    * @example
    * ```
    * TW_DMLQueue dmlQueue = new TW_DMLQueue();
@@ -77,9 +69,7 @@ public with sharing class TW_DefaultDMLQueue implements TW_DMLQueue {
 
   /**
    * @description Enqueues a record for undelete
-   *
    * @param record The record to enqueue for undelete
-   *
    * @example
    * ```
    * TW_DMLQueue dmlQueue = new TW_DMLQueue();
@@ -97,9 +87,7 @@ public with sharing class TW_DefaultDMLQueue implements TW_DMLQueue {
 
   /**
    * @description Executes DML for all queued records and clears the queue
-   *
    * @returns null
-   *
    * @example
    * ```
    * TW_DMLQueue dmlQueue = new TW_DMLQueue();

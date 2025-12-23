@@ -1,7 +1,6 @@
 /**
  * @description This class provides a basic implementation of a query selection.
  * @group Default Implementation
- *
  * @example
  * ```
  * TW_QuerySelection query = new TW_QuerySelection(Account.SObjectType);
@@ -16,9 +15,7 @@ public with sharing class TW_DefaultQuerySelector implements TW_QuerySelector {
 
   /**
    * @description Returns true if the query selection has been set.
-   *
    * @return Boolean
-   *
    * @example
    * ```
    * TW_QuerySelection query = new TW_QuerySelection();
@@ -32,9 +29,7 @@ public with sharing class TW_DefaultQuerySelector implements TW_QuerySelector {
 
   /**
    * @description Adds a field to the query selection.
-   *
    * @param field The field to add.
-   *
    * @example
    * ```
    * TW_QuerySelection query = new TW_QuerySelection();
@@ -49,9 +44,7 @@ public with sharing class TW_DefaultQuerySelector implements TW_QuerySelector {
 
   /**
    * @description Adds multiple fields to the query selection.
-   *
    * @param fields The fields to add.
-   *
    * @example
    * ```
    * TW_QuerySelection query = new TW_QuerySelection();
@@ -65,9 +58,7 @@ public with sharing class TW_DefaultQuerySelector implements TW_QuerySelector {
 
   /**
    * @description Adds a parent field to the query selection.
-   *
    * @param relationshipPath The relationship path to add.
-   *
    * @example
    * ```
    * TW_QuerySelection query = new TW_QuerySelection();
@@ -81,9 +72,7 @@ public with sharing class TW_DefaultQuerySelector implements TW_QuerySelector {
 
   /**
    * @description Adds a child field to the query selection.
-   *
    * @param relationshipField The relationship field to add.
-   *
    * @example
    * ```
    * TW_QuerySelection query = new TW_QuerySelection();
@@ -97,9 +86,7 @@ public with sharing class TW_DefaultQuerySelector implements TW_QuerySelector {
 
   /**
    * @description Adds a child field to the query selection.
-   *
    * @param relationshipField The relationship field to add.
-   *
    * @example
    * ```
    * TW_QuerySelection query = new TW_QuerySelection();
@@ -115,9 +102,7 @@ public with sharing class TW_DefaultQuerySelector implements TW_QuerySelector {
 
   /**
    * @description Returns the query selection as a string.
-   *
    * @return The query selection as a string.
-   *
    * @example
    * ```
    * TW_QuerySelection query = new TW_QuerySelection();
