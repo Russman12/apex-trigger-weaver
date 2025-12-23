@@ -12,7 +12,7 @@
  * dmlQueue.flush();
  * ```
  */
-public with sharing class TW_DMLQueue implements TW_DMLQueueable {
+public with sharing class TW_DefaultDMLQueue implements TW_DMLQueue {
   private final Map<String, List<SObject>> dmlQueue = new Map<String, List<SObject>>();
 
   /**

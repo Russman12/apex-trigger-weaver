@@ -7,26 +7,15 @@
  * ```
  * TW_Query query = new TW_Query();
  * query.fromSObject(Account.getSObjectType());
- * query.getSelection(); //returns TW_QuerySelectionable
+ * query.getSelector(); //returns TW_QuerySelectionable
  * query.run(); //returns SObject[] query results
  * ```
  */
-public class TW_Query implements TW_Queryable {
-  private final TW_QuerySelection selection = new TW_QuerySelection();
+public class TW_DefaultQuery implements TW_Query {
+  private final TW_DefaultQuerySelector selector = new TW_DefaultQuerySelector();
   private Schema.SObjectType sObjType;
 
-  /**
-   * @description Assigns the FROM clause for query to given SObject.
-   *
-   * @param sObjType The SObject type to query.
-   *
-   * @example
-   * ```
-   * TW_Query query = new TW_Query();
-   * query.fromSObject(Account.getSObjectType());
-   * ```
-   */
-  public void fromSObject(Schema.SObjectType sObjType) {
+  public TW_DefaultQuery(Schema.SObjectType sObjType) {
     this.sObjType = sObjType;
   }
 
@@ -39,11 +28,11 @@ public class TW_Query implements TW_Queryable {
    * ```
    * TW_Query query = new TW_Query();
    * query.fromSObject(Account.getSObjectType());
-   * TW_QuerySelection selection = query.getSelection();
+   * TW_QuerySelection selection = query.getSelector();
    * ```
    */
-  public TW_QuerySelection getSelection() {
-    return this.selection;
+  public TW_DefaultQuerySelector getSelector() {
+    return this.selector;
   }
 
   /**
@@ -53,7 +42,7 @@ public class TW_Query implements TW_Queryable {
    * @return The query results.
    */
   public SObject[] run(List<SObject> records) {
-    String queryStr = this.selection.toClauseString() + ' FROM ' + this.sObjType.getDescribe().getName() + ' WHERE Id IN :records';
+    String queryStr = this.selector.toClauseString() + ' FROM ' + this.sObjType.getDescribe().getName() + ' WHERE Id IN :records';
 
     return Database.queryWithBinds(queryStr, new Map<String, Object>{ 'records' => records }, AccessLevel.SYSTEM_MODE);
   }

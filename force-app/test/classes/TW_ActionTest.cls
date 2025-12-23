@@ -16,9 +16,10 @@ public with sharing class TW_ActionTest {
     getDMLQueueSpy.returns(expectedQueue);
 
     Test.startTest();
-    TW_DMLQueueable actualQueue = action.getDMLQueue();
+    TW_DMLQueue actualQueue = action.getDMLQueue();
     Test.stopTest();
 
+    Expect.that(getDMLQueueSpy).hasBeenCalledTimes(1);
     System.Assert.areEqual(expectedQueue, actualQueue, 'Unexpected dml queue returned');
   }
 
@@ -55,52 +56,12 @@ public with sharing class TW_ActionTest {
   }
 
   /**
-   * Ensures filteredRecords returns expected results.
-   */
-  @IsTest
-  static void filteredRecords() {
-    TW_Action action = new MyAction();
-    action.ctx = ctxStub;
-    List<SObject> expectedRecs = new List<SObject>{ new Account(Name = 'myacc') };
-
-    MethodSpy filteredRecsSpy = ctxMock.spyOn('filteredRecords');
-    filteredRecsSpy.returns(expectedRecs);
-
-    Test.startTest();
-    List<SObject> actualRecs = action.filteredRecords();
-    Test.stopTest();
-
-    System.Assert.areEqual(expectedRecs, actualRecs, 'Unexpected records returned');
-  }
-
-  /**
-   * Ensures filteredRecords throws InvalidContextException if context is unset.
-   */
-  @IsTest
-  static void filteredRecordsErr() {
-    TW_Action action = new MyAction();
-    List<SObject> expectedRecs = new List<SObject>{ new Account(Name = 'myacc') };
-
-    MethodSpy filteredRecsSpy = ctxMock.spyOn('filteredRecords');
-    filteredRecsSpy.returns(expectedRecs);
-
-    Test.startTest();
-    try {
-      action.filteredRecords();
-      System.Assert.fail('expected exception not thrown');
-    } catch (Exception e) {
-      System.Assert.isInstanceOfType(e, TW_Action.InvalidContextException.class, 'unexpected exception thrown');
-    }
-    Test.stopTest();
-  }
-
-  /**
    * Ensures context method calls perform no action by default
    */
   @IsTest
   static void contextCallsEmpty() {
     TW_Action action = new MyAction();
-    TW_QuerySelectionable selection = new MySelection();
+    TW_QuerySelector selection = new MySelection();
     Account rec = new Account();
 
     Test.startTest();
@@ -133,7 +94,7 @@ public with sharing class TW_ActionTest {
     Test.stopTest();
   }
 
-  private class MyQueue implements TW_DMLQueueable {
+  private class MyQueue implements TW_DMLQueue {
     public void enqueueInsert(SObject record) {
     }
     public void enqueueUpdate(SObject record) {
@@ -147,7 +108,7 @@ public with sharing class TW_ActionTest {
     }
   }
 
-  private class MySelection implements TW_QuerySelectionable {
+  private class MySelection implements TW_QuerySelector {
     public Boolean isSet() {
       return true;
     }
@@ -174,76 +135,76 @@ public with sharing class TW_ActionTest {
 
     private Boolean filterReturnVal = true;
 
-    protected override void beforeInsertSetup() {
+    public override void beforeInsertSetup() {
       methodCalls.put('beforeInsertSetup', null);
     }
-    protected override void afterInsertSetup(TW_QuerySelectionable selection) {
+    public override void afterInsertSetup(TW_QuerySelector selection) {
       methodCalls.put('afterInsertSetup', selection);
     }
-    protected override void beforeUpdateSetup(TW_QuerySelectionable selection) {
+    public override void beforeUpdateSetup(TW_QuerySelector selection) {
       methodCalls.put('beforeUpdateSetup', selection);
     }
-    protected override void afterUpdateSetup(TW_QuerySelectionable selection) {
+    public override void afterUpdateSetup(TW_QuerySelector selection) {
       methodCalls.put('afterUpdateSetup', selection);
     }
-    protected override void beforeDeleteSetup(TW_QuerySelectionable selection) {
+    public override void beforeDeleteSetup(TW_QuerySelector selection) {
       methodCalls.put('beforeDeleteSetup', selection);
     }
-    protected override void afterDeleteSetup(TW_QuerySelectionable selection) {
+    public override void afterDeleteSetup(TW_QuerySelector selection) {
       methodCalls.put('afterDeleteSetup', selection);
     }
-    protected override void afterUndeleteSetup(TW_QuerySelectionable selection) {
+    public override void afterUndeleteSetup(TW_QuerySelector selection) {
       methodCalls.put('afterUndeleteSetup', selection);
     }
 
-    protected override Boolean beforeInsertFilter(SObject newRecord) {
+    public override Boolean beforeInsertFilter(SObject newRecord) {
       methodCalls.put('beforeInsertFilter', newRecord);
       return this.filterReturnVal;
     }
-    protected override Boolean afterInsertFilter(SObject newRecord) {
+    public override Boolean afterInsertFilter(SObject newRecord) {
       methodCalls.put('afterInsertFilter', newRecord);
       return this.filterReturnVal;
     }
-    protected override Boolean beforeUpdateFilter(SObject oldRecord, SObject newRecord) {
+    public override Boolean beforeUpdateFilter(SObject oldRecord, SObject newRecord) {
       methodCalls.put('beforeUpdateFilter', new List<Object>{ oldRecord, newRecord });
       return this.filterReturnVal;
     }
-    protected override Boolean afterUpdateFilter(SObject oldRecord, SObject newRecord) {
+    public override Boolean afterUpdateFilter(SObject oldRecord, SObject newRecord) {
       methodCalls.put('afterUpdateFilter', new List<Object>{ oldRecord, newRecord });
       return this.filterReturnVal;
     }
-    protected override Boolean beforeDeleteFilter(SObject oldRecord) {
+    public override Boolean beforeDeleteFilter(SObject oldRecord) {
       methodCalls.put('beforeDeleteFilter', oldRecord);
       return this.filterReturnVal;
     }
-    protected override Boolean afterDeleteFilter(SObject oldRecord) {
+    public override Boolean afterDeleteFilter(SObject oldRecord) {
       methodCalls.put('afterDeleteFilter', oldRecord);
       return this.filterReturnVal;
     }
-    protected override Boolean afterUndeleteFilter(SObject newRecord) {
+    public override Boolean afterUndeleteFilter(SObject newRecord) {
       methodCalls.put('afterUndeleteFilter', newRecord);
       return this.filterReturnVal;
     }
 
-    protected override void beforeInsert(SObject newRecord) {
+    public override void beforeInsert(SObject newRecord) {
       methodCalls.put('beforeInsert', newRecord);
     }
-    protected override void afterInsert(SObject newRecord, SObject queriedRecord) {
+    public override void afterInsert(SObject newRecord, SObject queriedRecord) {
       methodCalls.put('afterInsert', new List<Object>{ newRecord, queriedRecord });
     }
-    protected override void beforeUpdate(SObject oldRecord, SObject newRecord, SObject queriedRecord) {
+    public override void beforeUpdate(SObject oldRecord, SObject newRecord, SObject queriedRecord) {
       methodCalls.put('beforeUpdate', new List<Object>{ oldRecord, newRecord, queriedRecord });
     }
-    protected override void afterUpdate(SObject oldRecord, SObject newRecord, SObject queriedRecord) {
+    public override void afterUpdate(SObject oldRecord, SObject newRecord, SObject queriedRecord) {
       methodCalls.put('afterUpdate', new List<Object>{ oldRecord, newRecord, queriedRecord });
     }
-    protected override void beforeDelete(SObject oldRecord, SObject queriedRecord) {
+    public override void beforeDelete(SObject oldRecord, SObject queriedRecord) {
       methodCalls.put('beforeDelete', new List<Object>{ oldRecord, queriedRecord });
     }
-    protected override void afterDelete(SObject oldRecord, SObject queriedRecord) {
+    public override void afterDelete(SObject oldRecord, SObject queriedRecord) {
       methodCalls.put('afterDelete', new List<Object>{ oldRecord, queriedRecord });
     }
-    protected override void afterUndelete(SObject newRecord, SObject queriedRecord) {
+    public override void afterUndelete(SObject newRecord, SObject queriedRecord) {
       methodCalls.put('afterUndelete', new List<Object>{ newRecord, queriedRecord });
     }
   }

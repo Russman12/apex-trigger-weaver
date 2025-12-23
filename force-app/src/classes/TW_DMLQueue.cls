@@ -1,7 +1,7 @@
 /**
  * @description Represents functionality that queues and executes DML operations
  */
-public interface TW_DMLQueueable {
+public interface TW_DMLQueue {
   /**
    * @description Enqueues an insert operation for the given record.
    * @param record Record to insert.

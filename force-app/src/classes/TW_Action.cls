@@ -13,7 +13,7 @@ public abstract class TW_Action {
    * @return DML queue.
    */
   @TestVisible
-  public TW_DMLQueueable getDMLQueue() {
+  public TW_DMLQueue getDMLQueue() {
     return this.ctx.getDMLQueue();
   }
 
@@ -26,21 +26,6 @@ public abstract class TW_Action {
       throw new InvalidContextException('Context can only be set once');
     }
     this.ctx = ctx;
-  }
-
-  /**
-   * @description Returns the type of this instance.
-   * @return The type of this instance.
-   */
-  public System.Type getType() {
-    return this.t;
-  }
-
-  /**
-   * @description assigns the type of this instance.
-   */
-  public void setType(System.Type t) {
-    this.t = t;
   }
 
   /**
@@ -68,7 +53,7 @@ public abstract class TW_Action {
   protected Boolean isChanged(Schema.SObjectField field) {
     System.TriggerOperation ctxOp = this.ctx.getOperation();
     if (ctxOp == System.TriggerOperation.BEFORE_UPDATE || ctxOp == System.TriggerOperation.BEFORE_UPDATE) {
-      return this.ctx.getOldMap().get(this.ctx.currentUpdateRecord.Id).get(field) != this.ctx.currentUpdateRecord.get(field);
+      return this.ctx.getOldMap().get(this.ctx.currentRecord.Id).get(field) != this.ctx.currentRecord.get(field);
     }
     return false;
   }
@@ -82,9 +67,9 @@ public abstract class TW_Action {
   protected Boolean anyChanged(Schema.SObjectField[] fields) {
     System.TriggerOperation ctxOp = this.ctx.getOperation();
     if (ctxOp == System.TriggerOperation.BEFORE_UPDATE || ctxOp == System.TriggerOperation.BEFORE_UPDATE) {
-      SObject oldRec = this.ctx.getOldMap().get(this.ctx.currentUpdateRecord.Id);
+      SObject oldRec = this.ctx.getOldMap().get(this.ctx.currentRecord.Id);
       for (Schema.SObjectField field : fields) {
-        if (oldRec.get(field) != this.ctx.currentUpdateRecord.get(field)) {
+        if (oldRec.get(field) != this.ctx.currentRecord.get(field)) {
           return true;
         }
       }
@@ -101,9 +86,9 @@ public abstract class TW_Action {
   protected Boolean allChanged(Schema.SObjectField[] fields) {
     System.TriggerOperation ctxOp = this.ctx.getOperation();
     if (ctxOp == System.TriggerOperation.BEFORE_UPDATE || ctxOp == System.TriggerOperation.BEFORE_UPDATE) {
-      SObject oldRec = this.ctx.getOldMap().get(this.ctx.currentUpdateRecord.Id);
+      SObject oldRec = this.ctx.getOldMap().get(this.ctx.currentRecord.Id);
       for (Schema.SObjectField field : fields) {
-        if (oldRec.get(field) == this.ctx.currentUpdateRecord.get(field)) {
+        if (oldRec.get(field) == this.ctx.currentRecord.get(field)) {
           return false;
         }
       }
@@ -123,42 +108,42 @@ public abstract class TW_Action {
    * @param TW_QuerySelectionable selection The selection that will be used to query related records.
    */
   @TestVisible
-  public virtual void afterInsertSetup(TW_QuerySelectionable selection) {
+  public virtual void afterInsertSetup(TW_QuerySelector selection) {
   }
   /**
    * @description Logic that executes once for the action before primary before update logic.
    * @param TW_QuerySelectionable selection The selection that will be used to query related records.
    */
   @TestVisible
-  public virtual void beforeUpdateSetup(TW_QuerySelectionable selection) {
+  public virtual void beforeUpdateSetup(TW_QuerySelector selection) {
   }
   /**
    * @description Logic that executes once for the action before primary after update logic.
    * @param TW_QuerySelectionable selection The selection that will be used to query related records.
    */
   @TestVisible
-  public virtual void afterUpdateSetup(TW_QuerySelectionable selection) {
+  public virtual void afterUpdateSetup(TW_QuerySelector selection) {
   }
   /**
    * @description Logic that executes once for the action before primary before delete logic.
    * @param TW_QuerySelectionable selection The selection that will be used to query related records.
    */
   @TestVisible
-  public virtual void beforeDeleteSetup(TW_QuerySelectionable selection) {
+  public virtual void beforeDeleteSetup(TW_QuerySelector selection) {
   }
   /**
    * @description Logic that executes once for the action before primary after delete logic.
    * @param TW_QuerySelectionable selection The selection that will be used to query related records.
    */
   @TestVisible
-  public virtual void afterDeleteSetup(TW_QuerySelectionable selection) {
+  public virtual void afterDeleteSetup(TW_QuerySelector selection) {
   }
   /**
    * @description Logic that executes once for the action before primary after undelete logic.
    * @param TW_QuerySelectionable selection The selection that will be used to query related records.
    */
   @TestVisible
-  public virtual void afterUndeleteSetup(TW_QuerySelectionable selection) {
+  public virtual void afterUndeleteSetup(TW_QuerySelector selection) {
   }
 
   /**

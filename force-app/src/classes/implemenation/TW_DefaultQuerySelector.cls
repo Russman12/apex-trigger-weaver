@@ -8,7 +8,7 @@
  * query.addField(Account.Name);
  * ```
  */
-public with sharing class TW_QuerySelection implements TW_QuerySelectionable {
+public with sharing class TW_DefaultQuerySelector implements TW_QuerySelector {
   private final Set<Schema.SObjectField> fields = new Set<Schema.SObjectField>();
   private final Set<List<Schema.SObjectField>> parentFields = new Set<List<Schema.SObjectField>>();
   private final Map<Schema.SObjectField, Set<List<Schema.SObjectField>>> childRelationships = new Map<Schema.SObjectField, Set<List<Schema.SObjectField>>>();

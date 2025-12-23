@@ -14,18 +14,12 @@ public with sharing class TW_Context {
     System.TriggerOperation.AFTER_UNDELETE
   };
 
-  private final List<SObject> oldRecords;
-  private final List<SObject> newRecords;
-  private final Map<Id, SObject> oldRecordsMap;
-  private final Map<Id, SObject> newRecordsMap;
-  private final Map<Id, SObject> queriedRecordsMap;
-  private final System.TriggerOperation operation;
+  private final TW_DMLQueue dmlQueue;
+  private final TW_Query query;
 
-  private final Map<System.Type, List<SObject>> filteredRecords;
-  private final List<SObject> globalFilteredRecords;
-  private final TW_DMLQueueable dmlQueue;
+  private Map<Id, SObject> queriedRecords;
 
-  public SObject currentUpdateRecord;
+  public SObject currentRecord;
 
   /**
    * @description Creates a new TW_Context instance. Throws exception if not in trigger context.
@@ -36,21 +30,14 @@ public with sharing class TW_Context {
    * TW_Context ctx = new TW_Context();
    * ```
    */
-  public TW_Context(Map<Id, SObject> queriedRecordsMap, TW_DMLQueueable dmlQueue) {
+  public TW_Context(TW_DMLQueue dmlQueue, TW_Query query) {
     //throw execption if not in trigger context
     if (!Trigger.isExecuting) {
       throw new InvalidContextException('Unable to create TW_Handler outside of a trigger context');
     }
 
-    this.oldRecords = Trigger.old;
-    this.newRecords = Trigger.new;
-    this.oldRecordsMap = Trigger.oldMap;
-    this.newRecordsMap = Trigger.newMap;
-    this.operation = Trigger.operationType;
-    this.filteredRecords = new Map<System.Type, List<SObject>>();
-    this.globalFilteredRecords = new List<SObject>();
     this.dmlQueue = dmlQueue;
-    this.queriedRecordsMap = queriedRecordsMap;
+    this.query = query;
   }
 
   /**
@@ -66,6 +53,10 @@ public with sharing class TW_Context {
     return QUERY_CONTEXTS.contains(Trigger.operationType);
   }
 
+  public TW_Query getQuery() {
+    return query;
+  }
+
   /**
    * @description Returns the current trigger operation.
    * @return The current trigger operation.
@@ -76,7 +67,7 @@ public with sharing class TW_Context {
    * ```
    */
   public System.TriggerOperation getOperation() {
-    return this.operation;
+    return Trigger.operationType;
   }
 
   /**
@@ -89,7 +80,7 @@ public with sharing class TW_Context {
    * ```
    */
   public List<SObject> getNew() {
-    return this.newRecords;
+    return Trigger.new;
   }
 
   /**
@@ -102,7 +93,11 @@ public with sharing class TW_Context {
    * ```
    */
   public Map<Id, SObject> getNewMap() {
-    return this.newRecordsMap;
+    return Trigger.newMap;
+  }
+
+  public SObject getNew(SObject r) {
+    return Trigger.newMap.get(r.Id);
   }
 
   /**
@@ -115,7 +110,7 @@ public with sharing class TW_Context {
    * ```
    */
   public List<SObject> getOld() {
-    return this.oldRecords;
+    return Trigger.old;
   }
 
   /**
@@ -128,7 +123,21 @@ public with sharing class TW_Context {
    * ```
    */
   public Map<Id, SObject> getOldMap() {
-    return this.oldRecordsMap;
+    return Trigger.oldMap;
+  }
+
+  public SObject getOld(SObject r) {
+    return Trigger.oldMap.get(r.Id);
+  }
+
+  /**
+   * @description Returns old or new records depending trigger context.
+   */
+  public List<SObject> getRecords() {
+    if (Trigger.new != null && !Trigger.new.isEmpty()) {
+      return Trigger.new;
+    }
+    return Trigger.old;
   }
 
   /**
@@ -141,7 +150,20 @@ public with sharing class TW_Context {
    * ```
    */
   public Map<Id, SObject> getQueriedRecordMap() {
-    return this.queriedRecordsMap.deepClone();
+    if (queriedRecords == null) {
+      throw new InvalidContextException('unable to retrieve queried records before setup completes');
+    }
+    return queriedRecords.deepClone();
+  }
+
+  public SObject getQueriedRecord(SObject rec) {
+    if (queriedRecords == null) {
+      queriedRecords = new Map<Id, SObject>();
+      if (query.getSelector().isSet()) {
+        queriedRecords = new Map<Id, SObject>(this.query.run(getRecords()));
+      }
+    }
+    return queriedRecords.get(rec.Id).clone(true, true, true, true);
   }
 
   /**
@@ -153,56 +175,12 @@ public with sharing class TW_Context {
    * TW_DMLQueueable dmlQueue = ctx.getDMLQueue();
    * ```
    */
-  public TW_DMLQueueable getDMLQueue() {
+  public TW_DMLQueue getDMLQueue() {
     return this.dmlQueue;
   }
 
   /**
-   * @description Returns all filtered records.
-   * @return Filtered records.
-   * @example
-   * ```
-   * TW_Context ctx = new TW_Context();
-   * List<SObject> filteredRecs = ctx.filteredRecords();
-   * ```
-   */
-  public List<SObject> filteredRecords() {
-    return this.globalFilteredRecords;
-  }
-
-  /**
-   * @description Returns all filtered records for a given functionality.
-   * @return Filtered records.
-   * @example
-   * ```
-   * TW_Context ctx = new TW_Context();
-   * List<SObject> filteredRecs = ctx.filteredRecords(MyFunc.class);
-   * ```
-   */
-  public List<SObject> filteredRecords(System.Type t) {
-    return this.filteredRecords.get(t);
-  }
-
-  /**
-   * @description Adds a record to the filtered records list.
-   * @param record Record to add.
-   * @example
-   * ```
-   */
-  public void addFilteredRecord(System.Type t, SObject record) {
-    if (!this.filteredRecords.containsKey(t)) {
-      this.filteredRecords.put(t, new List<SObject>());
-    }
-    this.filteredRecords.get(t).add(record);
-    this.globalFilteredRecords.add(record);
-  }
-
-  /**
    * @description Represents an exception relating to the context.
-   * @example
-   * ```
-   * TW_Context ctx = new TW_Context();
-   * try {
    */
   public class InvalidContextException extends Exception {
   }

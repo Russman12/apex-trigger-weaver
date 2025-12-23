@@ -13,23 +13,23 @@ public virtual class TW_Handler {
   };
 
   private static final Set<Type> BYPASSES = new Set<Type>();
-  private static Map<Schema.SObjectType, List<TW_Action__mdt>> activeTWSBySObj;
+  private static Map<Schema.SObjectType, List<TW_Action__mdt>> activeActionsBySObj;
 
   private static List<TW_Action__mdt> getActiveTWSForSObj(Schema.SObjectType sObjType) {
-    if (activeTWSBySObj == null) {
-      activeTWSBySObj = new Map<Schema.SObjectType, List<TW_Action__mdt>>();
+    if (activeActionsBySObj == null) {
+      activeActionsBySObj = new Map<Schema.SObjectType, List<TW_Action__mdt>>();
       for (TW_Action__mdt tw : TW_Action__mdt.getAll().values()) {
         if (tw.Active__c) {
           SObjectType twSObjType = ((SObject) Type.forName(tw.SObject_Name__c).newInstance()).getSObjectType();
-          if (!activeTWSBySObj.containsKey(twSObjType)) {
-            activeTWSBySObj.put(twSObjType, new List<TW_Action__mdt>());
+          if (!activeActionsBySObj.containsKey(twSObjType)) {
+            activeActionsBySObj.put(twSObjType, new List<TW_Action__mdt>());
           }
-          activeTWSBySObj.get(twSObjType).add(tw);
+          activeActionsBySObj.get(twSObjType).add(tw);
         }
       }
     }
 
-    return activeTWSBySObj.get(sObjType);
+    return activeActionsBySObj.get(sObjType);
   }
 
   /**
@@ -64,89 +64,102 @@ public virtual class TW_Handler {
     return new TW_Handler(sObjType);
   }
 
-  private List<TW_Action> actions = new List<TW_Action>();
-  private final TW_Queryable query;
-  private final TW_DMLQueueable dmlQueue;
-  private final TW_ActionExecutor executor;
-  private final SObjectType sObjType;
   private final TW_Context ctx;
-  private final Map<String, Object> queryBinds;
-  private final Map<Id, SObject> queriedRecordsMap;
-  private final TW_QuerySelectionable selection;
+  private final Schema.SObjectType sObjType;
 
   private TW_Handler(Schema.SObjectType sObjType) {
     this.sObjType = sObjType;
-
-    this.query = this.newQueryable();
-    query.fromSObject(sObjType);
-
-    this.selection = query.getSelection();
-    this.dmlQueue = this.newQueueable();
-    this.executor = new TW_ActionExecutor();
-    this.queriedRecordsMap = new Map<Id, SObject>();
-
-    this.ctx = new TW_Context(queriedRecordsMap, this.newQueueable());
-    this.queryBinds = new Map<String, Object>();
-    this.autoRegister();
+    this.ctx = new TW_Context(newQueueable(), newQueryable(sObjType));
   }
 
   /**
    * @description Creates a new TW_Queryable instance. This method can be overridden to provide a custom query implementation.
    * @return Default TW_Query instance.
    */
-  protected virtual TW_Queryable newQueryable() {
-    return new TW_Query();
+  protected virtual TW_Query newQueryable(SObjectType sObjType) {
+    return new TW_DefaultQuery(sObjType);
   }
 
   /**
    * @description Creates new TW_DMLQueueable instance. This method can be overridden to provide a custom queueable implementation.
    * @return Default TW_DMLQueue instance.
    */
-  protected virtual TW_DMLQueueable newQueueable() {
-    return new TW_DMLQueue();
+  protected virtual TW_DMLQueue newQueueable() {
+    return new TW_DefaultDMLQueue();
   }
 
-  private TW_Handler autoRegister() {
-    List<TW_Action__mdt> tws = getActiveTWSForSObj(this.sObjType);
+  private Map<System.Type, TW_Action> registeredActions() {
+    List<TW_Action__mdt> tws = getActiveTWSForSObj(sObjType);
     if (tws == null) {
-      return this;
+      return null;
     }
 
+    Map<System.Type, TW_Action> activeActions = new Map<System.Type, TW_Action>();
     for (TW_Action__mdt tw : tws) {
       System.Type t = System.Type.forName(tw.DeveloperName);
+      if (BYPASSES.contains(t)) {
+        continue;
+      }
       TW_Action action = (TW_Action) t.newInstance();
-      action.setType(t);
-      this.actions.add(action);
+      action.setContext(ctx);
+      activeActions.put(t, action);
     }
 
-    return this;
+    return activeActions;
   }
 
   /**
    * @description Executes all registered trigger weaver actions.
    */
   public void execute() {
-    for (TW_Action action : this.actions) {
-      if (BYPASSES.contains(action.getType())) {
-        continue;
-      }
+    TW_Executor e = getExecutor(ctx.getOperation());
+    List<TW_Action> registeredActions = registeredActions().values();
 
-      // Action orchestration handled by executor; context is set within executor
-      this.executor.executeSetup(action, this.ctx, this.selection);
+    Map<TW_Action, List<SObject>> actionRecords = new Map<TW_Action, List<SObject>>();
+    for (TW_Action a : registeredActions) {
+      List<SObject> filteredRecs = e.filteredRecords(a);
+      if (!filteredRecs.isEmpty()) {
+        actionRecords.put(a, filteredRecs);
+        e.setup(a);
+      }
     }
 
-    if (this.selection.isSet() && this.ctx.isQueryContext() && this.ctx.filteredRecords().size() > 0) {
-      List<SObject> queryResults = this.query.run(this.ctx.filteredRecords());
-      this.queriedRecordsMap.putAll(new Map<Id, SObject>(queryResults));
-    }
-
-    for (TW_Action action : actions) {
-      if (BYPASSES.contains(action.getType())) {
-        continue;
+    for (TW_Action a : registeredActions) {
+      if (actionRecords.containsKey(a)) {
+        for (SObject r : actionRecords.get(a)) {
+          ctx.currentRecord = r;
+          e.execute(a, r);
+        }
       }
-      this.executor.execute(action, this.ctx);
     }
 
     this.ctx.getDMLQueue().flush();
+  }
+
+  private TW_Executor getExecutor(System.TriggerOperation op) {
+    switch on op {
+      when BEFORE_INSERT {
+        return new TW_BeforeInsertExecutor(this.ctx);
+      }
+      when AFTER_INSERT {
+        return new TW_AfterInsertExecutor(this.ctx);
+      }
+      when BEFORE_UPDATE {
+        return new TW_BeforeUpdateExecutor(this.ctx);
+      }
+      when AFTER_UPDATE {
+        return new TW_AfterUpdateExecutor(this.ctx);
+      }
+      when BEFORE_DELETE {
+        return new TW_BeforeDeleteExecutor(this.ctx);
+      }
+      when AFTER_DELETE {
+        return new TW_AfterDeleteExecutor(this.ctx);
+      }
+      when AFTER_UNDELETE {
+        return new TW_AfterUndeleteExecutor(this.ctx);
+      }
+    }
+    return null;
   }
 }
