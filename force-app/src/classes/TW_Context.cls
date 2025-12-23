@@ -14,8 +14,22 @@ public with sharing class TW_Context {
     System.TriggerOperation.AFTER_UNDELETE
   };
 
-  private final TW_DMLQueue dmlQueue;
-  private final TW_Query query;
+  @TestVisible
+  private TW_DMLQueue dmlQueue;
+  @TestVisible
+  private TW_Query query;
+  @TestVisible
+  private TriggerOperation triggerOp = Trigger.operationType;
+  @TestVisible
+  private List<SObject> newRecs = Trigger.new;
+  @TestVisible
+  private Map<Id, SObject> newRecsMap = Trigger.newMap;
+  @TestVisible
+  private List<SObject> oldRecs = Trigger.old;
+  @TestVisible
+  private Map<Id, SObject> oldRecsMap = Trigger.oldMap;
+  @TestVisible
+  private Boolean isUpdate = Trigger.isUpdate;
 
   private Map<Id, SObject> queriedRecords;
 
@@ -43,6 +57,10 @@ public with sharing class TW_Context {
     this.query = query;
   }
 
+  @TestVisible
+  private TW_Context() {
+  }
+
   /**
    * @description Returns the query instance.
    * @return The query instance.
@@ -61,7 +79,7 @@ public with sharing class TW_Context {
    * ```
    */
   public System.TriggerOperation getOperation() {
-    return Trigger.operationType;
+    return triggerOp;
   }
 
   /**
@@ -74,7 +92,7 @@ public with sharing class TW_Context {
    * ```
    */
   public List<SObject> getNew() {
-    return Trigger.new;
+    return newRecs;
   }
 
   /**
@@ -87,7 +105,7 @@ public with sharing class TW_Context {
    * ```
    */
   public Map<Id, SObject> getNewMap() {
-    return Trigger.newMap;
+    return newRecsMap;
   }
 
   /**
@@ -100,7 +118,7 @@ public with sharing class TW_Context {
    * ```
    */
   public List<SObject> getOld() {
-    return Trigger.old;
+    return oldRecs;
   }
 
   /**
@@ -109,7 +127,7 @@ public with sharing class TW_Context {
    * @return The old record.
    */
   public SObject getOld(SObject r) {
-    return Trigger.oldMap.get(r.Id);
+    return oldRecsMap.get(r.Id);
   }
 
   /**
@@ -122,7 +140,7 @@ public with sharing class TW_Context {
    * ```
    */
   public Map<Id, SObject> getOldMap() {
-    return Trigger.oldMap;
+    return oldRecsMap;
   }
 
   /**
@@ -130,10 +148,10 @@ public with sharing class TW_Context {
    * @return The list of trigger records
    */
   public List<SObject> getRecords() {
-    if (Trigger.new != null && !Trigger.new.isEmpty()) {
-      return Trigger.new;
+    if (newRecs != null && !newRecs.isEmpty()) {
+      return newRecs;
     }
-    return Trigger.old;
+    return oldRecs;
   }
 
   /**
@@ -191,7 +209,7 @@ public with sharing class TW_Context {
    * @param field Field to check.
    */
   public Boolean isChanged(Schema.SObjectField field) {
-    if (!Trigger.isUpdate) {
+    if (!isUpdate) {
       throw new InvalidContextException('isChanged can only be called in an update context');
     }
     return getOld(currentRecord).get(field) != currentRecord.get(field);
@@ -202,7 +220,7 @@ public with sharing class TW_Context {
    * @param fields Fields to check.
    */
   public Boolean anyChanged(List<Schema.SObjectField> fields) {
-    if (!Trigger.isUpdate) {
+    if (!isUpdate) {
       throw new InvalidContextException('isChanged can only be called in an update context');
     }
     SObject oldRec = getOld(currentRecord);
@@ -219,7 +237,7 @@ public with sharing class TW_Context {
    * @param fields Fields to check.
    */
   public Boolean allChanged(List<Schema.SObjectField> fields) {
-    if (!Trigger.isUpdate) {
+    if (!isUpdate) {
       throw new InvalidContextException('isChanged can only be called in an update context');
     }
     SObject oldRec = getOld(currentRecord);

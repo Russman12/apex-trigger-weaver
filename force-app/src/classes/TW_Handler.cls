@@ -69,14 +69,14 @@ public virtual class TW_Handler {
 
   private TW_Handler(Schema.SObjectType sObjType) {
     this.sObjType = sObjType;
-    this.ctx = new TW_Context(newQueueable(), newQueryable(sObjType));
+    this.ctx = new TW_Context(newDMLQueue(), newQuery(sObjType));
   }
 
   /**
    * @description Creates a new TW_Queryable instance. This method can be overridden to provide a custom query implementation.
    * @return Default TW_Query instance.
    */
-  protected virtual TW_Query newQueryable(SObjectType sObjType) {
+  protected virtual TW_Query newQuery(SObjectType sObjType) {
     return new TW_DefaultQuery(sObjType);
   }
 
@@ -84,7 +84,7 @@ public virtual class TW_Handler {
    * @description Creates new TW_DMLQueueable instance. This method can be overridden to provide a custom queueable implementation.
    * @return Default TW_DMLQueue instance.
    */
-  protected virtual TW_DMLQueue newQueueable() {
+  protected virtual TW_DMLQueue newDMLQueue() {
     return new TW_DefaultDMLQueue();
   }
 
