@@ -162,9 +162,7 @@ public with sharing class TW_DefaultQuerySelector implements TW_QuerySelector {
   }
 
   private String getChildRelationshipName(Schema.SObjectField relationshipField) {
-    System.debug(System.Limits.getCpuTime());
     List<Schema.ChildRelationship> rels = relationshipField.getDescribe().getReferenceTo()[0].getDescribe().getChildRelationships();
-    System.debug(System.Limits.getCpuTime());
     for (Schema.ChildRelationship cr : rels) {
       if (cr.getField() == relationshipField) {
         return String.valueOf(cr.getRelationshipName());
