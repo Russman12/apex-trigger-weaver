@@ -12,7 +12,7 @@ public with sharing class TW_AfterUndeleteExecutor implements TW_Executor {
   public List<SObject> filteredRecords(TW_Action a) {
     List<SObject> filteredRecords = new List<SObject>();
     for (SObject r : ctx.getNew()) {
-      if (a.afterUndeleteFilter(ctx.getOld(r))) {
+      if (a.afterUndeleteFilter(r)) {
         filteredRecords.add(r);
       }
     }
