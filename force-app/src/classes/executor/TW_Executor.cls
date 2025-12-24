@@ -18,6 +18,11 @@ public interface TW_Executor {
   void setup(TW_Action action);
 
   /**
+   * @description Runs the query for related record data
+   */
+  void runQuery();
+
+  /**
    * @description Executes the action's primary function for the given record.
    * @param action The action which should be executed.
    * @param record The record which the action will be executed on.

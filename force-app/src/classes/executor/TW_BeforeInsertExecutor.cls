@@ -24,6 +24,9 @@ public with sharing class TW_BeforeInsertExecutor implements TW_Executor {
     a.beforeInsertSetup();
   }
 
+  public void runQuery() {
+  }
+
   public void execute(TW_Action a, SObject r) {
     a.beforeInsert(r);
   }

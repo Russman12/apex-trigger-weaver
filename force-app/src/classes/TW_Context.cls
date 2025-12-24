@@ -5,15 +5,6 @@
  * @internal
  */
 public with sharing class TW_Context {
-  private static final Set<System.TriggerOperation> QUERY_CONTEXTS = new Set<System.TriggerOperation>{
-    System.TriggerOperation.AFTER_INSERT,
-    System.TriggerOperation.BEFORE_UPDATE,
-    System.TriggerOperation.AFTER_UPDATE,
-    System.TriggerOperation.BEFORE_DELETE,
-    System.TriggerOperation.AFTER_DELETE,
-    System.TriggerOperation.AFTER_UNDELETE
-  };
-
   @TestVisible
   private TW_DMLQueue dmlQueue;
   @TestVisible
@@ -30,8 +21,8 @@ public with sharing class TW_Context {
   private Map<Id, SObject> oldRecsMap = Trigger.oldMap;
   @TestVisible
   private Boolean isUpdate = Trigger.isUpdate;
-  @TestVisible
-  private Map<Id, SObject> queriedRecords;
+
+  public Map<Id, SObject> queriedRecords;
 
   /**
    * @description The current record which is being executed.
@@ -179,12 +170,6 @@ public with sharing class TW_Context {
    * ```
    */
   public SObject getQueriedRecord(SObject rec) {
-    if (queriedRecords == null) {
-      queriedRecords = new Map<Id, SObject>();
-      if (query.getSelector().isSet()) {
-        queriedRecords = new Map<Id, SObject>(this.query.run(getRecords()));
-      }
-    }
     return queriedRecords.get(rec.Id).clone(true, true, true, true);
   }
 

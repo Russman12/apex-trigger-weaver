@@ -12,13 +12,13 @@ public class TW_BeforeInsertExecutorTest {
   private static final Mock SELECTOR_MOCK = Mock.forType(TW_QuerySelector.class);
   private static final TW_QuerySelector SELECTOR_STUB = (TW_QuerySelector) SELECTOR_MOCK.stub;
 
+  private static final TW_Executor executor = new TW_BeforeInsertExecutor(CTX_STUB);
+
   /**
    * Ensures filteredRecords returns as expected
    */
   @IsTest
   static void filteredRecords() {
-    TW_Executor executor = new TW_BeforeInsertExecutor(CTX_STUB);
-
     Account newAcc1 = new Account(Name = 'new one');
     Account newAcc2 = new Account(Name = 'new two');
     List<SObject> newRecs = new List<Account>{ newAcc1, newAcc2 };
@@ -48,8 +48,6 @@ public class TW_BeforeInsertExecutorTest {
    */
   @IsTest
   static void setup() {
-    TW_Executor executor = new TW_BeforeInsertExecutor(CTX_STUB);
-
     MethodSpy setupSpy = ACTION_MOCK.spyOn('beforeInsertSetup');
 
     Test.startTest();
@@ -60,12 +58,22 @@ public class TW_BeforeInsertExecutorTest {
   }
 
   /**
+   * Ensures runQuery executes as expected
+   */
+  @IsTest
+  static void runQuery() {
+    Test.startTest();
+    executor.runQuery();
+    Test.stopTest();
+
+    System.Assert.areEqual(null, CTX_STUB.queriedRecords, 'unexpected results assigned');
+  }
+
+  /**
    * Ensures execute runs as expected
    */
   @IsTest
   static void execute() {
-    TW_Executor executor = new TW_BeforeInsertExecutor(CTX_STUB);
-
     SObject triggerRec = new Account(Name = 'Triggered Account');
 
     MethodSpy primaryMethodSpy = ACTION_MOCK.spyOn('beforeInsert');

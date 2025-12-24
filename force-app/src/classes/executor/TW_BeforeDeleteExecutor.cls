@@ -20,6 +20,13 @@ public with sharing class TW_BeforeDeleteExecutor implements TW_Executor {
     return filteredRecords;
   }
 
+  public void runQuery() {
+    TW_Query query = ctx.getQuery();
+    if (query.getSelector().isSet()) {
+      ctx.queriedRecords = new Map<Id, SObject>(query.run(ctx.getOld()));
+    }
+  }
+
   public void setup(TW_Action a) {
     a.beforeDeleteSetup(ctx.getQuery().getSelector());
   }

@@ -3,34 +3,10 @@
  * @group Framework
  */
 public virtual class TW_Handler {
-  private static final Set<System.TriggerOperation> QUERY_CONTEXTS = new Set<System.TriggerOperation>{
-    System.TriggerOperation.AFTER_INSERT,
-    System.TriggerOperation.BEFORE_UPDATE,
-    System.TriggerOperation.AFTER_UPDATE,
-    System.TriggerOperation.BEFORE_DELETE,
-    System.TriggerOperation.AFTER_DELETE,
-    System.TriggerOperation.AFTER_UNDELETE
-  };
-
+  @TestVisible
   private static final Set<Type> BYPASSES = new Set<Type>();
-  private static Map<Schema.SObjectType, List<TW_Action__mdt>> activeActionsBySObj;
-
-  private static List<TW_Action__mdt> getActiveTWSForSObj(Schema.SObjectType sObjType) {
-    if (activeActionsBySObj == null) {
-      activeActionsBySObj = new Map<Schema.SObjectType, List<TW_Action__mdt>>();
-      for (TW_Action__mdt tw : TW_Action__mdt.getAll().values()) {
-        if (tw.Active__c) {
-          SObjectType twSObjType = ((SObject) Type.forName(tw.SObject_Name__c).newInstance()).getSObjectType();
-          if (!activeActionsBySObj.containsKey(twSObjType)) {
-            activeActionsBySObj.put(twSObjType, new List<TW_Action__mdt>());
-          }
-          activeActionsBySObj.get(twSObjType).add(tw);
-        }
-      }
-    }
-
-    return activeActionsBySObj.get(sObjType);
-  }
+  @TestVisible
+  private static TW_ActionRegistry actionRegistry = new TW_ActionRegistry();
 
   /**
    * @description Bypasses given trigger weaver action to prevent multiple executions.
@@ -55,27 +31,33 @@ public virtual class TW_Handler {
     BYPASSES.clear();
   }
 
-  /**
-   * @description Creates a new TW_Handler instance.
-   * @param sObjType The SObject type to handle.
-   * @return TW_Handler instance.
-   */
-  public static TW_Handler make(Schema.SObjectType sObjType) {
-    return new TW_Handler(sObjType);
-  }
+  @TestVisible
+  private TW_Context ctx;
+  @TestVisible
+  private Schema.SObjectType sObjType;
+  @TestVisible
+  private TW_ExecutorFactory executorFactory;
 
-  private final TW_Context ctx;
-  private final Schema.SObjectType sObjType;
+  public TW_Handler(Schema.SObjectType sObjType) {
+    //throw execption if not in trigger context
+    if (!Trigger.isExecuting) {
+      throw new InvalidContextException('Unable to create TW_Handler outside of a trigger context');
+    }
 
-  private TW_Handler(Schema.SObjectType sObjType) {
     this.sObjType = sObjType;
     this.ctx = new TW_Context(newDMLQueue(), newQuery(sObjType));
+    this.executorFactory = new TW_ExecutorFactory(this.ctx);
+  }
+
+  @TestVisible
+  private TW_Handler() {
   }
 
   /**
    * @description Creates a new TW_Queryable instance. This method can be overridden to provide a custom query implementation.
    * @return Default TW_Query instance.
    */
+  @TestVisible
   protected virtual TW_Query newQuery(SObjectType sObjType) {
     return new TW_DefaultQuery(sObjType);
   }
@@ -84,25 +66,25 @@ public virtual class TW_Handler {
    * @description Creates new TW_DMLQueueable instance. This method can be overridden to provide a custom queueable implementation.
    * @return Default TW_DMLQueue instance.
    */
+  @TestVisible
   protected virtual TW_DMLQueue newDMLQueue() {
     return new TW_DefaultDMLQueue();
   }
 
-  private Map<System.Type, TW_Action> registeredActions() {
-    List<TW_Action__mdt> tws = getActiveTWSForSObj(sObjType);
-    if (tws == null) {
-      return null;
+  private List<TW_Action> registeredActions() {
+    List<TW_Action> activeActions = new List<TW_Action>();
+    List<System.Type> actionTypes = actionRegistry.activeActions(sObjType);
+    if (actionTypes == null || actionTypes.isEmpty()) {
+      return activeActions;
     }
 
-    Map<System.Type, TW_Action> activeActions = new Map<System.Type, TW_Action>();
-    for (TW_Action__mdt tw : tws) {
-      System.Type t = System.Type.forName(tw.DeveloperName);
+    for (System.Type t : actionTypes) {
       if (BYPASSES.contains(t)) {
         continue;
       }
       TW_Action action = (TW_Action) t.newInstance();
       action.setContext(ctx);
-      activeActions.put(t, action);
+      activeActions.add(action);
     }
 
     return activeActions;
@@ -112,8 +94,12 @@ public virtual class TW_Handler {
    * @description Executes all registered trigger actions.
    */
   public void execute() {
-    TW_Executor e = getExecutor(ctx.getOperation());
-    List<TW_Action> registeredActions = registeredActions().values();
+    List<TW_Action> registeredActions = registeredActions();
+    if (registeredActions.isEmpty()) {
+      return;
+    }
+
+    TW_Executor e = executorFactory.make();
 
     Map<TW_Action, List<SObject>> actionRecords = new Map<TW_Action, List<SObject>>();
     for (TW_Action a : registeredActions) {
@@ -124,6 +110,8 @@ public virtual class TW_Handler {
       }
     }
 
+    e.runQuery();
+
     for (TW_Action a : registeredActions) {
       if (actionRecords.containsKey(a)) {
         for (SObject r : actionRecords.get(a)) {
@@ -133,33 +121,12 @@ public virtual class TW_Handler {
       }
     }
 
-    this.ctx.getDMLQueue().flush();
+    ctx.getDMLQueue().flush();
   }
 
-  private TW_Executor getExecutor(System.TriggerOperation op) {
-    switch on op {
-      when BEFORE_INSERT {
-        return new TW_BeforeInsertExecutor(this.ctx);
-      }
-      when AFTER_INSERT {
-        return new TW_AfterInsertExecutor(this.ctx);
-      }
-      when BEFORE_UPDATE {
-        return new TW_BeforeUpdateExecutor(this.ctx);
-      }
-      when AFTER_UPDATE {
-        return new TW_AfterUpdateExecutor(this.ctx);
-      }
-      when BEFORE_DELETE {
-        return new TW_BeforeDeleteExecutor(this.ctx);
-      }
-      when AFTER_DELETE {
-        return new TW_AfterDeleteExecutor(this.ctx);
-      }
-      when AFTER_UNDELETE {
-        return new TW_AfterUndeleteExecutor(this.ctx);
-      }
-    }
-    return null;
+  /**
+   * @description Represents an exception relating to the context.
+   */
+  public class InvalidContextException extends Exception {
   }
 }

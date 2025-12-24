@@ -24,7 +24,14 @@ public with sharing class TW_AfterInsertExecutor implements TW_Executor {
     a.afterInsertSetup(ctx.getQuery().getSelector());
   }
 
+  public void runQuery() {
+    TW_Query query = ctx.getQuery();
+    if (query.getSelector().isSet()) {
+      ctx.queriedRecords = new Map<Id, SObject>(query.run(ctx.getNew()));
+    }
+  }
+
   public void execute(TW_Action a, SObject r) {
-    a.afterInsert(ctx.getOld(r), r);
+    a.afterInsert(r, ctx.getQueriedRecord(r));
   }
 }

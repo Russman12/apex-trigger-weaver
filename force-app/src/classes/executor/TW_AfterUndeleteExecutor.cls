@@ -24,6 +24,13 @@ public with sharing class TW_AfterUndeleteExecutor implements TW_Executor {
     a.afterUndeleteSetup(ctx.getQuery().getSelector());
   }
 
+  public void runQuery() {
+    TW_Query query = ctx.getQuery();
+    if (query.getSelector().isSet()) {
+      ctx.queriedRecords = new Map<Id, SObject>(query.run(ctx.getNew()));
+    }
+  }
+
   public void execute(TW_Action a, SObject r) {
     a.afterUndelete(r, ctx.getQueriedRecord(r));
   }
