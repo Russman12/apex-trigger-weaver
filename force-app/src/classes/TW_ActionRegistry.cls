@@ -26,7 +26,8 @@ public class TW_ActionRegistry {
   }
 
   /**
-   * @description Manually registers an action. This should only be used in a test context.
+   * @description Manually registers an action. This will prevent actual metadata types from registering.
+   * This should only be used in a test context.
    * @param sObjType The SObject type to register the action for.
    * @param actionType The action type to register.
    */

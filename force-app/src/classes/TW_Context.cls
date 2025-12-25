@@ -22,7 +22,7 @@ public with sharing class TW_Context {
   @TestVisible
   private Boolean isUpdate = Trigger.isUpdate;
 
-  public Map<Id, SObject> queriedRecords;
+  public Map<Id, SObject> queriedRecords = new Map<Id, SObject>();
 
   /**
    * @description The current record which is being executed.
@@ -170,7 +170,7 @@ public with sharing class TW_Context {
    * ```
    */
   public SObject getQueriedRecord(SObject rec) {
-    return queriedRecords.get(rec.Id).clone(true, true, true, true);
+    return queriedRecords.get(rec.Id)?.clone(true, true, true, true);
   }
 
   /**

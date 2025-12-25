@@ -11,7 +11,8 @@
  * ```
  */
 public class TW_DefaultQuery implements TW_Query {
-  private final TW_DefaultQuerySelector selector = new TW_DefaultQuerySelector();
+  @TestVisible
+  private TW_DefaultQuerySelector selector = new TW_DefaultQuerySelector();
   private Schema.SObjectType sObjType;
 
   public TW_DefaultQuery(Schema.SObjectType sObjType) {
@@ -29,7 +30,7 @@ public class TW_DefaultQuery implements TW_Query {
    * ```
    */
   public TW_DefaultQuerySelector getSelector() {
-    return this.selector;
+    return selector;
   }
 
   /**
@@ -38,7 +39,7 @@ public class TW_DefaultQuery implements TW_Query {
    * @return The query results.
    */
   public SObject[] run(List<SObject> records) {
-    String queryStr = this.selector.toClauseString() + ' FROM ' + this.sObjType.getDescribe().getName() + ' WHERE Id IN :records';
+    String queryStr = selector.toClauseString() + ' FROM ' + this.sObjType.getDescribe().getName() + ' WHERE Id IN :records';
 
     return Database.queryWithBinds(queryStr, new Map<String, Object>{ 'records' => records }, AccessLevel.SYSTEM_MODE);
   }

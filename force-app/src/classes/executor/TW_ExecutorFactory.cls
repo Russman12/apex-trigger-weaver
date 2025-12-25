@@ -29,12 +29,6 @@ public with sharing class TW_ExecutorFactory {
         return new TW_AfterUndeleteExecutor(this.ctx);
       }
     }
-    throw new InvalidContextException('There is no valid executor for this context');
-  }
-
-  /**
-   * @description Represents an exception relating to the context.
-   */
-  public class InvalidContextException extends Exception {
+    return null;
   }
 }

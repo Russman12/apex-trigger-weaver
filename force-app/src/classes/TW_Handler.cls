@@ -96,6 +96,7 @@ public virtual class TW_Handler {
   public void execute() {
     List<TW_Action> registeredActions = registeredActions();
     if (registeredActions.isEmpty()) {
+      System.debug(LoggingLevel.FINE, 'No registered TW Actions, exiting');
       return;
     }
 
