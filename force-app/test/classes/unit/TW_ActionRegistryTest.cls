@@ -14,7 +14,11 @@ public class TW_ActionRegistryTest {
     List<System.Type> types = registry.activeActions(Account.getSObjectType());
     Test.stopTest();
 
-    System.Assert.areEqual(new List<System.Type>{ AccountTWNameChange.class }, types, 'active actions not returned as expected');
+    System.Assert.areEqual(
+      new List<System.Type>{ AccountDescriptionTWAction.class, AccountTWNameChange.class },
+      types,
+      'active actions not returned as expected'
+    );
   }
 
   /**

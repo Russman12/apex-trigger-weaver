@@ -14,4 +14,8 @@
         <field>SObject_Name__c</field>
         <value xsi:type="xsd:string">Account</value>
     </values>
+    <values>
+        <field>Rank__c</field>
+        <value xsi:type="xsd:decimal">1</value>
+    </values>
 </CustomMetadata>
