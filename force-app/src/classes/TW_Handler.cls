@@ -47,7 +47,7 @@ public virtual class TW_Handler {
     }
 
     this.sObjType = sObjType;
-    this.ctx = new TW_Context(newDMLQueue());
+    this.ctx = new TW_Context();
     this.executorFactory = new TW_ExecutorFactory(this.ctx);
     this.extensions.addAll(newExtensions());
   }
@@ -79,15 +79,6 @@ public virtual class TW_Handler {
   @TestVisible
   protected virtual List<TW_Extension> newExtensions() {
     return new List<TW_Extension>();
-  }
-
-  /**
-   * @description Creates new TW_DMLQueueable instance. This method can be overridden to provide a custom queueable implementation.
-   * @return Default TW_DMLQueue instance.
-   */
-  @TestVisible
-  protected virtual TW_DMLQueue newDMLQueue() {
-    return new TW_DefaultDMLQueue();
   }
 
   private List<TW_Action> registeredActions() {
@@ -152,13 +143,7 @@ public virtual class TW_Handler {
       }
 
       for (TW_Extension x : extensions) {
-        x.beforeFlush(ctx);
-      }
-
-      ctx.getDMLQueue().flush();
-
-      for (TW_Extension x : extensions) {
-        x.afterFlush(ctx);
+        x.afterExecute(ctx);
       }
     } catch (Exception ex) {
       for (TW_Extension x : extensions) {

@@ -7,15 +7,6 @@ public abstract class TW_Action {
   private TW_Context ctx;
 
   /**
-   * @description Returns the DML queue used to enqueue DML operations.
-   * @return DML queue.
-   */
-  @TestVisible
-  public TW_DMLQueue getDMLQueue() {
-    return this.ctx.getDMLQueue();
-  }
-
-  /**
    * @description Sets the context for the trigger weaver action.
    * @param ctx The context to set.
    */

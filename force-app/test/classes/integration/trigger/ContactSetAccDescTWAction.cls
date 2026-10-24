@@ -2,7 +2,13 @@
  * Sets  the account description to be a comma delimited list of all the account's
  * contacts' names.
  */
-public class ContactSetAccDescTWAction extends TW_Action {
+public class ContactSetAccDescTWAction extends TW_Action implements DMLQueueAware {
+  private DMLQueue dml;
+
+  public void setDMLQueue(DMLQueue queue) {
+    this.dml = queue;
+  }
+
   public override Boolean afterUpdateFilter(SObject oldRecord, SObject newRecord) {
     return isChanged(Contact.Name);
   }
@@ -11,6 +17,6 @@ public class ContactSetAccDescTWAction extends TW_Action {
    * "Bump" the parent account description to allow the account description to be updated.
    */
   public override void afterUpdate(SObject oldRecord, SObject newRecord) {
-    getDMLQueue().enqueueUpdate(new Account(Id = ((Contact) newRecord).AccountId, Description = ''));
+    dml.enqueueUpdate(new Account(Id = ((Contact) newRecord).AccountId, Description = ''));
   }
 }

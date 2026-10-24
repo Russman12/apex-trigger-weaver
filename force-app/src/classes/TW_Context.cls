@@ -6,8 +6,6 @@
  */
 public with sharing class TW_Context {
   @TestVisible
-  private TW_DMLQueue dmlQueue;
-  @TestVisible
   private TriggerOperation triggerOp = Trigger.operationType;
   @TestVisible
   private List<SObject> newRecs = Trigger.new;
@@ -26,25 +24,14 @@ public with sharing class TW_Context {
   public SObject currentRecord;
 
   /**
-   * @description Creates a new TW_Context instance. Throws exception if not in trigger context.
-   * @param idField The Id field of the SObject type.
-   * @throws InvalidContextException if not in trigger context.
+   * @description Creates a new TW_Context instance from the running trigger. TW_Handler verifies
+   * that a trigger is executing before creating the context.
    * @example
    * ```
    * TW_Context ctx = new TW_Context();
    * ```
    */
-  public TW_Context(TW_DMLQueue dmlQueue) {
-    this.dmlQueue = dmlQueue;
-
-    //throw execption if not in trigger context
-    if (!Trigger.isExecuting) {
-      throw new InvalidContextException('Unable to create TW_Handler outside of a trigger context');
-    }
-  }
-
-  @TestVisible
-  private TW_Context() {
+  public TW_Context() {
   }
 
   /**
@@ -130,19 +117,6 @@ public with sharing class TW_Context {
       return newRecs;
     }
     return oldRecs;
-  }
-
-  /**
-   * @description Returns the DML queue used to enqueue DML operations.
-   * @return DML queue.
-   * @example
-   * ```
-   * TW_Context ctx = new TW_Context();
-   * TW_DMLQueueable dmlQueue = ctx.getDMLQueue();
-   * ```
-   */
-  public TW_DMLQueue getDMLQueue() {
-    return this.dmlQueue;
   }
 
   /**

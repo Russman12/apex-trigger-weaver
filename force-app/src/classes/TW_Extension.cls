@@ -38,19 +38,11 @@ public abstract class TW_Extension {
   }
 
   /**
-   * @description Invoked once after all action logic executes and before the DML queue is flushed.
+   * @description Invoked once after all action logic executes for every record.
    * @param ctx The trigger context.
    */
   @TestVisible
-  public virtual void beforeFlush(TW_Context ctx) {
-  }
-
-  /**
-   * @description Invoked once after the DML queue is flushed.
-   * @param ctx The trigger context.
-   */
-  @TestVisible
-  public virtual void afterFlush(TW_Context ctx) {
+  public virtual void afterExecute(TW_Context ctx) {
   }
 
   /**

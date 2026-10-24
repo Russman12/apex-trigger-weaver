@@ -11,8 +11,6 @@ public class TW_HandlerTest {
   private static final TW_Executor EXEC_STUB = (TW_Executor) EXEC_MOCK.stub;
   private static final Mock ACTION_REG_MOCK = Mock.forType(TW_ActionRegistry.class);
   private static final TW_ActionRegistry ACTION_REG_STUB = (TW_ActionRegistry) ACTION_REG_MOCK.stub;
-  private static final Mock DML_QUEUE_MOCK = Mock.forType(TW_DMLQueue.class);
-  private static final TW_DMLQueue DML_QUEUE_STUB = (TW_DMLQueue) DML_QUEUE_MOCK.stub;
 
   /**
    * Ensures addBypass adds bypass as expected
@@ -71,20 +69,6 @@ public class TW_HandlerTest {
   }
 
   /**
-   * Ensures newDMLQueue returns TW_DefaultDMLQueue as expected
-   */
-  @IsTest
-  static void newDMLQueue() {
-    TW_Handler handler = new TW_Handler();
-
-    Test.startTest();
-    TW_DMLQueue d = handler.newDMLQueue();
-    Test.stopTest();
-
-    System.Assert.isInstanceOfType(d, TW_DefaultDMLQueue.class, 'context dmlQueue not set as expected');
-  }
-
-  /**
    * Ensures execute runs all registered actions
    */
   @IsTest
@@ -103,11 +87,6 @@ public class TW_HandlerTest {
 
     MethodSpy execSpy = EXEC_MOCK.spyOn('execute');
 
-    MethodSpy getDmlQueueSpy = CTX_MOCK.spyOn('getDMLQueue');
-    getDmlQueueSpy.returns(DML_QUEUE_STUB);
-
-    MethodSpy flushSpy = DML_QUEUE_MOCK.spyOn('flush');
-
     TW_Handler.actionRegistry = ACTION_REG_STUB;
     TW_Handler handler = new TW_Handler();
     handler.ctx = CTX_STUB;
@@ -121,8 +100,6 @@ public class TW_HandlerTest {
     Expect.that(execFilteredRecSpy).hasBeenCalledTimes(2);
     Expect.that(activeActionsSpy).hasBeenCalledTimes(1);
     Expect.that(execSpy).hasBeenCalledTimes(4);
-    Expect.that(getDmlQueueSpy).hasBeenCalledTimes(1);
-    Expect.that(flushSpy).hasBeenCalledTimes(1);
   }
 
   /**
@@ -143,11 +120,6 @@ public class TW_HandlerTest {
     execFilteredRecSpy.returns(filteredRecs);
 
     MethodSpy execSpy = EXEC_MOCK.spyOn('execute');
-
-    MethodSpy getDmlQueueSpy = CTX_MOCK.spyOn('getDMLQueue');
-    getDmlQueueSpy.returns(DML_QUEUE_STUB);
-
-    MethodSpy flushSpy = DML_QUEUE_MOCK.spyOn('flush');
 
     TW_Handler.actionRegistry = ACTION_REG_STUB;
     TW_Handler.BYPASSES.add(MyAction1.class);
@@ -183,11 +155,6 @@ public class TW_HandlerTest {
     execFilteredRecSpy.returnsOnce(new List<SObject>());
 
     MethodSpy execSpy = EXEC_MOCK.spyOn('execute');
-
-    MethodSpy getDmlQueueSpy = CTX_MOCK.spyOn('getDMLQueue');
-    getDmlQueueSpy.returns(DML_QUEUE_STUB);
-
-    MethodSpy flushSpy = DML_QUEUE_MOCK.spyOn('flush');
 
     TW_Handler.actionRegistry = ACTION_REG_STUB;
     TW_Handler handler = new TW_Handler();
@@ -283,8 +250,6 @@ public class TW_HandlerTest {
     execFilteredRecSpy.returns(filteredRecs);
     execFilteredRecSpy.returnsOnce(new List<SObject>());
     EXEC_MOCK.spyOn('execute');
-    CTX_MOCK.spyOn('getDMLQueue').returns(DML_QUEUE_STUB);
-    DML_QUEUE_MOCK.spyOn('flush');
 
     TW_Handler.actionRegistry = ACTION_REG_STUB;
     TW_Handler handler = new TW_Handler();
@@ -298,7 +263,7 @@ public class TW_HandlerTest {
     Test.stopTest();
 
     System.Assert.areEqual(
-      new List<String>{ 'onStart:2', 'onActionSetup:1', 'beforeExecute', 'beforeFlush', 'afterFlush', 'onFinish' },
+      new List<String>{ 'onStart:2', 'onActionSetup:1', 'beforeExecute', 'afterExecute', 'onFinish' },
       ext.calls,
       'hooks not invoked as expected'
     );
@@ -380,11 +345,8 @@ public class TW_HandlerTest {
     public override void beforeExecute(TW_Context ctx) {
       calls.add('beforeExecute');
     }
-    public override void beforeFlush(TW_Context ctx) {
-      calls.add('beforeFlush');
-    }
-    public override void afterFlush(TW_Context ctx) {
-      calls.add('afterFlush');
+    public override void afterExecute(TW_Context ctx) {
+      calls.add('afterExecute');
     }
     public override void onError(TW_Context ctx, Exception e) {
       calls.add('onError:' + e.getMessage());

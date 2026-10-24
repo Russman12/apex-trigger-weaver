@@ -4,26 +4,6 @@ public with sharing class TW_ActionTest {
   private static TW_Context ctxStub = (TW_Context) ctxMock.stub;
 
   /**
-   * Ensures that the DMLQueue is returned correctly.
-   */
-  @IsTest
-  static void getDMLQueue() {
-    TW_Action action = new MyAction();
-    action.ctx = ctxStub;
-    MyQueue expectedQueue = new MyQueue();
-
-    MethodSpy getDMLQueueSpy = ctxMock.spyOn('getDMLQueue');
-    getDMLQueueSpy.returns(expectedQueue);
-
-    Test.startTest();
-    TW_DMLQueue actualQueue = action.getDMLQueue();
-    Test.stopTest();
-
-    Expect.that(getDMLQueueSpy).hasBeenCalledTimes(1);
-    System.Assert.areEqual(expectedQueue, actualQueue, 'Unexpected dml queue returned');
-  }
-
-  /**
    * Ensures that setContext assigns the context.
    */
   @IsTest
@@ -183,20 +163,6 @@ public with sharing class TW_ActionTest {
     action.afterDelete(rec);
     action.afterUndelete(rec);
     Test.stopTest();
-  }
-
-  private class MyQueue implements TW_DMLQueue {
-    public void enqueueInsert(SObject record) {
-    }
-    public void enqueueUpdate(SObject record) {
-    }
-    public void enqueueDelete(SObject record) {
-    }
-    public void enqueueUndelete(SObject record) {
-    }
-    public List<String> flush() {
-      return null;
-    }
   }
 
   private class MyAction extends TW_Action {

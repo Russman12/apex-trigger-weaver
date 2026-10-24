@@ -2,8 +2,16 @@
  * Sets the parent account to match the contact's full name when
  * the contact's name changes
  */
-public with sharing class ContactTWAccNameMismatch extends TW_Action {
+public with sharing class ContactTWAccNameMismatch extends TW_Action implements DMLQueueAware {
   private Map<Id, Account> parentAccounts;
+  private DMLQueue dml;
+
+  /**
+   * Store the shared DML queue
+   */
+  public void setDMLQueue(DMLQueue queue) {
+    this.dml = queue;
+  }
 
   /**
    * Only execute when FirstName or LastName has changed
@@ -22,7 +30,7 @@ public with sharing class ContactTWAccNameMismatch extends TW_Action {
     Account parentAccount = parentAccounts().get(newContact.AccountId);
 
     if (parentAccount != null && parentAccount.Name != newContact.Name) {
-      this.getDMLQueue().enqueueUpdate(new Account(Id = newContact.AccountId, Name = ContactBusinessLogic.fullName(newContact)));
+      dml.enqueueUpdate(new Account(Id = newContact.AccountId, Name = ContactBusinessLogic.fullName(newContact)));
     }
   }
 

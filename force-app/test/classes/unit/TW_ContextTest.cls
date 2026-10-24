@@ -6,23 +6,6 @@ public with sharing class TW_ContextTest {
   private static final Id ACC_ID = '00100000000000x';
 
   /**
-   * Ensures the constructor throws outside of trigger context
-   */
-  @IsTest
-  static void constructorError() {
-    TW_DMLQueue mockQueue = new MyQueue();
-
-    Test.startTest();
-    try {
-      TW_Context ctx = new TW_Context(mockQueue);
-      System.Assert.fail('expected exception not thrown');
-    } catch (Exception e) {
-      System.Assert.isInstanceOfType(e, TW_Context.InvalidContextException.class, 'Unexpected exception thrown');
-    }
-    Test.stopTest();
-  }
-
-  /**
    * Ensures getOperation returns correct TriggerOperation
    */
   @IsTest
@@ -163,21 +146,6 @@ public with sharing class TW_ContextTest {
   }
 
   /**
-   * Ensures getDMLQueue returns the expected queue
-   */
-  @IsTest
-  static void getDMLQueue() {
-    TW_Context ctx = new TW_Context();
-    ctx.dmlQueue = new MyQueue();
-
-    Test.startTest();
-    TW_DMLQueue actual = ctx.getDMLQueue();
-    Test.stopTest();
-
-    System.Assert.areEqual(ctx.dmlQueue, actual, 'unexpected queue returned');
-  }
-
-  /**
    * Ensures isChanged throws exception outside of update context
    */
   @IsTest
@@ -287,19 +255,5 @@ public with sharing class TW_ContextTest {
     ((Account) ctx.currentRecord).Phone = '1234567891';
     System.Assert.isTrue(ctx.allChanged(changeFields), 'expected to be changed');
     Test.stopTest();
-  }
-
-  private class MyQueue implements TW_DMLQueue {
-    public void enqueueInsert(SObject record) {
-    }
-    public void enqueueUpdate(SObject record) {
-    }
-    public void enqueueDelete(SObject record) {
-    }
-    public void enqueueUndelete(SObject record) {
-    }
-    public List<String> flush() {
-      return null;
-    }
   }
 }

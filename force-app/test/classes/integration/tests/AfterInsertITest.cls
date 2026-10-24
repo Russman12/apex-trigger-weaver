@@ -55,8 +55,13 @@ public class AfterInsertITest {
   /**
    * Assigns description to parent account name
    */
-  public class MyAction extends TW_Action {
+  public class MyAction extends TW_Action implements DMLQueueAware {
     private Map<Id, Contact> queriedContacts;
+    private DMLQueue dml;
+
+    public void setDMLQueue(DMLQueue queue) {
+      this.dml = queue;
+    }
 
     public override Boolean afterInsertFilter(SObject newRecord) {
       return ((Contact) newRecord).FirstName != 'skip';
@@ -66,7 +71,7 @@ public class AfterInsertITest {
       Contact nContact = (Contact) newRecord;
       Contact qContact = queriedContacts().get(nContact.Id);
 
-      getDMLQueue().enqueueUpdate(new Contact(Id = nContact.Id, Description = qContact.Account.Name));
+      dml.enqueueUpdate(new Contact(Id = nContact.Id, Description = qContact.Account.Name));
     }
 
     private Map<Id, Contact> queriedContacts() {
