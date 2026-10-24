@@ -27,6 +27,7 @@ public with sharing class TW_AfterUpdateExecutor implements TW_Executor {
   public void runQuery() {
     TW_Query query = ctx.getQuery();
     if (query.getSelector().isSet()) {
+      System.debug(LoggingLevel.FINE, 'executing after update query: ' + query.toString());
       ctx.queriedRecords = new Map<Id, SObject>(query.run(ctx.getNew()));
     }
   }

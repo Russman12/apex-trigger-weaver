@@ -23,6 +23,7 @@ public with sharing class TW_BeforeDeleteExecutor implements TW_Executor {
   public void runQuery() {
     TW_Query query = ctx.getQuery();
     if (query.getSelector().isSet()) {
+      System.debug(LoggingLevel.FINE, 'executing before delete query: ' + query.toString());
       ctx.queriedRecords = new Map<Id, SObject>(query.run(ctx.getOld()));
     }
   }

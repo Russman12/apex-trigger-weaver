@@ -104,6 +104,7 @@ public virtual class TW_Handler {
 
     Map<TW_Action, List<SObject>> actionRecords = new Map<TW_Action, List<SObject>>();
     for (TW_Action a : registeredActions) {
+      System.debug(LoggingLevel.FINE, 'Filtering records for ' + a);
       List<SObject> filteredRecs = e.filteredRecords(a);
       if (!filteredRecs.isEmpty()) {
         actionRecords.put(a, filteredRecs);
