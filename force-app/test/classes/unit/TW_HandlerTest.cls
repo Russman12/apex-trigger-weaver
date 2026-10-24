@@ -71,21 +71,7 @@ public class TW_HandlerTest {
   }
 
   /**
-   * Ensures newQuery returns TW_DefaultQuery as expected
-   */
-  @IsTest
-  static void newQuery() {
-    TW_Handler handler = new TW_Handler();
-
-    Test.startTest();
-    TW_Query q = handler.newQuery(Account.getSObjectType());
-    Test.stopTest();
-
-    System.Assert.isInstanceOfType(q, TW_DefaultQuery.class, 'context query not set as expected');
-  }
-
-  /**
-   * Ensures newQuery returns TW_DefaultQuery as expected
+   * Ensures newDMLQueue returns TW_DefaultDMLQueue as expected
    */
   @IsTest
   static void newDMLQueue() {
@@ -115,10 +101,6 @@ public class TW_HandlerTest {
     MethodSpy execFilteredRecSpy = EXEC_MOCK.spyOn('filteredRecords');
     execFilteredRecSpy.returns(filteredRecs);
 
-    MethodSpy execSetupSpy = EXEC_MOCK.spyOn('setup');
-
-    MethodSpy runQuerySpy = EXEC_MOCK.spyOn('runQuery');
-
     MethodSpy execSpy = EXEC_MOCK.spyOn('execute');
 
     MethodSpy getDmlQueueSpy = CTX_MOCK.spyOn('getDMLQueue');
@@ -138,8 +120,6 @@ public class TW_HandlerTest {
     Expect.that(execFactoryMakeSpy).hasBeenCalledTimes(1);
     Expect.that(execFilteredRecSpy).hasBeenCalledTimes(2);
     Expect.that(activeActionsSpy).hasBeenCalledTimes(1);
-    Expect.that(execSetupSpy).hasBeenCalledTimes(2);
-    Expect.that(runQuerySpy).hasBeenCalledTimes(1);
     Expect.that(execSpy).hasBeenCalledTimes(4);
     Expect.that(getDmlQueueSpy).hasBeenCalledTimes(1);
     Expect.that(flushSpy).hasBeenCalledTimes(1);
@@ -162,10 +142,6 @@ public class TW_HandlerTest {
     MethodSpy execFilteredRecSpy = EXEC_MOCK.spyOn('filteredRecords');
     execFilteredRecSpy.returns(filteredRecs);
 
-    MethodSpy execSetupSpy = EXEC_MOCK.spyOn('setup');
-
-    MethodSpy runQuerySpy = EXEC_MOCK.spyOn('runQuery');
-
     MethodSpy execSpy = EXEC_MOCK.spyOn('execute');
 
     MethodSpy getDmlQueueSpy = CTX_MOCK.spyOn('getDMLQueue');
@@ -185,7 +161,6 @@ public class TW_HandlerTest {
 
     Expect.that(execFilteredRecSpy).hasBeenCalledTimes(1);
     Expect.that(activeActionsSpy).hasBeenCalledTimes(1);
-    Expect.that(execSetupSpy).hasBeenCalledTimes(1);
     Expect.that(execSpy).hasBeenCalledTimes(2);
   }
 
@@ -207,10 +182,6 @@ public class TW_HandlerTest {
     execFilteredRecSpy.returns(filteredRecs);
     execFilteredRecSpy.returnsOnce(new List<SObject>());
 
-    MethodSpy execSetupSpy = EXEC_MOCK.spyOn('setup');
-
-    MethodSpy runQuerySpy = EXEC_MOCK.spyOn('runQuery');
-
     MethodSpy execSpy = EXEC_MOCK.spyOn('execute');
 
     MethodSpy getDmlQueueSpy = CTX_MOCK.spyOn('getDMLQueue');
@@ -228,7 +199,6 @@ public class TW_HandlerTest {
     Test.stopTest();
 
     Expect.that(execFilteredRecSpy).hasBeenCalledTimes(2);
-    Expect.that(execSetupSpy).hasBeenCalledTimes(1);
     Expect.that(execSpy).hasBeenCalledTimes(2);
   }
 
@@ -268,9 +238,162 @@ public class TW_HandlerTest {
     Test.stopTest();
   }
 
+  /**
+   * Ensures newExtensions returns no extensions by default
+   */
+  @IsTest
+  static void newExtensions() {
+    TW_Handler handler = new TW_Handler();
+
+    Test.startTest();
+    List<TW_Extension> exts = handler.newExtensions();
+    Test.stopTest();
+
+    System.Assert.isTrue(exts.isEmpty(), 'unexpected default extensions returned');
+  }
+
+  /**
+   * Ensures addExtension registers extensions in order and returns the handler
+   */
+  @IsTest
+  static void addExtension() {
+    TW_Handler handler = new TW_Handler();
+    TW_Extension ext1 = new RecordingExtension();
+    TW_Extension ext2 = new RecordingExtension();
+
+    Test.startTest();
+    TW_Handler result = handler.addExtension(ext1).addExtension(ext2);
+    Test.stopTest();
+
+    System.Assert.areEqual(handler, result, 'handler not returned');
+    System.Assert.areEqual(new List<TW_Extension>{ ext1, ext2 }, handler.extensions, 'extensions not registered as expected');
+  }
+
+  /**
+   * Ensures execute invokes extension hooks in lifecycle order
+   */
+  @IsTest
+  static void executeExtensionHooks() {
+    List<System.Type> actions = new List<System.Type>{ MyAction1.class, MyAction2.class };
+    List<SObject> filteredRecs = new List<SObject>{ new Account(Name = 'acc1') };
+
+    EXEC_FACTORY_MOCK.spyOn('make').returns(EXEC_STUB);
+    ACTION_REG_MOCK.spyOn('activeActions').returns(actions);
+    MethodSpy execFilteredRecSpy = EXEC_MOCK.spyOn('filteredRecords');
+    execFilteredRecSpy.returns(filteredRecs);
+    execFilteredRecSpy.returnsOnce(new List<SObject>());
+    EXEC_MOCK.spyOn('execute');
+    CTX_MOCK.spyOn('getDMLQueue').returns(DML_QUEUE_STUB);
+    DML_QUEUE_MOCK.spyOn('flush');
+
+    TW_Handler.actionRegistry = ACTION_REG_STUB;
+    TW_Handler handler = new TW_Handler();
+    handler.ctx = CTX_STUB;
+    handler.executorFactory = EXEC_FACTORY_STUB;
+    RecordingExtension ext = new RecordingExtension();
+    handler.addExtension(ext);
+
+    Test.startTest();
+    handler.execute();
+    Test.stopTest();
+
+    System.Assert.areEqual(
+      new List<String>{ 'onStart:2', 'onActionSetup:1', 'beforeExecute', 'beforeFlush', 'afterFlush', 'onFinish' },
+      ext.calls,
+      'hooks not invoked as expected'
+    );
+  }
+
+  /**
+   * Ensures execute notifies extensions of errors and rethrows
+   */
+  @IsTest
+  static void executeExtensionError() {
+    List<System.Type> actions = new List<System.Type>{ MyAction1.class };
+    List<SObject> filteredRecs = new List<SObject>{ new Account(Name = 'acc1') };
+    MyException expected = new MyException('boom');
+
+    EXEC_FACTORY_MOCK.spyOn('make').returns(EXEC_STUB);
+    ACTION_REG_MOCK.spyOn('activeActions').returns(actions);
+    EXEC_MOCK.spyOn('filteredRecords').returns(filteredRecs);
+    EXEC_MOCK.spyOn('execute').throwsException(expected);
+
+    TW_Handler.actionRegistry = ACTION_REG_STUB;
+    TW_Handler handler = new TW_Handler();
+    handler.ctx = CTX_STUB;
+    handler.executorFactory = EXEC_FACTORY_STUB;
+    RecordingExtension ext = new RecordingExtension();
+    handler.addExtension(ext);
+
+    Test.startTest();
+    try {
+      handler.execute();
+      System.Assert.fail('expected exception not thrown');
+    } catch (MyException e) {
+      System.Assert.areEqual(expected, e, 'unexpected exception thrown');
+    }
+    Test.stopTest();
+
+    System.Assert.areEqual(
+      new List<String>{ 'onStart:1', 'onActionSetup:1', 'beforeExecute', 'onError:boom', 'onFinish' },
+      ext.calls,
+      'hooks not invoked as expected'
+    );
+  }
+
+  /**
+   * Ensures extension hooks are not invoked when there are no actions
+   */
+  @IsTest
+  static void executeExtensionNoActions() {
+    ACTION_REG_MOCK.spyOn('activeActions').returns(new List<System.Type>{});
+
+    TW_Handler.actionRegistry = ACTION_REG_STUB;
+    TW_Handler handler = new TW_Handler();
+    handler.ctx = CTX_STUB;
+    handler.executorFactory = EXEC_FACTORY_STUB;
+    RecordingExtension ext = new RecordingExtension();
+    handler.addExtension(ext);
+
+    Test.startTest();
+    handler.execute();
+    Test.stopTest();
+
+    System.Assert.isTrue(ext.calls.isEmpty(), 'hooks should not be invoked');
+  }
+
   private class MyAction1 extends TW_Action {
   }
 
   private class MyAction2 extends TW_Action {
+  }
+
+  private class RecordingExtension extends TW_Extension {
+    public List<String> calls = new List<String>();
+
+    public override void onStart(TW_Context ctx, List<TW_Action> actions) {
+      calls.add('onStart:' + actions.size());
+    }
+    public override void onActionSetup(TW_Context ctx, TW_Action action, List<SObject> records) {
+      calls.add('onActionSetup:' + records.size());
+    }
+    public override void beforeExecute(TW_Context ctx) {
+      calls.add('beforeExecute');
+    }
+    public override void beforeFlush(TW_Context ctx) {
+      calls.add('beforeFlush');
+    }
+    public override void afterFlush(TW_Context ctx) {
+      calls.add('afterFlush');
+    }
+    public override void onError(TW_Context ctx, Exception e) {
+      calls.add('onError:' + e.getMessage());
+    }
+    public override void onFinish(TW_Context ctx) {
+      calls.add('onFinish');
+    }
+  }
+
+  private class MyException extends Exception {
   }
 }

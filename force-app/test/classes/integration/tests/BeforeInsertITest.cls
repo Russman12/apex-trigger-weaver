@@ -3,8 +3,6 @@
  */
 @IsTest
 public class BeforeInsertITest {
-  private static Integer setupCalls = 0;
-
   static {
     TW_ActionRegistry.register(Contact.getSObjectType(), MyAction.class);
   }
@@ -30,7 +28,6 @@ public class BeforeInsertITest {
     System.Assert.areEqual(5, System.Limits.getDmlRows());
     Test.stopTest();
 
-    System.Assert.areEqual(1, setupCalls, 'setup should be called once');
     System.Assert.areEqual(expectedEmail1, [SELECT Email FROM Contact WHERE Id = :contacts[0].Id].Email, 'email not set as expected');
     System.Assert.areEqual(expectedEmail2, [SELECT Email FROM Contact WHERE Id = :contacts[1].Id].Email, 'email not set as expected');
     System.Assert.areEqual(null, [SELECT Email FROM Contact WHERE Id = :contacts[2].Id].Email, 'email not set as expected');
@@ -115,10 +112,6 @@ public class BeforeInsertITest {
   public class MyAction extends TW_Action {
     public override Boolean beforeInsertFilter(SObject newRecord) {
       return ((Contact) newRecord).FirstName != 'skip';
-    }
-
-    public override void beforeInsertSetup() {
-      setupCalls++;
     }
 
     public override void beforeInsert(SObject record) {

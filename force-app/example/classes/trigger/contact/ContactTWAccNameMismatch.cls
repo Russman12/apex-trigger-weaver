@@ -3,12 +3,7 @@
  * the contact's name changes
  */
 public with sharing class ContactTWAccNameMismatch extends TW_Action {
-  /**
-   * Select the parent account with its name field
-   */
-  public override void afterUpdateSetup(TW_QuerySelector selection) {
-    selection.addParentField(new List<Schema.SObjectField>{ Contact.AccountId, Account.Name });
-  }
+  private Map<Id, Account> parentAccounts;
 
   /**
    * Only execute when FirstName or LastName has changed
@@ -22,13 +17,26 @@ public with sharing class ContactTWAccNameMismatch extends TW_Action {
   /**
    * If parent account name does not match the contact's full name, update it
    */
-  public override void afterUpdate(SObject oldRecord, SObject newRecord, SObject queriedRecord) {
-    Contact oldContact = (Contact) oldRecord;
+  public override void afterUpdate(SObject oldRecord, SObject newRecord) {
     Contact newContact = (Contact) newRecord;
-    Contact queriedContact = (Contact) queriedRecord;
+    Account parentAccount = parentAccounts().get(newContact.AccountId);
 
-    if (queriedContact.Account.Name != newContact.Name) {
+    if (parentAccount != null && parentAccount.Name != newContact.Name) {
       this.getDMLQueue().enqueueUpdate(new Account(Id = newContact.AccountId, Name = ContactBusinessLogic.fullName(newContact)));
     }
+  }
+
+  /**
+   * Query parent accounts once for all trigger records
+   */
+  private Map<Id, Account> parentAccounts() {
+    if (parentAccounts == null) {
+      Set<Id> accountIds = new Set<Id>();
+      for (Contact c : (List<Contact>) newRecords()) {
+        accountIds.add(c.AccountId);
+      }
+      parentAccounts = new Map<Id, Account>([SELECT Id, Name FROM Account WHERE Id IN :accountIds]);
+    }
+    return parentAccounts;
   }
 }

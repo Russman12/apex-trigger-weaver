@@ -76,55 +76,6 @@ public abstract class TW_Action {
   }
 
   /**
-   * @description Logic that executes once for the action before primary before insert logic.
-   */
-  @TestVisible
-  public virtual void beforeInsertSetup() {
-  }
-  /**
-   * @description Logic that executes once for the action before primary after insert logic.
-   * @param TW_QuerySelectionable selection The selection that will be used to query related records.
-   */
-  @TestVisible
-  public virtual void afterInsertSetup(TW_QuerySelector selection) {
-  }
-  /**
-   * @description Logic that executes once for the action before primary before update logic.
-   * @param TW_QuerySelectionable selection The selection that will be used to query related records.
-   */
-  @TestVisible
-  public virtual void beforeUpdateSetup(TW_QuerySelector selection) {
-  }
-  /**
-   * @description Logic that executes once for the action before primary after update logic.
-   * @param TW_QuerySelectionable selection The selection that will be used to query related records.
-   */
-  @TestVisible
-  public virtual void afterUpdateSetup(TW_QuerySelector selection) {
-  }
-  /**
-   * @description Logic that executes once for the action before primary before delete logic.
-   * @param TW_QuerySelectionable selection The selection that will be used to query related records.
-   */
-  @TestVisible
-  public virtual void beforeDeleteSetup(TW_QuerySelector selection) {
-  }
-  /**
-   * @description Logic that executes once for the action before primary after delete logic.
-   * @param TW_QuerySelectionable selection The selection that will be used to query related records.
-   */
-  @TestVisible
-  public virtual void afterDeleteSetup(TW_QuerySelector selection) {
-  }
-  /**
-   * @description Logic that executes once for the action before primary after undelete logic.
-   * @param TW_QuerySelectionable selection The selection that will be used to query related records.
-   */
-  @TestVisible
-  public virtual void afterUndeleteSetup(TW_QuerySelector selection) {
-  }
-
-  /**
    * @description Overridable method used to determine which records should be processed
    * in before insert context. This method is called before the primary logic for each
    * record. If true, the record will be processed. Default true.
@@ -212,55 +163,46 @@ public abstract class TW_Action {
   /**
    * @description Primary logic that executes for each record after insert.
    * @param SObject newRecord The new record from trigger.
-   * @param SObject queriedRecord The record with queried data applied.
-   * @return List of records to insert.
    */
   @TestVisible
-  public virtual void afterInsert(SObject newRecord, SObject queriedRecord) {
+  public virtual void afterInsert(SObject newRecord) {
   }
   /**
    * @description Primary logic that executes for each record before update.
    * @param SObject oldRecord The old record from trigger.
    * @param SObject newRecord The new record from trigger.
-   * @param SObject queriedRecord The record with queried data applied.
-   * @return List of records to insert.
    */
   @TestVisible
-  public virtual void beforeUpdate(SObject oldRecord, SObject newRecord, SObject queriedRecord) {
+  public virtual void beforeUpdate(SObject oldRecord, SObject newRecord) {
   }
   /**
    * @description Primary logic that executes for each record after update.
    * @param SObject oldRecord The old record from trigger.
    * @param SObject newRecord The new record from trigger.
-   * @param SObject queriedRecord The record with queried data applied.
    */
   @TestVisible
-  public virtual void afterUpdate(SObject oldRecord, SObject newRecord, SObject queriedRecord) {
+  public virtual void afterUpdate(SObject oldRecord, SObject newRecord) {
   }
   /**
    * @description Primary logic that executes for each record before delete.
    * @param SObject oldRecord The old record from trigger.
-   * @param SObject newRecord The new record from trigger.
-   * @param SObject queriedRecord The record with queried data applied.
    */
   @TestVisible
-  public virtual void beforeDelete(SObject oldRecord, SObject queriedRecord) {
+  public virtual void beforeDelete(SObject oldRecord) {
   }
   /**
    * @description Primary logic that executes for each record after delete.
    * @param SObject oldRecord The old record from trigger.
-   * @param SObject queriedRecord The record with queried data applied.
    */
   @TestVisible
-  public virtual void afterDelete(SObject oldRecord, SObject queriedRecord) {
+  public virtual void afterDelete(SObject oldRecord) {
   }
   /**
    * @description Primary logic that executes for each record after undelete.
    * @param SObject newRecord The new record from trigger.
-   * @param SObject queriedRecord The record with queried data applied.
    */
   @TestVisible
-  public virtual void afterUndelete(SObject newRecord, SObject queriedRecord) {
+  public virtual void afterUndelete(SObject newRecord) {
   }
 
   public class InvalidActionException extends Exception {

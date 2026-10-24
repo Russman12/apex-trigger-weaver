@@ -3,7 +3,6 @@
  */
 @IsTest
 public class AfterInsertITest {
-  private static Integer setupCalls = 0;
   private static String accName = 'acc1';
 
   static {
@@ -36,7 +35,6 @@ public class AfterInsertITest {
     System.Assert.areEqual(5, System.Limits.getDmlRows());
     Test.stopTest();
 
-    System.Assert.areEqual(1, setupCalls, 'setup should be called once');
     System.Assert.areEqual(
       accName,
       [SELECT Description FROM Contact WHERE Id = :contacts[0].Id].Description,
@@ -58,20 +56,25 @@ public class AfterInsertITest {
    * Assigns description to parent account name
    */
   public class MyAction extends TW_Action {
+    private Map<Id, Contact> queriedContacts;
+
     public override Boolean afterInsertFilter(SObject newRecord) {
       return ((Contact) newRecord).FirstName != 'skip';
     }
 
-    public override void afterInsertSetup(TW_QuerySelector selector) {
-      setupCalls++;
-      selector.addParentField(new List<SObjectField>{ Contact.AccountId, Account.Name });
-    }
-
-    public override void afterInsert(SObject newRecord, SObject queriedRecord) {
+    public override void afterInsert(SObject newRecord) {
       Contact nContact = (Contact) newRecord;
-      Contact qContact = (Contact) queriedRecord;
+      Contact qContact = queriedContacts().get(nContact.Id);
 
       getDMLQueue().enqueueUpdate(new Contact(Id = nContact.Id, Description = qContact.Account.Name));
+    }
+
+    private Map<Id, Contact> queriedContacts() {
+      if (queriedContacts == null) {
+        Set<Id> contactIds = new Map<Id, SObject>(newRecords()).keySet();
+        queriedContacts = new Map<Id, Contact>([SELECT Id, Account.Name FROM Contact WHERE Id IN :contactIds]);
+      }
+      return queriedContacts;
     }
   }
 }

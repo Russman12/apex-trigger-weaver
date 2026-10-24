@@ -12,19 +12,13 @@ public with sharing class TW_BeforeInsertExecutor implements TW_Executor {
   public List<SObject> filteredRecords(TW_Action a) {
     List<SObject> filteredRecords = new List<SObject>();
     for (SObject r : ctx.getNew()) {
+      ctx.currentRecord = r;
       if (a.beforeInsertFilter(r)) {
         filteredRecords.add(r);
       }
     }
 
     return filteredRecords;
-  }
-
-  public void setup(TW_Action a) {
-    a.beforeInsertSetup();
-  }
-
-  public void runQuery() {
   }
 
   public void execute(TW_Action a, SObject r) {

@@ -162,19 +162,9 @@ public with sharing class TW_ActionTest {
   @IsTest
   static void contextCallsEmpty() {
     TW_Action action = new MyAction();
-    TW_QuerySelector selection = new MySelection();
     Account rec = new Account();
 
     Test.startTest();
-    //setup methods
-    action.beforeInsertSetup();
-    action.afterInsertSetup(selection);
-    action.beforeUpdateSetup(selection);
-    action.afterUpdateSetup(selection);
-    action.beforeDeleteSetup(selection);
-    action.afterDeleteSetup(selection);
-    action.afterUndeleteSetup(selection);
-
     //filter methods
     System.assert.isTrue(action.beforeInsertFilter(rec), 'unexpected filter result returned');
     System.assert.isTrue(action.afterInsertFilter(rec), 'unexpected filter results returned');
@@ -186,12 +176,12 @@ public with sharing class TW_ActionTest {
 
     //primary function methods
     action.beforeInsert(rec);
-    action.afterInsert(rec, rec);
-    action.beforeUpdate(rec, rec, rec);
-    action.afterUpdate(rec, rec, rec);
-    action.beforeDelete(rec, rec);
-    action.afterDelete(rec, rec);
-    action.afterUndelete(rec, rec);
+    action.afterInsert(rec);
+    action.beforeUpdate(rec, rec);
+    action.afterUpdate(rec, rec);
+    action.beforeDelete(rec);
+    action.afterDelete(rec);
+    action.afterUndelete(rec);
     Test.stopTest();
   }
 
@@ -205,25 +195,6 @@ public with sharing class TW_ActionTest {
     public void enqueueUndelete(SObject record) {
     }
     public List<String> flush() {
-      return null;
-    }
-  }
-
-  private class MySelection implements TW_QuerySelector {
-    public Boolean isSet() {
-      return true;
-    }
-    public void addField(Schema.SObjectField field) {
-    }
-    public void addFields(Schema.SObjectField[] fields) {
-    }
-    public void addParentField(Schema.SObjectField[] relationshipPath) {
-    }
-    public void addChildField(Schema.SObjectField relationshipField, Schema.SObjectField childField) {
-    }
-    public void addChildParentField(Schema.SObjectField relationshipField, Schema.SObjectField[] relationshipPath) {
-    }
-    public String toClauseString() {
       return null;
     }
   }

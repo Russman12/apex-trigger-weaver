@@ -37,6 +37,8 @@ public virtual class TW_Handler {
   private Schema.SObjectType sObjType;
   @TestVisible
   private TW_ExecutorFactory executorFactory;
+  @TestVisible
+  private final List<TW_Extension> extensions = new List<TW_Extension>();
 
   public TW_Handler(Schema.SObjectType sObjType) {
     //throw execption if not in trigger context
@@ -45,8 +47,9 @@ public virtual class TW_Handler {
     }
 
     this.sObjType = sObjType;
-    this.ctx = new TW_Context(newDMLQueue(), newQuery(sObjType));
+    this.ctx = new TW_Context(newDMLQueue());
     this.executorFactory = new TW_ExecutorFactory(this.ctx);
+    this.extensions.addAll(newExtensions());
   }
 
   @TestVisible
@@ -54,12 +57,28 @@ public virtual class TW_Handler {
   }
 
   /**
-   * @description Creates a new TW_Queryable instance. This method can be overridden to provide a custom query implementation.
-   * @return Default TW_Query instance.
+   * @description Registers an extension whose lifecycle hooks are invoked during execution. Extensions
+   * are invoked in the order they are registered.
+   * @param extension The extension to register.
+   * @return This handler, to allow chaining.
+   * @example
+   * ```
+   * new TW_Handler(Account.getSObjectType()).addExtension(new MyExtension()).execute();
+   * ```
+   */
+  public TW_Handler addExtension(TW_Extension extension) {
+    this.extensions.add(extension);
+    return this;
+  }
+
+  /**
+   * @description Creates the extensions registered for every execution of this handler. This method
+   * can be overridden to provide default extensions. Extensions added with addExtension run after these.
+   * @return Empty list of extensions by default.
    */
   @TestVisible
-  protected virtual TW_Query newQuery(SObjectType sObjType) {
-    return new TW_DefaultQuery(sObjType);
+  protected virtual List<TW_Extension> newExtensions() {
+    return new List<TW_Extension>();
   }
 
   /**
@@ -91,7 +110,7 @@ public virtual class TW_Handler {
   }
 
   /**
-   * @description Executes all registered trigger actions.
+   * @description Executes all registered trigger actions, invoking extension hooks at each lifecycle event.
    */
   public void execute() {
     List<TW_Action> registeredActions = registeredActions();
@@ -102,28 +121,55 @@ public virtual class TW_Handler {
 
     TW_Executor e = executorFactory.make();
 
-    Map<TW_Action, List<SObject>> actionRecords = new Map<TW_Action, List<SObject>>();
-    for (TW_Action a : registeredActions) {
-      System.debug(LoggingLevel.FINE, 'Filtering records for ' + a);
-      List<SObject> filteredRecs = e.filteredRecords(a);
-      if (!filteredRecs.isEmpty()) {
-        actionRecords.put(a, filteredRecs);
-        e.setup(a);
+    try {
+      for (TW_Extension x : extensions) {
+        x.onStart(ctx, registeredActions);
       }
-    }
 
-    e.runQuery();
-
-    for (TW_Action a : registeredActions) {
-      if (actionRecords.containsKey(a)) {
-        for (SObject r : actionRecords.get(a)) {
-          ctx.currentRecord = r;
-          e.execute(a, r);
+      Map<TW_Action, List<SObject>> actionRecords = new Map<TW_Action, List<SObject>>();
+      for (TW_Action a : registeredActions) {
+        System.debug(LoggingLevel.FINE, 'Filtering records for ' + a);
+        List<SObject> filteredRecs = e.filteredRecords(a);
+        if (!filteredRecs.isEmpty()) {
+          actionRecords.put(a, filteredRecs);
+          for (TW_Extension x : extensions) {
+            x.onActionSetup(ctx, a, filteredRecs);
+          }
         }
       }
-    }
 
-    ctx.getDMLQueue().flush();
+      for (TW_Extension x : extensions) {
+        x.beforeExecute(ctx);
+      }
+
+      for (TW_Action a : registeredActions) {
+        if (actionRecords.containsKey(a)) {
+          for (SObject r : actionRecords.get(a)) {
+            ctx.currentRecord = r;
+            e.execute(a, r);
+          }
+        }
+      }
+
+      for (TW_Extension x : extensions) {
+        x.beforeFlush(ctx);
+      }
+
+      ctx.getDMLQueue().flush();
+
+      for (TW_Extension x : extensions) {
+        x.afterFlush(ctx);
+      }
+    } catch (Exception ex) {
+      for (TW_Extension x : extensions) {
+        x.onError(ctx, ex);
+      }
+      throw ex;
+    } finally {
+      for (TW_Extension x : extensions) {
+        x.onFinish(ctx);
+      }
+    }
   }
 
   /**

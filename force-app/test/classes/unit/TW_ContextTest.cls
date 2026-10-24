@@ -3,7 +3,6 @@
  */
 @IsTest
 public with sharing class TW_ContextTest {
-  private static TW_QuerySelector mockSelector = new MySelector();
   private static final Id ACC_ID = '00100000000000x';
 
   /**
@@ -12,31 +11,15 @@ public with sharing class TW_ContextTest {
   @IsTest
   static void constructorError() {
     TW_DMLQueue mockQueue = new MyQueue();
-    TW_Query mockQuery = new MyQuery();
 
     Test.startTest();
     try {
-      TW_Context ctx = new TW_Context(mockQueue, mockQuery);
+      TW_Context ctx = new TW_Context(mockQueue);
       System.Assert.fail('expected exception not thrown');
     } catch (Exception e) {
       System.Assert.isInstanceOfType(e, TW_Context.InvalidContextException.class, 'Unexpected exception thrown');
     }
     Test.stopTest();
-  }
-
-  /**
-   * Ensures getQuery returns correct query
-   */
-  @IsTest
-  static void getQuery() {
-    TW_Context ctx = new TW_Context();
-    ctx.query = new MyQuery();
-
-    Test.startTest();
-    TW_Query actualQ = ctx.getQuery();
-    Test.stopTest();
-
-    System.Assert.areEqual(ctx.query, actualQ, 'unexpected query returned');
   }
 
   /**
@@ -180,42 +163,6 @@ public with sharing class TW_ContextTest {
   }
 
   /**
-   * Ensures getQueriedRecordMap returns map of queried records and that records are distinct instances
-   */
-  @IsTest
-  static void getQueriedRecordMap() {
-    TW_Context ctx = new TW_Context();
-    Account a = new Account(Id = ACC_ID, Name = 'test');
-    ctx.queriedRecords = new Map<Id, SObject>{ ACC_ID => a };
-
-    Test.startTest();
-    Map<Id, SObject> result = ctx.getQueriedRecordMap();
-    System.Assert.areEqual(ctx.queriedRecords, result, 'unexpected records returned');
-
-    ((Account) result.get(ACC_ID)).Name = 'broke';
-    System.Assert.areNotEqual(((Account) result.get(ACC_ID)).Name, a.Name, 'original accout should be unmodified');
-    Test.stopTest();
-  }
-
-  /**
-   * Ensures getQueriedRecord returns the expected record and that records are distinct instances
-   */
-  @IsTest
-  static void getQueriedRecord() {
-    TW_Context ctx = new TW_Context();
-    Account a = new Account(Id = ACC_ID, Name = 'test');
-    ctx.queriedRecords = new Map<Id, SObject>{ ACC_ID => a };
-
-    Test.startTest();
-    SObject queriedRec = ctx.getQueriedRecord(new Account(Id = ACC_ID));
-    System.Assert.areEqual(a, queriedRec, 'unexpected record returned');
-
-    ((Account) queriedRec).Name = 'broke';
-    System.Assert.areNotEqual(a.Name, ((Account) queriedRec).Name);
-    Test.stopTest();
-  }
-
-  /**
    * Ensures getDMLQueue returns the expected queue
    */
   @IsTest
@@ -353,34 +300,6 @@ public with sharing class TW_ContextTest {
     }
     public List<String> flush() {
       return null;
-    }
-  }
-
-  private class MySelector implements TW_QuerySelector {
-    public Boolean isSet() {
-      return true;
-    }
-    public void addField(Schema.SObjectField field) {
-    }
-    public void addFields(Schema.SObjectField[] fields) {
-    }
-    public void addParentField(Schema.SObjectField[] relationshipPath) {
-    }
-    public void addChildField(Schema.SObjectField relationshipField, Schema.SObjectField childField) {
-    }
-    public void addChildParentField(Schema.SObjectField relationshipField, Schema.SObjectField[] relationshipPath) {
-    }
-    public String toClauseString() {
-      return null;
-    }
-  }
-
-  private class MyQuery implements TW_Query {
-    public TW_QuerySelector getSelector() {
-      return mockSelector;
-    }
-    public SObject[] run(List<SObject> records) {
-      return records;
     }
   }
 }

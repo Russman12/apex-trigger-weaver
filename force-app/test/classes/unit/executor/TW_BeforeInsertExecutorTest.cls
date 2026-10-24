@@ -7,10 +7,6 @@ public class TW_BeforeInsertExecutorTest {
   private static final TW_Context CTX_STUB = (TW_Context) CTX_MOCK.stub;
   private static final Mock ACTION_MOCK = Mock.forType(TW_Action.class);
   private static final TW_Action ACTION_STUB = (TW_Action) ACTION_MOCK.stub;
-  private static final Mock QUERY_MOCK = Mock.forType(TW_Query.class);
-  private static final TW_Query QUERY_STUB = (TW_Query) QUERY_MOCK.stub;
-  private static final Mock SELECTOR_MOCK = Mock.forType(TW_QuerySelector.class);
-  private static final TW_QuerySelector SELECTOR_STUB = (TW_QuerySelector) SELECTOR_MOCK.stub;
 
   private static final TW_Executor executor = new TW_BeforeInsertExecutor(CTX_STUB);
 
@@ -41,32 +37,6 @@ public class TW_BeforeInsertExecutorTest {
 
     System.Assert.areEqual(1, actual.size(), 'unexpected records returned');
     System.Assert.areEqual(newAcc1, actual[0], 'unexpected records returned');
-  }
-
-  /**
-   * Ensures setup executes as expected
-   */
-  @IsTest
-  static void setup() {
-    MethodSpy setupSpy = ACTION_MOCK.spyOn('beforeInsertSetup');
-
-    Test.startTest();
-    executor.setup(ACTION_STUB);
-    Test.stopTest();
-
-    Expect.that(setupSpy).hasBeenCalledTimes(1);
-  }
-
-  /**
-   * Ensures runQuery executes as expected
-   */
-  @IsTest
-  static void runQuery() {
-    Test.startTest();
-    executor.runQuery();
-    Test.stopTest();
-
-    System.Assert.areEqual(null, CTX_STUB.queriedRecords, 'unexpected results assigned');
   }
 
   /**

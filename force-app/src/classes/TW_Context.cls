@@ -8,8 +8,6 @@ public with sharing class TW_Context {
   @TestVisible
   private TW_DMLQueue dmlQueue;
   @TestVisible
-  private TW_Query query;
-  @TestVisible
   private TriggerOperation triggerOp = Trigger.operationType;
   @TestVisible
   private List<SObject> newRecs = Trigger.new;
@@ -21,8 +19,6 @@ public with sharing class TW_Context {
   private Map<Id, SObject> oldRecsMap = Trigger.oldMap;
   @TestVisible
   private Boolean isUpdate = Trigger.isUpdate;
-
-  public Map<Id, SObject> queriedRecords = new Map<Id, SObject>();
 
   /**
    * @description The current record which is being executed.
@@ -38,9 +34,8 @@ public with sharing class TW_Context {
    * TW_Context ctx = new TW_Context();
    * ```
    */
-  public TW_Context(TW_DMLQueue dmlQueue, TW_Query query) {
+  public TW_Context(TW_DMLQueue dmlQueue) {
     this.dmlQueue = dmlQueue;
-    this.query = query;
 
     //throw execption if not in trigger context
     if (!Trigger.isExecuting) {
@@ -50,14 +45,6 @@ public with sharing class TW_Context {
 
   @TestVisible
   private TW_Context() {
-  }
-
-  /**
-   * @description Returns the query instance.
-   * @return The query instance.
-   */
-  public TW_Query getQuery() {
-    return query;
   }
 
   /**
@@ -143,34 +130,6 @@ public with sharing class TW_Context {
       return newRecs;
     }
     return oldRecs;
-  }
-
-  /**
-   * @description Returns queried records as a Map<Id, SObject>. Records are cloned to ensure immutabillity.
-   * @return Queried records map.
-   * @example
-   * ```
-   * TW_Context ctx = new TW_Context();
-   * Map<Id, SObject> queriedRecordsMap = ctx.getQueriedRecordMap();
-   * ```
-   */
-  public Map<Id, SObject> getQueriedRecordMap() {
-    return queriedRecords.deepClone();
-  }
-
-  /**
-   * @description Returns queried instance of the given record. Executes query if results are unset.
-   * This should only be called after the query selector is fully constructed.
-   * @return The SObject record.
-   * @example
-   * ```
-   * TW_Context ctx = new TW_Context();
-   * SObject queriedRec1 = ctx.getQueriedRecord(rec1); // executes query and returns record
-   * SObject queriedRec2 = ctx.getQueriedRecord(rec2); // returns record and does not query again
-   * ```
-   */
-  public SObject getQueriedRecord(SObject rec) {
-    return queriedRecords.get(rec.Id)?.clone(true, true, true, true);
   }
 
   /**

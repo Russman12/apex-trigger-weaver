@@ -11,7 +11,7 @@ public class ContactEmailTWAction extends TW_Action {
     return anyChanged(new List<Schema.SObjectField>{ Contact.FirstName, Contact.LastName });
   }
 
-  public override void beforeUpdate(SObject oldRecord, SObject newRecord, SObject queriedRecord) {
+  public override void beforeUpdate(SObject oldRecord, SObject newRecord) {
     Contact contact = (Contact) newRecord;
     contact.Email = contact.FirstName + '-' + contact.LastName + '@example.com';
   }
