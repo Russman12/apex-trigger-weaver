@@ -1,22 +1,22 @@
 /**
- * Example extension that collects DML from every action in the trigger execution and performs one
+ * Example plugin that collects DML from every action in the trigger execution and performs one
  * DML statement per operation once every action has executed. This keeps DML bulkified across
  * actions. Execution is AllOrNone so if any record fails DML, an exception is thrown.
  *
- * Register it on a trigger handler with addExtension:
+ * Register it on a trigger handler with addPlugin:
  * ```
- * new TW_Handler(Account.getSObjectType()).addExtension(DMLTWExtension.class).execute();
+ * new TW_Handler(Account.getSObjectType()).addPlugin(TW_Plugin_DML.class).execute();
  * ```
  *
  * Then enqueue DML from any action:
  * ```
  * public override void afterInsert(SObject newRecord) {
- *   DMLTWExtension dml = (DMLTWExtension) getExtension(DMLTWExtension.class);
+ *   TW_Plugin_DML dml = (TW_Plugin_DML) getPlugin(TW_Plugin_DML.class);
  *   dml.enqueueInsert(new Task(WhatId = newRecord.Id, Subject = 'Follow up'));
  * }
  * ```
  */
-public with sharing class DMLTWExtension extends TW_Extension {
+public with sharing class TW_Plugin_DML extends TW_Plugin {
   private final List<SObject> inserts = new List<SObject>();
   private final List<SObject> updates = new List<SObject>();
   private final List<SObject> deletes = new List<SObject>();

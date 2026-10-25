@@ -18,7 +18,7 @@ public with sharing class TW_Context {
   @TestVisible
   private Boolean isUpdate = Trigger.isUpdate;
   @TestVisible
-  private Map<System.Type, TW_Extension> extensions = new Map<System.Type, TW_Extension>();
+  private Map<System.Type, TW_Plugin> plugins = new Map<System.Type, TW_Plugin>();
 
   /**
    * @description The current record which is being executed.
@@ -37,30 +37,30 @@ public with sharing class TW_Context {
   }
 
   /**
-   * @description Sets the extensions registered for the running execution, keyed by the type they
+   * @description Sets the plugins registered for the running execution, keyed by the type they
    * were registered under.
-   * @param extensions The registered extensions.
+   * @param plugins The registered plugins.
    */
-  public void setExtensions(Map<System.Type, TW_Extension> extensions) {
-    this.extensions = extensions;
+  public void setPlugins(Map<System.Type, TW_Plugin> plugins) {
+    this.plugins = plugins;
   }
 
   /**
-   * @description Returns the extension registered under the given type. Throws an exception if no
-   * extension is registered under the type.
-   * @param extensionType The type the extension was registered under.
-   * @return The registered extension.
+   * @description Returns the plugin registered under the given type. Throws an exception if no
+   * plugin is registered under the type.
+   * @param pluginType The type the plugin was registered under.
+   * @return The registered plugin.
    * @example
    * ```
-   * MyExtension ext = (MyExtension) ctx.getExtension(MyExtension.class);
+   * MyPlugin plugin = (MyPlugin) ctx.getPlugin(MyPlugin.class);
    * ```
    */
-  public TW_Extension getExtension(System.Type extensionType) {
-    TW_Extension extension = extensions.get(extensionType);
-    if (extension == null) {
-      throw new MissingExtensionException('No extension registered for ' + extensionType);
+  public TW_Plugin getPlugin(System.Type pluginType) {
+    TW_Plugin plugin = plugins.get(pluginType);
+    if (plugin == null) {
+      throw new MissingPluginException('No plugin registered for ' + pluginType);
     }
-    return extension;
+    return plugin;
   }
 
   /**
@@ -200,8 +200,8 @@ public with sharing class TW_Context {
   }
 
   /**
-   * @description Represents an exception thrown when a required extension is not registered.
+   * @description Represents an exception thrown when a required plugin is not registered.
    */
-  public class MissingExtensionException extends Exception {
+  public class MissingPluginException extends Exception {
   }
 }

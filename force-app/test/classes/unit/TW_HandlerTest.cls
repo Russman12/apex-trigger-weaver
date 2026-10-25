@@ -206,107 +206,107 @@ public class TW_HandlerTest {
   }
 
   /**
-   * Ensures newExtensions returns no extensions by default
+   * Ensures newPlugins returns no plugins by default
    */
   @IsTest
-  static void newExtensions() {
+  static void newPlugins() {
     TW_Handler handler = new TW_Handler();
 
     Test.startTest();
-    List<System.Type> exts = handler.newExtensions();
+    List<System.Type> plugins = handler.newPlugins();
     Test.stopTest();
 
-    System.Assert.isTrue(exts.isEmpty(), 'unexpected default extensions returned');
+    System.Assert.isTrue(plugins.isEmpty(), 'unexpected default plugins returned');
   }
 
   /**
-   * Ensures addExtension creates and registers a new instance of the extension type
+   * Ensures addPlugin creates and registers a new instance of the plugin type
    */
   @IsTest
-  static void addExtensionType() {
+  static void addPluginType() {
     TW_Handler handler = new TW_Handler();
 
     Test.startTest();
-    TW_Handler result = handler.addExtension(RecordingExtension.class);
+    TW_Handler result = handler.addPlugin(RecordingPlugin.class);
     Test.stopTest();
 
     System.Assert.areEqual(handler, result, 'handler not returned');
-    System.Assert.areEqual(1, handler.extensions.size(), 'extension not registered');
-    System.Assert.isInstanceOfType(handler.extensions[0], RecordingExtension.class, 'unexpected extension registered');
+    System.Assert.areEqual(1, handler.plugins.size(), 'plugin not registered');
+    System.Assert.isInstanceOfType(handler.plugins[0], RecordingPlugin.class, 'unexpected plugin registered');
     System.Assert.areEqual(
-      handler.extensions[0],
-      handler.extensionsByType.get(RecordingExtension.class),
-      'extension not registered under its type'
+      handler.plugins[0],
+      handler.pluginsByType.get(RecordingPlugin.class),
+      'plugin not registered under its type'
     );
   }
 
   /**
-   * Ensures addExtension registers instances in order under their types and returns the handler
+   * Ensures addPlugin registers instances in order under their types and returns the handler
    */
   @IsTest
-  static void addExtensionInstance() {
+  static void addPluginInstance() {
     TW_Handler handler = new TW_Handler();
-    TW_Extension ext1 = new RecordingExtension();
-    TW_Extension ext2 = new OtherExtension();
+    TW_Plugin plugin1 = new RecordingPlugin();
+    TW_Plugin plugin2 = new OtherPlugin();
 
     Test.startTest();
-    TW_Handler result = handler.addExtension(RecordingExtension.class, ext1).addExtension(OtherExtension.class, ext2);
+    TW_Handler result = handler.addPlugin(RecordingPlugin.class, plugin1).addPlugin(OtherPlugin.class, plugin2);
     Test.stopTest();
 
     System.Assert.areEqual(handler, result, 'handler not returned');
-    System.Assert.areEqual(new List<TW_Extension>{ ext1, ext2 }, handler.extensions, 'extensions not registered in order');
-    System.Assert.areEqual(ext1, handler.extensionsByType.get(RecordingExtension.class), 'extension not registered under its type');
-    System.Assert.areEqual(ext2, handler.extensionsByType.get(OtherExtension.class), 'extension not registered under its type');
+    System.Assert.areEqual(new List<TW_Plugin>{ plugin1, plugin2 }, handler.plugins, 'plugins not registered in order');
+    System.Assert.areEqual(plugin1, handler.pluginsByType.get(RecordingPlugin.class), 'plugin not registered under its type');
+    System.Assert.areEqual(plugin2, handler.pluginsByType.get(OtherPlugin.class), 'plugin not registered under its type');
   }
 
   /**
-   * Ensures addExtension throws when the type is already registered
+   * Ensures addPlugin throws when the type is already registered
    */
   @IsTest
-  static void addExtensionDuplicate() {
+  static void addPluginDuplicate() {
     TW_Handler handler = new TW_Handler();
-    handler.addExtension(RecordingExtension.class);
+    handler.addPlugin(RecordingPlugin.class);
 
     Test.startTest();
     try {
-      handler.addExtension(RecordingExtension.class);
+      handler.addPlugin(RecordingPlugin.class);
       System.Assert.fail('expected exception not thrown');
     } catch (Exception e) {
-      System.Assert.isInstanceOfType(e, TW_Handler.InvalidExtensionException.class, 'unexpected exception thrown');
+      System.Assert.isInstanceOfType(e, TW_Handler.InvalidPluginException.class, 'unexpected exception thrown');
     }
     Test.stopTest();
 
-    System.Assert.areEqual(1, handler.extensions.size(), 'duplicate extension registered');
+    System.Assert.areEqual(1, handler.plugins.size(), 'duplicate plugin registered');
   }
 
   /**
-   * Ensures execute makes registered extensions available through the context
+   * Ensures execute makes registered plugins available through the context
    */
   @IsTest
-  static void executeSetsContextExtensions() {
+  static void executeSetsContextPlugins() {
     EXEC_FACTORY_MOCK.spyOn('make').returns(EXEC_STUB);
     ACTION_REG_MOCK.spyOn('activeActions').returns(new List<System.Type>{ MyAction1.class });
     EXEC_MOCK.spyOn('filteredRecords').returns(new List<SObject>());
-    MethodSpy setExtensionsSpy = CTX_MOCK.spyOn('setExtensions');
+    MethodSpy setPluginsSpy = CTX_MOCK.spyOn('setPlugins');
 
     TW_Handler.actionRegistry = ACTION_REG_STUB;
     TW_Handler handler = new TW_Handler();
     handler.ctx = CTX_STUB;
     handler.executorFactory = EXEC_FACTORY_STUB;
-    handler.addExtension(RecordingExtension.class);
+    handler.addPlugin(RecordingPlugin.class);
 
     Test.startTest();
     handler.execute();
     Test.stopTest();
 
-    Expect.that(setExtensionsSpy).hasBeenCalledWith(handler.extensionsByType);
+    Expect.that(setPluginsSpy).hasBeenCalledWith(handler.pluginsByType);
   }
 
   /**
-   * Ensures execute invokes extension hooks in lifecycle order
+   * Ensures execute invokes plugin hooks in lifecycle order
    */
   @IsTest
-  static void executeExtensionHooks() {
+  static void executePluginHooks() {
     List<System.Type> actions = new List<System.Type>{ MyAction1.class, MyAction2.class };
     List<SObject> filteredRecs = new List<SObject>{ new Account(Name = 'acc1') };
 
@@ -321,8 +321,8 @@ public class TW_HandlerTest {
     TW_Handler handler = new TW_Handler();
     handler.ctx = CTX_STUB;
     handler.executorFactory = EXEC_FACTORY_STUB;
-    RecordingExtension ext = new RecordingExtension();
-    handler.addExtension(RecordingExtension.class, ext);
+    RecordingPlugin plugin = new RecordingPlugin();
+    handler.addPlugin(RecordingPlugin.class, plugin);
 
     Test.startTest();
     handler.execute();
@@ -330,16 +330,16 @@ public class TW_HandlerTest {
 
     System.Assert.areEqual(
       new List<String>{ 'onStart:2', 'onActionSetup:1', 'beforeExecute', 'afterExecute', 'onFinish' },
-      ext.calls,
+      plugin.calls,
       'hooks not invoked as expected'
     );
   }
 
   /**
-   * Ensures execute notifies extensions of errors and rethrows
+   * Ensures execute notifies plugins of errors and rethrows
    */
   @IsTest
-  static void executeExtensionError() {
+  static void executePluginError() {
     List<System.Type> actions = new List<System.Type>{ MyAction1.class };
     List<SObject> filteredRecs = new List<SObject>{ new Account(Name = 'acc1') };
     MyException expected = new MyException('boom');
@@ -353,8 +353,8 @@ public class TW_HandlerTest {
     TW_Handler handler = new TW_Handler();
     handler.ctx = CTX_STUB;
     handler.executorFactory = EXEC_FACTORY_STUB;
-    RecordingExtension ext = new RecordingExtension();
-    handler.addExtension(RecordingExtension.class, ext);
+    RecordingPlugin plugin = new RecordingPlugin();
+    handler.addPlugin(RecordingPlugin.class, plugin);
 
     Test.startTest();
     try {
@@ -367,30 +367,30 @@ public class TW_HandlerTest {
 
     System.Assert.areEqual(
       new List<String>{ 'onStart:1', 'onActionSetup:1', 'beforeExecute', 'onError:boom', 'onFinish' },
-      ext.calls,
+      plugin.calls,
       'hooks not invoked as expected'
     );
   }
 
   /**
-   * Ensures extension hooks are not invoked when there are no actions
+   * Ensures plugin hooks are not invoked when there are no actions
    */
   @IsTest
-  static void executeExtensionNoActions() {
+  static void executePluginNoActions() {
     ACTION_REG_MOCK.spyOn('activeActions').returns(new List<System.Type>{});
 
     TW_Handler.actionRegistry = ACTION_REG_STUB;
     TW_Handler handler = new TW_Handler();
     handler.ctx = CTX_STUB;
     handler.executorFactory = EXEC_FACTORY_STUB;
-    RecordingExtension ext = new RecordingExtension();
-    handler.addExtension(RecordingExtension.class, ext);
+    RecordingPlugin plugin = new RecordingPlugin();
+    handler.addPlugin(RecordingPlugin.class, plugin);
 
     Test.startTest();
     handler.execute();
     Test.stopTest();
 
-    System.Assert.isTrue(ext.calls.isEmpty(), 'hooks should not be invoked');
+    System.Assert.isTrue(plugin.calls.isEmpty(), 'hooks should not be invoked');
   }
 
   private class MyAction1 extends TW_Action {
@@ -399,7 +399,7 @@ public class TW_HandlerTest {
   private class MyAction2 extends TW_Action {
   }
 
-  private class RecordingExtension extends TW_Extension {
+  private class RecordingPlugin extends TW_Plugin {
     public List<String> calls = new List<String>();
 
     public override void onStart(TW_Context ctx, List<TW_Action> actions) {
@@ -422,7 +422,7 @@ public class TW_HandlerTest {
     }
   }
 
-  private class OtherExtension extends TW_Extension {
+  private class OtherPlugin extends TW_Plugin {
   }
 
   private class MyException extends Exception {

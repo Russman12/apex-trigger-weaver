@@ -1,14 +1,14 @@
 /**
- * Example extension that logs a summary of each trigger execution: the operation, how many
+ * Example plugin that logs a summary of each trigger execution: the operation, how many
  * actions had records to process, and the SOQL queries and DML statements consumed (including
- * any nested trigger executions caused by DMLTWExtension flushing its queued DML).
+ * any nested trigger executions caused by TW_Plugin_DML flushing its queued DML).
  *
- * Register it on a trigger handler with addExtension:
+ * Register it on a trigger handler with addPlugin:
  * ```
- * new TW_Handler(Account.getSObjectType()).addExtension(LoggingTWExtension.class).execute();
+ * new TW_Handler(Account.getSObjectType()).addPlugin(TW_Plugin_Logging.class).execute();
  * ```
  */
-public with sharing class LoggingTWExtension extends TW_Extension {
+public with sharing class TW_Plugin_Logging extends TW_Plugin {
   private Integer startQueries;
   private Integer startDmlStatements;
   private Integer activeActions = 0;

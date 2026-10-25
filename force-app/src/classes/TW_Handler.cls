@@ -38,9 +38,9 @@ public virtual class TW_Handler {
   @TestVisible
   private TW_ExecutorFactory executorFactory;
   @TestVisible
-  private final List<TW_Extension> extensions = new List<TW_Extension>();
+  private final List<TW_Plugin> plugins = new List<TW_Plugin>();
   @TestVisible
-  private final Map<System.Type, TW_Extension> extensionsByType = new Map<System.Type, TW_Extension>();
+  private final Map<System.Type, TW_Plugin> pluginsByType = new Map<System.Type, TW_Plugin>();
 
   public TW_Handler(Schema.SObjectType sObjType) {
     //throw execption if not in trigger context
@@ -51,8 +51,8 @@ public virtual class TW_Handler {
     this.sObjType = sObjType;
     this.ctx = new TW_Context();
     this.executorFactory = new TW_ExecutorFactory(this.ctx);
-    for (System.Type t : newExtensions()) {
-      addExtension(t);
+    for (System.Type t : newPlugins()) {
+      addPlugin(t);
     }
   }
 
@@ -61,51 +61,51 @@ public virtual class TW_Handler {
   }
 
   /**
-   * @description Registers a new instance of the given extension type. The type must extend
-   * TW_Extension and have a public no-arg constructor. A new instance is created for each handler,
-   * so the extension is shared by every action in this execution only. Actions access it with
-   * `getExtension(extensionType)`. Extensions are invoked in the order they are registered.
-   * @param extensionType The extension type to register.
+   * @description Registers a new instance of the given plugin type. The type must extend
+   * TW_Plugin and have a public no-arg constructor. A new instance is created for each handler,
+   * so the plugin is shared by every action in this execution only. Actions access it with
+   * `getPlugin(pluginType)`. Plugins are invoked in the order they are registered.
+   * @param pluginType The plugin type to register.
    * @return This handler, to allow chaining.
    * @example
    * ```
-   * new TW_Handler(Account.getSObjectType()).addExtension(MyExtension.class).execute();
+   * new TW_Handler(Account.getSObjectType()).addPlugin(MyPlugin.class).execute();
    * ```
    */
-  public TW_Handler addExtension(System.Type extensionType) {
-    return addExtension(extensionType, (TW_Extension) extensionType.newInstance());
+  public TW_Handler addPlugin(System.Type pluginType) {
+    return addPlugin(pluginType, (TW_Plugin) pluginType.newInstance());
   }
 
   /**
-   * @description Registers the given extension instance under the given type. Use this when the
-   * extension requires constructor arguments, or to substitute an implementation for the type.
+   * @description Registers the given plugin instance under the given type. Use this when the
+   * plugin requires constructor arguments, or to substitute an implementation for the type.
    * Always pass a new instance; an instance shared between handlers (e.g. held in a static variable)
    * is shared with nested trigger executions.
-   * @param extensionType The type actions use to look up the extension.
-   * @param extension The extension instance.
+   * @param pluginType The type actions use to look up the plugin.
+   * @param plugin The plugin instance.
    * @return This handler, to allow chaining.
    * @example
    * ```
-   * new TW_Handler(Account.getSObjectType()).addExtension(MyExtension.class, new MyExtension('config')).execute();
+   * new TW_Handler(Account.getSObjectType()).addPlugin(MyPlugin.class, new MyPlugin('config')).execute();
    * ```
    */
-  public TW_Handler addExtension(System.Type extensionType, TW_Extension extension) {
-    if (extensionsByType.containsKey(extensionType)) {
-      throw new InvalidExtensionException('Extension already registered for ' + extensionType);
+  public TW_Handler addPlugin(System.Type pluginType, TW_Plugin plugin) {
+    if (pluginsByType.containsKey(pluginType)) {
+      throw new InvalidPluginException('Plugin already registered for ' + pluginType);
     }
-    this.extensions.add(extension);
-    this.extensionsByType.put(extensionType, extension);
+    this.plugins.add(plugin);
+    this.pluginsByType.put(pluginType, plugin);
     return this;
   }
 
   /**
-   * @description Returns the extension types registered for every execution of this handler. This
-   * method can be overridden to provide default extensions. Extensions added with addExtension run
+   * @description Returns the plugin types registered for every execution of this handler. This
+   * method can be overridden to provide default plugins. Plugins added with addPlugin run
    * after these.
-   * @return Empty list of extension types by default.
+   * @return Empty list of plugin types by default.
    */
   @TestVisible
-  protected virtual List<System.Type> newExtensions() {
+  protected virtual List<System.Type> newPlugins() {
     return new List<System.Type>();
   }
 
@@ -129,7 +129,7 @@ public virtual class TW_Handler {
   }
 
   /**
-   * @description Executes all registered trigger actions, invoking extension hooks at each lifecycle event.
+   * @description Executes all registered trigger actions, invoking plugin hooks at each lifecycle event.
    */
   public void execute() {
     List<TW_Action> registeredActions = registeredActions();
@@ -138,12 +138,12 @@ public virtual class TW_Handler {
       return;
     }
 
-    ctx.setExtensions(extensionsByType);
+    ctx.setPlugins(pluginsByType);
     TW_Executor e = executorFactory.make();
 
     try {
-      for (TW_Extension x : extensions) {
-        x.onStart(ctx, registeredActions);
+      for (TW_Plugin p : plugins) {
+        p.onStart(ctx, registeredActions);
       }
 
       Map<TW_Action, List<SObject>> actionRecords = new Map<TW_Action, List<SObject>>();
@@ -152,14 +152,14 @@ public virtual class TW_Handler {
         List<SObject> filteredRecs = e.filteredRecords(a);
         if (!filteredRecs.isEmpty()) {
           actionRecords.put(a, filteredRecs);
-          for (TW_Extension x : extensions) {
-            x.onActionSetup(ctx, a, filteredRecs);
+          for (TW_Plugin p : plugins) {
+            p.onActionSetup(ctx, a, filteredRecs);
           }
         }
       }
 
-      for (TW_Extension x : extensions) {
-        x.beforeExecute(ctx);
+      for (TW_Plugin p : plugins) {
+        p.beforeExecute(ctx);
       }
 
       for (TW_Action a : registeredActions) {
@@ -171,17 +171,17 @@ public virtual class TW_Handler {
         }
       }
 
-      for (TW_Extension x : extensions) {
-        x.afterExecute(ctx);
+      for (TW_Plugin p : plugins) {
+        p.afterExecute(ctx);
       }
     } catch (Exception ex) {
-      for (TW_Extension x : extensions) {
-        x.onError(ctx, ex);
+      for (TW_Plugin p : plugins) {
+        p.onError(ctx, ex);
       }
       throw ex;
     } finally {
-      for (TW_Extension x : extensions) {
-        x.onFinish(ctx);
+      for (TW_Plugin p : plugins) {
+        p.onFinish(ctx);
       }
     }
   }
@@ -193,8 +193,8 @@ public virtual class TW_Handler {
   }
 
   /**
-   * @description Represents an exception relating to extension registration.
+   * @description Represents an exception relating to plugin registration.
    */
-  public class InvalidExtensionException extends Exception {
+  public class InvalidPluginException extends Exception {
   }
 }

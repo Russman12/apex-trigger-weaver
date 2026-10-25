@@ -58,22 +58,22 @@ public with sharing class TW_ActionTest {
   }
 
   /**
-   * Ensures getExtension delegates to context
+   * Ensures getPlugin delegates to context
    */
   @IsTest
-  static void getExtension() {
+  static void getPlugin() {
     TW_Action action = new MyAction();
     action.ctx = ctxStub;
-    TW_Extension ext = new MyExtension();
+    TW_Plugin plugin = new MyPlugin();
 
-    MethodSpy spy = ctxMock.spyOn('getExtension');
-    spy.returns(ext);
+    MethodSpy spy = ctxMock.spyOn('getPlugin');
+    spy.returns(plugin);
 
     Test.startTest();
-    System.Assert.areEqual(ext, action.getExtension(MyExtension.class), 'unexpected result returned');
+    System.Assert.areEqual(plugin, action.getPlugin(MyPlugin.class), 'unexpected result returned');
     Test.stopTest();
 
-    Expect.that(spy).hasBeenCalledWith(MyExtension.class);
+    Expect.that(spy).hasBeenCalledWith(MyPlugin.class);
   }
 
   /**
@@ -187,6 +187,6 @@ public with sharing class TW_ActionTest {
   private class MyAction extends TW_Action {
   }
 
-  private class MyExtension extends TW_Extension {
+  private class MyPlugin extends TW_Plugin {
   }
 }

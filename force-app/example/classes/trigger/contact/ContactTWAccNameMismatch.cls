@@ -22,7 +22,7 @@ public with sharing class ContactTWAccNameMismatch extends TW_Action {
     Account parentAccount = parentAccounts().get(newContact.AccountId);
 
     if (parentAccount != null && parentAccount.Name != newContact.Name) {
-      DMLTWExtension dml = (DMLTWExtension) getExtension(DMLTWExtension.class);
+      TW_Plugin_DML dml = (TW_Plugin_DML) getPlugin(TW_Plugin_DML.class);
       dml.enqueueUpdate(new Account(Id = newContact.AccountId, Name = ContactBusinessLogic.fullName(newContact)));
     }
   }

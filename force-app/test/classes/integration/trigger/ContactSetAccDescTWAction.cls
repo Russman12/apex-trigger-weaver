@@ -11,7 +11,7 @@ public class ContactSetAccDescTWAction extends TW_Action {
    * "Bump" the parent account description to allow the account description to be updated.
    */
   public override void afterUpdate(SObject oldRecord, SObject newRecord) {
-    DMLTWExtension dml = (DMLTWExtension) getExtension(DMLTWExtension.class);
+    TW_Plugin_DML dml = (TW_Plugin_DML) getPlugin(TW_Plugin_DML.class);
     dml.enqueueUpdate(new Account(Id = ((Contact) newRecord).AccountId, Description = ''));
   }
 }

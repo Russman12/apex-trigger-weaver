@@ -1,22 +1,22 @@
 /**
  * @description Defines lifecycle hooks that are invoked during trigger execution. Extend this class
- * and override the hooks needed, then register the extension with `TW_Handler.addExtension` or by
- * overriding `TW_Handler.newExtensions`. Extensions are invoked in the order they are registered.
+ * and override the hooks needed, then register the plugin with `TW_Handler.addPlugin` or by
+ * overriding `TW_Handler.newPlugins`. Plugins are invoked in the order they are registered.
  * Hooks are only invoked when at least one non-bypassed action is registered for the SObject.
  *
  * One instance is created per trigger execution and shared by every action in that execution.
- * Public methods added to the extension are available to actions through `TW_Action.getExtension`,
+ * Public methods added to the plugin are available to actions through `TW_Action.getPlugin`,
  * so a single class can hold both the lifecycle behaviour and the API actions use.
  * @group Framework
  * @example
  * ```
- * new TW_Handler(Account.getSObjectType()).addExtension(MyExtension.class).execute();
+ * new TW_Handler(Account.getSObjectType()).addPlugin(MyPlugin.class).execute();
  *
  * // within an action
- * MyExtension ext = (MyExtension) getExtension(MyExtension.class);
+ * MyPlugin plugin = (MyPlugin) getPlugin(MyPlugin.class);
  * ```
  */
-public abstract class TW_Extension {
+public abstract class TW_Plugin {
   /**
    * @description Invoked once after actions are resolved and bypasses are applied.
    * @param ctx The trigger context.
@@ -54,7 +54,7 @@ public abstract class TW_Extension {
 
   /**
    * @description Invoked when an exception is thrown during execution. The exception is rethrown
-   * after all extensions have been notified.
+   * after all plugins have been notified.
    * @param ctx The trigger context.
    * @param e The exception that was thrown.
    */

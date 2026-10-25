@@ -34,19 +34,19 @@ public abstract class TW_Action {
   }
 
   /**
-   * @description Returns the extension registered under the given type, allowing the action to use
-   * the functionality the extension provides. Throws TW_Context.MissingExtensionException if no
-   * extension is registered under the type.
-   * @param extensionType The type the extension was registered under.
-   * @return The registered extension.
+   * @description Returns the plugin registered under the given type, allowing the action to use
+   * the functionality the plugin provides. Throws TW_Context.MissingPluginException if no
+   * plugin is registered under the type.
+   * @param pluginType The type the plugin was registered under.
+   * @return The registered plugin.
    * @example
    * ```
-   * MyExtension ext = (MyExtension) getExtension(MyExtension.class);
+   * MyPlugin plugin = (MyPlugin) getPlugin(MyPlugin.class);
    * ```
    */
   @TestVisible
-  protected TW_Extension getExtension(System.Type extensionType) {
-    return ctx.getExtension(extensionType);
+  protected TW_Plugin getPlugin(System.Type pluginType) {
+    return ctx.getPlugin(pluginType);
   }
 
   /**

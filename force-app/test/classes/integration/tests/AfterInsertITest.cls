@@ -66,7 +66,7 @@ public class AfterInsertITest {
       Contact nContact = (Contact) newRecord;
       Contact qContact = queriedContacts().get(nContact.Id);
 
-      DMLTWExtension dml = (DMLTWExtension) getExtension(DMLTWExtension.class);
+      TW_Plugin_DML dml = (TW_Plugin_DML) getPlugin(TW_Plugin_DML.class);
       dml.enqueueUpdate(new Contact(Id = nContact.Id, Description = qContact.Account.Name));
     }
 

@@ -118,7 +118,7 @@ public class BeforeInsertITest {
       Contact contact = (Contact) record;
       contact.Email = contact.FirstName + '.' + contact.LastName + '@example.com';
 
-      DMLTWExtension dml = (DMLTWExtension) getExtension(DMLTWExtension.class);
+      TW_Plugin_DML dml = (TW_Plugin_DML) getPlugin(TW_Plugin_DML.class);
       dml.enqueueInsert(new Account(Name = contact.Email));
     }
   }

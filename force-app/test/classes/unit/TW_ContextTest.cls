@@ -258,38 +258,38 @@ public with sharing class TW_ContextTest {
   }
 
   /**
-   * Ensures getExtension returns the extension registered under the type
+   * Ensures getPlugin returns the plugin registered under the type
    */
   @IsTest
-  static void getExtension() {
+  static void getPlugin() {
     TW_Context ctx = new TW_Context();
-    TW_Extension ext = new MyExtension();
-    ctx.setExtensions(new Map<System.Type, TW_Extension>{ MyExtension.class => ext });
+    TW_Plugin plugin = new MyPlugin();
+    ctx.setPlugins(new Map<System.Type, TW_Plugin>{ MyPlugin.class => plugin });
 
     Test.startTest();
-    TW_Extension actual = ctx.getExtension(MyExtension.class);
+    TW_Plugin actual = ctx.getPlugin(MyPlugin.class);
     Test.stopTest();
 
-    System.Assert.areEqual(ext, actual, 'unexpected extension returned');
+    System.Assert.areEqual(plugin, actual, 'unexpected plugin returned');
   }
 
   /**
-   * Ensures getExtension throws when no extension is registered under the type
+   * Ensures getPlugin throws when no plugin is registered under the type
    */
   @IsTest
-  static void getExtensionMissing() {
+  static void getPluginMissing() {
     TW_Context ctx = new TW_Context();
 
     Test.startTest();
     try {
-      ctx.getExtension(MyExtension.class);
+      ctx.getPlugin(MyPlugin.class);
       System.Assert.fail('expected exception not thrown');
     } catch (Exception e) {
-      System.Assert.isInstanceOfType(e, TW_Context.MissingExtensionException.class, 'unexpected exception thrown');
+      System.Assert.isInstanceOfType(e, TW_Context.MissingPluginException.class, 'unexpected exception thrown');
     }
     Test.stopTest();
   }
 
-  private class MyExtension extends TW_Extension {
+  private class MyPlugin extends TW_Plugin {
   }
 }
