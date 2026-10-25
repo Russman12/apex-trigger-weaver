@@ -81,11 +81,12 @@ public with sharing class AccountTWNameChange extends TW_Action {
 
 Create a `TW_Action__mdt` record. The record's **DeveloperName must match the Apex class name**.
 
-| Field             | Description                                            |
-| ----------------- | ------------------------------------------------------ |
-| `SObject_Name__c` | API name of the SObject whose trigger runs the action. |
-| `Active__c`       | When checked, the action runs. Defaults to checked.    |
-| `Description__c`  | Optional description of the action's purpose.          |
+| Field             | Description                                                                 |
+| ----------------- | --------------------------------------------------------------------------- |
+| `SObject_Name__c` | API name of the SObject whose trigger runs the action.                      |
+| `Order__c`        | Position in the SObject's execution order. Unique among its active actions. |
+| `Active__c`       | When checked, the action runs. Defaults to checked.                         |
+| `Description__c`  | Optional description of the action's purpose.                               |
 
 ```xml
 <!-- customMetadata/TW_Action.AccountTWNameChange.md-meta.xml -->
@@ -103,6 +104,10 @@ Create a `TW_Action__mdt` record. The record's **DeveloperName must match the Ap
         <field>SObject_Name__c</field>
         <value xsi:type="xsd:string">Account</value>
     </values>
+    <values>
+        <field>Order__c</field>
+        <value xsi:type="xsd:string">1</value>
+    </values>
 </CustomMetadata>
 ```
 
@@ -110,10 +115,12 @@ Create a `TW_Action__mdt` record. The record's **DeveloperName must match the Ap
 
 When `TW_Handler.execute()` runs:
 
-1. **Resolve actions.** The handler loads active `TW_Action__mdt` records for the SObject and caches them for the transaction. It removes any bypassed actions and creates a new instance of each remaining action. If no actions remain, the handler exits without invoking any plugins. Action order is not guaranteed.
+1. **Resolve actions.** The handler loads active `TW_Action__mdt` records for the SObject, sorts them by `Order__c`, and caches them for the transaction. It removes any bypassed actions and creates a new instance of each remaining action. If no actions remain, the handler exits without invoking any plugins.
 2. **Filter.** For each action, the handler calls the filter for the current operation on every trigger record and keeps the records that pass.
 3. **Execute.** For each action, the handler calls the handler method for the current operation once per filtered record.
 4. **Plugins.** The handler invokes plugin hooks around each stage. The handler constructor creates the plugins. See [Plugins](#plugins).
+
+Actions run in ascending `Order__c`. The handler compares values one character at a time by Unicode value, so `10` sorts before `9` and uppercase letters sort before lowercase. Each active action for an SObject needs its own order. If two share an order, the SObject's trigger throws `TW_ActionRegistry.InvalidActionConfigException`. It does the same for a record whose `DeveloperName` matches no Apex class, and these errors affect no other SObject. An active record whose `SObject_Name__c` is not a valid SObject throws the same exception in every trigger that uses the framework, because the handler can't match it to one SObject.
 
 Every filter runs before any handler method runs. Because one action instance handles all records in an execution, actions can cache bulk query results in instance variables. Query once for all `newRecords()` on first use, then read from the cache for each record.
 

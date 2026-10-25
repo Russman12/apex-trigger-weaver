@@ -22,6 +22,218 @@ public class TW_ActionRegistryTest {
   }
 
   /**
+   * Ensures activeActions sorts by Order__c, comparing characters by Unicode value
+   */
+  @IsTest
+  static void activeActionsSorted() {
+    TW_ActionRegistry.actionRecords = new List<TW_Action__mdt>{
+      record('ContactSetAccDescTWAction', 'Account', 'b'),
+      record('ContactEmailTWAction', 'Account', 'B'),
+      record('AccountTWNameChange', 'Account', '9'),
+      record('AccountDescriptionTWAction', 'Account', '10')
+    };
+    TW_ActionRegistry registry = new TW_ActionRegistry();
+
+    Test.startTest();
+    List<System.Type> types = registry.activeActions(Account.getSObjectType());
+    Test.stopTest();
+
+    System.Assert.areEqual(
+      new List<System.Type>{
+        AccountDescriptionTWAction.class,
+        AccountTWNameChange.class,
+        ContactEmailTWAction.class,
+        ContactSetAccDescTWAction.class
+      },
+      types,
+      'actions not sorted by order'
+    );
+  }
+
+  /**
+   * Ensures activeActions skips inactive actions, including any that share an order
+   */
+  @IsTest
+  static void activeActionsInactive() {
+    TW_Action__mdt inactive = record('AccountTWNameChange', 'Account', '1');
+    inactive.Active__c = false;
+    TW_ActionRegistry.actionRecords = new List<TW_Action__mdt>{ inactive, record('AccountDescriptionTWAction', 'Account', '1') };
+    TW_ActionRegistry registry = new TW_ActionRegistry();
+
+    Test.startTest();
+    List<System.Type> types = registry.activeActions(Account.getSObjectType());
+    Test.stopTest();
+
+    System.Assert.areEqual(new List<System.Type>{ AccountDescriptionTWAction.class }, types, 'inactive action returned');
+  }
+
+  /**
+   * Ensures activeActions matches the SObject name regardless of case
+   */
+  @IsTest
+  static void activeActionsSObjectNameCase() {
+    TW_ActionRegistry.actionRecords = new List<TW_Action__mdt>{ record('AccountTWNameChange', 'account', '1') };
+    TW_ActionRegistry registry = new TW_ActionRegistry();
+
+    Test.startTest();
+    List<System.Type> types = registry.activeActions(Account.getSObjectType());
+    Test.stopTest();
+
+    System.Assert.areEqual(new List<System.Type>{ AccountTWNameChange.class }, types, 'action not matched to SObject');
+  }
+
+  /**
+   * Ensures activeActions returns null when no actions are configured for the SObject
+   */
+  @IsTest
+  static void activeActionsNone() {
+    TW_ActionRegistry.actionRecords = new List<TW_Action__mdt>{ record('AccountTWNameChange', 'Account', '1') };
+    TW_ActionRegistry registry = new TW_ActionRegistry();
+
+    Test.startTest();
+    List<System.Type> types = registry.activeActions(Contact.getSObjectType());
+    Test.stopTest();
+
+    System.Assert.isNull(types, 'unexpected actions returned');
+  }
+
+  /**
+   * Ensures activeActions throws when two active actions for an SObject share an order
+   */
+  @IsTest
+  static void activeActionsDuplicateOrder() {
+    TW_ActionRegistry.actionRecords = new List<TW_Action__mdt>{
+      record('AccountTWNameChange', 'Account', '1'),
+      record('AccountDescriptionTWAction', 'Account', '1')
+    };
+    TW_ActionRegistry registry = new TW_ActionRegistry();
+
+    Test.startTest();
+    try {
+      registry.activeActions(Account.getSObjectType());
+      System.Assert.fail('expected exception not thrown');
+    } catch (Exception e) {
+      System.Assert.isInstanceOfType(e, TW_ActionRegistry.InvalidActionConfigException.class, 'unexpected exception thrown');
+    }
+    Test.stopTest();
+  }
+
+  /**
+   * Ensures a duplicate order on one SObject does not affect another SObject
+   */
+  @IsTest
+  static void activeActionsDuplicateOrderOtherSObject() {
+    TW_ActionRegistry.actionRecords = new List<TW_Action__mdt>{
+      record('ContactEmailTWAction', 'Contact', '1'),
+      record('ContactSetAccDescTWAction', 'Contact', '1'),
+      record('AccountTWNameChange', 'Account', '1')
+    };
+    TW_ActionRegistry registry = new TW_ActionRegistry();
+
+    Test.startTest();
+    List<System.Type> types = registry.activeActions(Account.getSObjectType());
+    Test.stopTest();
+
+    System.Assert.areEqual(new List<System.Type>{ AccountTWNameChange.class }, types, 'unexpected actions returned');
+  }
+
+  /**
+   * Ensures activeActions throws when an active action has no order
+   */
+  @IsTest
+  static void activeActionsBlankOrder() {
+    TW_ActionRegistry.actionRecords = new List<TW_Action__mdt>{ record('AccountTWNameChange', 'Account', ' ') };
+    TW_ActionRegistry registry = new TW_ActionRegistry();
+
+    Test.startTest();
+    try {
+      registry.activeActions(Account.getSObjectType());
+      System.Assert.fail('expected exception not thrown');
+    } catch (Exception e) {
+      System.Assert.isInstanceOfType(e, TW_ActionRegistry.InvalidActionConfigException.class, 'unexpected exception thrown');
+    }
+    Test.stopTest();
+  }
+
+  /**
+   * Ensures activeActions throws when an active action has no matching Apex class
+   */
+  @IsTest
+  static void activeActionsMissingClass() {
+    TW_ActionRegistry.actionRecords = new List<TW_Action__mdt>{ record('TW_DoesNotExist', 'Account', '1') };
+    TW_ActionRegistry registry = new TW_ActionRegistry();
+
+    Test.startTest();
+    try {
+      registry.activeActions(Account.getSObjectType());
+      System.Assert.fail('expected exception not thrown');
+    } catch (Exception e) {
+      System.Assert.isInstanceOfType(e, TW_ActionRegistry.InvalidActionConfigException.class, 'unexpected exception thrown');
+    }
+    Test.stopTest();
+  }
+
+  /**
+   * Ensures activeActions throws for any SObject when an active action's SObject name is not an
+   * SObject, and keeps throwing on later calls
+   */
+  @IsTest
+  static void activeActionsInvalidSObject() {
+    TW_ActionRegistry.actionRecords = new List<TW_Action__mdt>{
+      record('AccountTWNameChange', 'Account', '1'),
+      record('ContactEmailTWAction', 'Acount', '1'),
+      record('ContactSetAccDescTWAction', 'TW_Handler', '1')
+    };
+    TW_ActionRegistry registry = new TW_ActionRegistry();
+
+    Test.startTest();
+    for (Integer i = 0; i < 2; i++) {
+      try {
+        registry.activeActions(Account.getSObjectType());
+        System.Assert.fail('expected exception not thrown');
+      } catch (Exception e) {
+        System.Assert.isInstanceOfType(e, TW_ActionRegistry.InvalidActionConfigException.class, 'unexpected exception thrown');
+      }
+    }
+    Test.stopTest();
+  }
+
+  /**
+   * Ensures activeActions throws when an active action has no SObject name
+   */
+  @IsTest
+  static void activeActionsBlankSObject() {
+    TW_ActionRegistry.actionRecords = new List<TW_Action__mdt>{ record('AccountTWNameChange', null, '1') };
+    TW_ActionRegistry registry = new TW_ActionRegistry();
+
+    Test.startTest();
+    try {
+      registry.activeActions(Account.getSObjectType());
+      System.Assert.fail('expected exception not thrown');
+    } catch (Exception e) {
+      System.Assert.isInstanceOfType(e, TW_ActionRegistry.InvalidActionConfigException.class, 'unexpected exception thrown');
+    }
+    Test.stopTest();
+  }
+
+  /**
+   * Ensures an inactive action with an invalid SObject name is ignored
+   */
+  @IsTest
+  static void activeActionsInvalidSObjectInactive() {
+    TW_Action__mdt inactive = record('ContactEmailTWAction', 'Acount', '1');
+    inactive.Active__c = false;
+    TW_ActionRegistry.actionRecords = new List<TW_Action__mdt>{ inactive, record('AccountTWNameChange', 'Account', '1') };
+    TW_ActionRegistry registry = new TW_ActionRegistry();
+
+    Test.startTest();
+    List<System.Type> types = registry.activeActions(Account.getSObjectType());
+    Test.stopTest();
+
+    System.Assert.areEqual(new List<System.Type>{ AccountTWNameChange.class }, types, 'unexpected actions returned');
+  }
+
+  /**
    * Ensures register registers actions as expected
    */
   @IsTest
@@ -37,7 +249,7 @@ public class TW_ActionRegistryTest {
   }
 
   /**
-   * Ensures register registers actions as expected
+   * Ensures clear prevents actions from being returned
    */
   @IsTest
   static void clear() {
@@ -49,5 +261,9 @@ public class TW_ActionRegistryTest {
     Test.stopTest();
 
     System.Assert.areEqual(null, types, 'active actions not returned as expected');
+  }
+
+  private static TW_Action__mdt record(String developerName, String sObjName, String order) {
+    return new TW_Action__mdt(DeveloperName = developerName, SObject_Name__c = sObjName, Order__c = order, Active__c = true);
   }
 }

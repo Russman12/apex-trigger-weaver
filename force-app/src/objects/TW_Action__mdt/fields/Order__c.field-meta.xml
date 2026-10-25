@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Order__c</fullName>
+    <description
+  >Position of the action in its SObject&apos;s execution order. Actions run in ascending order, compared character by character by Unicode value, so &quot;10&quot; sorts before &quot;9&quot; and uppercase letters sort before lowercase. Must be unique among the active actions for an SObject.</description>
+    <externalId>false</externalId>
+    <fieldManageability>SubscriberControlled</fieldManageability>
+    <inlineHelpText
+  >Actions for an SObject run in ascending order of this value, compared character by character. Must be unique among the active actions for the SObject.</inlineHelpText>
+    <label>Order</label>
+    <length>255</length>
+    <required>true</required>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

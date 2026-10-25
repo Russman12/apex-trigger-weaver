@@ -41,11 +41,12 @@ For each trigger operation, the handler first calls every action's filter on eac
 
 Create a `TW_Action__mdt` record whose **DeveloperName matches the Apex class name**:
 
-| Field             | Description                                            |
-| ----------------- | ------------------------------------------------------ |
-| `SObject_Name__c` | API name of the SObject whose trigger runs the action. |
-| `Active__c`       | When checked, the action runs. Defaults to checked.    |
-| `Description__c`  | Optional description of the action's purpose.          |
+| Field             | Description                                                                 |
+| ----------------- | --------------------------------------------------------------------------- |
+| `SObject_Name__c` | API name of the SObject whose trigger runs the action.                      |
+| `Order__c`        | Position in the SObject's execution order. Unique among its active actions. |
+| `Active__c`       | When checked, the action runs. Defaults to checked.                         |
+| `Description__c`  | Optional description of the action's purpose.                               |
 
 ## Next steps
 
