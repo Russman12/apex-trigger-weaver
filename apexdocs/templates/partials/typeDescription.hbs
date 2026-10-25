@@ -1,0 +1,9 @@
+{{#each doc.annotations}}
+`{{this}}`
+{{/each}}
+
+{{#if doc.deprecated}}
+> **Deprecated** {{{renderContent doc.deprecated.description}}}
+{{/if}}
+
+{{{renderContent doc.description}}}

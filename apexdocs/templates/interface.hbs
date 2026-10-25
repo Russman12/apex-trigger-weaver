@@ -1,0 +1,17 @@
+{{> typeHeading}}
+
+{{> typeDescription}}
+
+{{#if extends.length}}
+**Extends**
+
+{{#each extends}}
+{{link this}}{{#unless @last}}, {{/unless}}
+{{/each}}
+{{/if}}
+
+{{> typeDetails}}
+
+{{#if methods.value}}
+{{> memberSection methods typeName=name kind="methods" label="Methods" detail="methodDetail"}}
+{{/if}}

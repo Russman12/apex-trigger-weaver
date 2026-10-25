@@ -1,0 +1,12 @@
+{{#each doc.authors}}
+**Author** {{this}}
+
+{{/each}}
+{{#if doc.date}}
+**Date** {{doc.date}}
+{{/if}}
+
+{{#each doc.sees}}
+**See** {{link this}}
+
+{{/each}}

@@ -242,7 +242,7 @@ Tests use [Apex Mockery](https://github.com/salesforce/apex-mockery), which `scr
 
 ### Documentation
 
-Run `npm run docs:dev` to view the documentation site. [ApexDocs](https://github.com/cesarParra/apexdocs) generates the API reference from the doc comments in `force-app/src`. Don't edit the generated pages by hand.
+Run `npm run docs:dev` to view the documentation site. [ApexDocs](https://github.com/cesarParra/apexdocs) generates the API reference from the doc comments in `force-app/src`. Don't edit the generated pages by hand. The Handlebars templates in `apexdocs/templates` control the layout of class and interface pages. Add a `@usage` tag to a class or interface doc comment to fill its Usage section.
 
 ## Contributing
 

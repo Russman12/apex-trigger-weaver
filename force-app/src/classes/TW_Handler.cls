@@ -1,8 +1,9 @@
 /**
- * @description Entry point for trigger weaver. Create a handler in an SObject's trigger and call
- * execute to run the active actions configured for that SObject, along with the org's plugins.
- * Plugins are listed by the org's plugin registry, a class named `TW_PluginRegistry` that implements
- * `TW_Plugin.Registry`, and run for every SObject.
+ * @description Entry point for trigger weaver.
+ * @usage Create a handler in an SObject's trigger and call execute to run the active actions
+ * configured for that SObject, along with the org's plugins. Plugins are listed by the org's plugin
+ * registry, a class named `TW_PluginRegistry` that implements `TW_Plugin.Registry`, and run for
+ * every SObject.
  * @example
  * ```
  * trigger AccountTrigger on Account(before insert, after insert, before update, after update) {

@@ -1,0 +1,7 @@
+{{#each value}}
+{{!-- {#id} sets the heading anchor the member list links to; ~ trims the space so the brace closes it --}}
+{{{ heading headingLevel (inlineCode heading) }}} {#{{../typeName}}-{{../kind}}-{{../group}}-{{@index~}} }
+
+{{> (lookup .. "detail") this}}
+
+{{/each}}

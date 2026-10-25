@@ -1,0 +1,21 @@
+{{ heading headingLevel typeName }} {{label}}
+
+The following are {{kind}} for {{inlineCode typeName}}.
+
+{{#if isGrouped}}
+{{#each value}}
+{{ heading headingLevel heading }}
+
+{{#if groupDescription}}
+{{groupDescription}}
+{{/if}}
+
+{{> memberList this typeName=../typeName kind=../kind group=@index}}
+
+{{> memberDetails this typeName=../typeName kind=../kind detail=../detail group=@index}}
+{{/each}}
+{{else}}
+{{> memberList this typeName=typeName kind=kind group=0}}
+
+{{> memberDetails this typeName=typeName kind=kind detail=detail group=0}}
+{{/if}}

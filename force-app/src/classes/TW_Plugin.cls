@@ -1,7 +1,8 @@
 /**
- * @description Defines the interfaces used to build plugins. A plugin implements one or more of the
- * lifecycle hook interfaces, which are invoked during trigger execution. A plugin that only provides
- * services to actions, with no hooks, implements `TW_Plugin.Plugin` directly.
+ * @description Defines the interfaces used to build plugins.
+ * @usage A plugin implements one or more of the lifecycle hook interfaces, which are invoked during
+ * trigger execution. A plugin that only provides services to actions, with no hooks, implements
+ * `TW_Plugin.Plugin` directly.
  *
  * Plugins are listed by the org's plugin registry, a class named `TW_PluginRegistry` that implements
  * `TW_Plugin.Registry`. Every listed plugin runs for every SObject using the framework, in the order
@@ -16,15 +17,38 @@
  * @group Framework
  * @example
  * ```
- * public class MyPlugin implements TW_Plugin.BeforeExecute, TW_Plugin.AfterExecute {
- *   public void beforeExecute(TW_Context ctx) {
+ * // Inserts the follow-up tasks queued by actions in one DML statement
+ * public with sharing class FollowUpTaskPlugin implements TW_Plugin.AfterExecute, TW_Plugin.OnError {
+ *   private final List<Task> tasks = new List<Task>();
+ *
+ *   // Called by actions
+ *   public void addTask(Id recordId) {
+ *     tasks.add(new Task(WhatId = recordId, Subject = 'Follow up'));
  *   }
+ *
+ *   // Runs once after every action has executed
  *   public void afterExecute(TW_Context ctx) {
+ *     insert tasks;
+ *   }
+ *
+ *   // Runs if anything throws
+ *   public void onError(TW_Context ctx, Exception e) {
+ *     System.debug(LoggingLevel.ERROR, 'Follow-up tasks not created: ' + e.getMessage());
  *   }
  * }
  *
- * // within an action
- * MyPlugin plugin = (MyPlugin) getPlugin(MyPlugin.class);
+ * // List the plugin in the org's registry
+ * public class TW_PluginRegistry implements TW_Plugin.Registry {
+ *   public List<System.Type> plugins() {
+ *     return new List<System.Type>{ FollowUpTaskPlugin.class };
+ *   }
+ * }
+ *
+ * // Use the plugin within an action
+ * public override void afterInsert(SObject newRecord) {
+ *   FollowUpTaskPlugin followUps = (FollowUpTaskPlugin) getPlugin(FollowUpTaskPlugin.class);
+ *   followUps.addTask(newRecord.Id);
+ * }
  * ```
  */
 public abstract class TW_Plugin {

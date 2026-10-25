@@ -1,0 +1,59 @@
+{{#if inherited}}
+*Inherited*
+{{/if}}
+
+{{#each doc.annotations}}
+`{{this}}`
+{{/each}}
+
+{{#if doc.deprecated}}
+> **Deprecated** {{{renderContent doc.deprecated.description}}}
+{{/if}}
+
+{{{renderContent doc.description}}}
+
+{{ heading signature.headingLevel signature.heading }}
+
+{{ code signature.value }}
+
+{{#if parameters.value}}
+{{ heading parameters.headingLevel parameters.heading }}
+
+| Name | Type | Description |
+|------|------|-------------|
+{{#each parameters.value}}
+| {{name}} | {{link type}} | {{{renderContent description}}} |
+{{/each}}
+{{/if}}
+
+{{ heading returnType.headingLevel "Return Value" }}
+
+Type: {{link returnType.value.type}}
+
+{{#if returnType.value.description}}
+{{{renderContent returnType.value.description}}}
+{{/if}}
+
+{{#if throws.value}}
+{{ heading throws.headingLevel throws.heading }}
+
+{{#each throws.value}}
+{{link this.type}}: {{{renderContent this.description}}}
+
+{{/each}}
+{{/if}}
+
+{{#each doc.customTags}}
+**{{splitAndCapitalize name}}**
+
+{{{renderContent description}}}
+
+{{/each}}
+
+{{#if doc.example.value}}
+{{ heading doc.example.headingLevel doc.example.heading }}
+
+{{{renderContent doc.example.value}}}
+{{/if}}
+
+{{> docDetailsPartial}}

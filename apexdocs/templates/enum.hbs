@@ -1,0 +1,13 @@
+{{> typeHeading}}
+
+{{> typeDescription}}
+
+{{> typeDetails}}
+
+{{ heading values.headingLevel values.heading }}
+
+| Value | Description |
+|-------|-------------|
+{{#each values.value}}
+| {{value}} | {{description}} |
+{{/each}}

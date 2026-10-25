@@ -1,0 +1,71 @@
+{{ heading headingLevel heading }}
+
+{{{renderContent doc.description}}}
+
+{{ heading (add headingLevel 1) "API Name" }}
+
+`{{apiName}}`
+
+{{#if publishBehavior}}
+{{ heading (add headingLevel 1) "Publish Behavior" }}
+
+{{publishBehavior}}
+{{/if}}
+
+{{#if hasFields}}
+{{ heading fields.headingLevel heading }} Fields
+
+The following are fields for {{inlineCode apiName}}.
+
+{{#each fields.value}}
+- [{{inlineCode apiName}}](#{{../apiName}}-{{apiName}}){{#if description}}\
+  {{{renderContent description}}}{{/if}}
+{{/each}}
+
+{{#each fields.value}}
+{{!-- {#id} sets the heading anchor the field list links to; ~ trims the space so the brace closes it --}}
+{{{ heading headingLevel (inlineCode apiName) }}} {#{{../apiName}}-{{apiName~}} }
+
+{{#if description}}
+{{{renderContent description}}}
+{{/if}}
+
+{{!-- Each line ends with a \ hard line break. Optional lines add the break before themselves, inside
+their #if, so the last line never ends with a stray \. this. is required because heading is also a
+helper name. --}}
+**Label:** {{this.heading}}\
+{{#if fieldType}}
+**Type:** {{fieldType}}\
+{{/if}}
+**Required:** {{#if required}}Yes{{else}}No{{/if}}{{#if pickListValues}}\
+**Picklist Values:** {{#each pickListValues.value}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}{{/if}}{{#if inlineHelpText}}\
+**Inline Help Text:** {{inlineHelpText}}{{/if}}{{#if complianceGroup}}\
+**Compliance Group:** {{complianceGroup}}{{/if}}{{#if securityClassification}}\
+**Security Classification:** {{securityClassification}}{{/if}}
+
+{{/each}}
+{{/if}}
+
+{{#if hasRecords}}
+{{ heading metadataRecords.headingLevel heading }} Records
+
+The following are records for {{inlineCode apiName}}.
+
+{{#each metadataRecords.value}}
+- [{{inlineCode apiName}}](#{{../apiName}}-records-{{@index}}){{#if description}}\
+  {{{renderContent description}}}{{/if}}
+{{/each}}
+
+{{#each metadataRecords.value}}
+{{!-- Record API names contain a dot, which the {#id} syntax reads as a class, so records use their index --}}
+{{{ heading headingLevel (inlineCode apiName) }}} {#{{../apiName}}-records-{{@index~}} }
+
+{{#if description}}
+{{{renderContent description}}}
+{{/if}}
+
+**Label:** {{label}}\
+**Protected:** {{#if protected}}Yes{{else}}No{{/if}}
+
+{{/each}}
+{{/if}}

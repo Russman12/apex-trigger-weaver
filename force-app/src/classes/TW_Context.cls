@@ -1,8 +1,19 @@
 /**
- * @description Holds the trigger state for a single TW_Handler execution and is shared by every
- * action and plugin in that execution. Provides access to the trigger records, the record
- * currently being processed, and the plugins listed in the plugin registry.
- * @internal
+ * @description Holds the trigger state for a single TW_Handler execution.
+ * @usage One context is created for each trigger execution and shared by every action and plugin in
+ * that execution. It provides access to the trigger records, the record currently being processed,
+ * and the plugins listed in the plugin registry.
+ *
+ * Plugins receive the context as the `ctx` parameter of every lifecycle hook. Actions use it
+ * indirectly through the TW_Action methods, such as `newRecords` and `isChanged`. The framework
+ * creates the context, so plugins and actions never construct one.
+ * @group Framework
+ * @example
+ * ```
+ * public void onError(TW_Context ctx, Exception e) {
+ *   System.debug(LoggingLevel.ERROR, ctx.getOperation() + ' failed for ' + ctx.getRecords().size() + ' record(s)');
+ * }
+ * ```
  */
 public with sharing class TW_Context {
   @TestVisible
@@ -27,19 +38,16 @@ public with sharing class TW_Context {
   public SObject currentRecord;
 
   /**
-   * @description Creates a new TW_Context instance from the running trigger. TW_Handler verifies
-   * that a trigger is executing before creating the context.
-   * @example
-   * ```
-   * TW_Context ctx = new TW_Context();
-   * ```
+   * @description Creates a new TW_Context instance from the running trigger. For framework use;
+   * TW_Handler creates the context for each execution.
    */
   public TW_Context() {
   }
 
   /**
    * @description Creates a new TW_Context instance from the running trigger with the plugins for the
-   * execution, keyed by their type.
+   * execution, keyed by their type. For framework use; TW_Handler creates the context for each
+   * execution.
    * @param plugins The plugins for the execution.
    */
   public TW_Context(Map<System.Type, TW_Plugin.Plugin> plugins) {
@@ -69,7 +77,6 @@ public with sharing class TW_Context {
    * @return The current trigger operation.
    * @example
    * ```
-   * TW_Context ctx = new TW_Context();
    * System.TriggerOperation operation = ctx.getOperation();
    * ```
    */
@@ -82,7 +89,6 @@ public with sharing class TW_Context {
    * @return New trigger records, or null in delete context.
    * @example
    * ```
-   * TW_Context ctx = new TW_Context();
    * List<SObject> newRecords = ctx.getNew();
    * ```
    */
@@ -95,7 +101,6 @@ public with sharing class TW_Context {
    * @return New trigger records map, or null in before insert and delete contexts.
    * @example
    * ```
-   * TW_Context ctx = new TW_Context();
    * Map<Id, SObject> newRecordsMap = ctx.getNewMap();
    * ```
    */
@@ -108,7 +113,6 @@ public with sharing class TW_Context {
    * @return Old trigger records, or null in insert and undelete contexts.
    * @example
    * ```
-   * TW_Context ctx = new TW_Context();
    * List<SObject> oldRecords = ctx.getOld();
    * ```
    */
@@ -131,7 +135,6 @@ public with sharing class TW_Context {
    * @return Old trigger records map, or null in insert and undelete contexts.
    * @example
    * ```
-   * TW_Context ctx = new TW_Context();
    * Map<Id, SObject> oldRecordsMap = ctx.getOldMap();
    * ```
    */

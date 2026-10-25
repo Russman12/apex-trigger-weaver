@@ -1,0 +1,4 @@
+{{#each value}}
+- [{{inlineCode heading}}](#{{../typeName}}-{{../kind}}-{{../group}}-{{@index}}){{#if doc.description}}\
+  {{{renderContent doc.description}}}{{/if}}
+{{/each}}

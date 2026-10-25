@@ -1,0 +1,51 @@
+{{> typeHeading}}
+
+{{> typeDescription}}
+
+{{#if classModifier}}
+`{{classModifier}}`
+{{/if}}
+
+{{#if extends.length}}
+**Inheritance**
+
+{{#each extends}}{{link this}}{{#unless @last}} < {{/unless}}{{/each}}
+{{/if}}
+
+{{#if implements}}
+**Implements**
+
+{{#each implements}}
+{{link this}}{{#unless @last}}, {{/unless}}
+{{/each}}
+{{/if}}
+
+{{> typeDetails}}
+
+{{#if constructors.value}}
+{{> memberSection constructors typeName=name kind="constructors" label="Constructors" detail="constructorDetail"}}
+{{/if}}
+
+{{#if fields.value}}
+{{> memberSection fields typeName=name kind="fields" label="Fields" detail="fieldDetail"}}
+{{/if}}
+
+{{#if properties.value}}
+{{> memberSection properties typeName=name kind="properties" label="Properties" detail="fieldDetail"}}
+{{/if}}
+
+{{#if methods.value}}
+{{> memberSection methods typeName=name kind="methods" label="Methods" detail="methodDetail"}}
+{{/if}}
+
+{{#if innerClasses.value}}
+{{> typeSection innerClasses typeName=name kind="classes" label="Classes" template="classTemplate"}}
+{{/if}}
+
+{{#if innerInterfaces.value}}
+{{> typeSection innerInterfaces typeName=name kind="interfaces" label="Interfaces" template="interfaceTemplate"}}
+{{/if}}
+
+{{#if innerEnums.value}}
+{{> typeSection innerEnums typeName=name kind="enums" label="Enums" template="enumTemplate"}}
+{{/if}}

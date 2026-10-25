@@ -1,8 +1,8 @@
 /**
- * @description Base class for a unit of trigger logic. Extend this class and override the filter
- * and handler methods for the trigger operations the action handles; methods that are not
- * overridden do nothing. An action runs when an active TW_Action__mdt record whose DeveloperName
- * matches the class name is configured for the SObject.
+ * @description Base class for a unit of trigger logic.
+ * @usage Extend this class and override the filter and handler methods for the trigger operations
+ * the action handles; methods that are not overridden do nothing. An action runs when an active
+ * TW_Action__mdt record whose DeveloperName matches the class name is configured for the SObject.
  * @group Framework
  */
 public abstract class TW_Action {

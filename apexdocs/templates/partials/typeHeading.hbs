@@ -1,0 +1,2 @@
+{{!-- Nested types are rendered with anchorParent set, giving the heading the anchor their parent's summary list links to --}}
+{{ heading headingLevel heading }}{{#if anchorParent}} {#{{anchorParent}}-{{name~}} }{{/if}}

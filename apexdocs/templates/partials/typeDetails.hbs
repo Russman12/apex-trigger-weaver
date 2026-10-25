@@ -1,0 +1,29 @@
+{{#if namespace}}
+{{ heading (add headingLevel 1) "Namespace" }}
+
+{{namespace}}
+{{/if}}
+
+{{#each doc.customTags}}
+{{#if (eq name "usage")}}
+{{ heading (add ../headingLevel 1) "Usage" }}
+
+{{{renderContent description}}}
+{{/if}}
+{{/each}}
+
+{{#each doc.customTags}}
+{{#unless (eq name "usage")}}
+**{{splitAndCapitalize name}}**
+
+{{{renderContent description}}}
+{{/unless}}
+{{/each}}
+
+{{#if doc.example.value}}
+{{ heading doc.example.headingLevel doc.example.heading }}
+
+{{{renderContent doc.example.value}}}
+{{/if}}
+
+{{> docDetailsPartial}}

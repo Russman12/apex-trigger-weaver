@@ -1,0 +1,13 @@
+{{ heading headingLevel typeName }} {{label}}
+
+The following are {{kind}} nested in {{inlineCode typeName}}.
+
+{{#each value}}
+- [{{inlineCode name}}](#{{../typeName}}-{{name}}){{#if doc.description}}\
+  {{{renderContent doc.description}}}{{/if}}
+{{/each}}
+
+{{#each value}}
+{{> (lookup .. "template") this anchorParent=../typeName}}
+
+{{/each}}

@@ -13,6 +13,36 @@ function loadFileAsync(filePath: string): Promise<string> {
   });
 }
 
+const TEMPLATE_DIR = './apexdocs/templates';
+
+function readTemplate(name: string): string {
+  return fs.readFileSync(`${TEMPLATE_DIR}/${name}.hbs`, 'utf8').trim();
+}
+
+// Custom templates receive no translations, so the templates use literal labels. Each file in
+// partials/ is registered as an inline partial named after the file, and the class, interface and
+// enum templates as classTemplate, interfaceTemplate and enumTemplate. These names replace ApexDocs'
+// own partials of the same name, including where inner classes, interfaces and enums are rendered.
+// customObject.hbs renders custom objects and custom metadata types.
+const PARTIALS: Record<string, string> = {
+  ...Object.fromEntries(
+    fs
+      .readdirSync(`${TEMPLATE_DIR}/partials`)
+      .filter((file) => file.endsWith('.hbs'))
+      .map((file) => [file.replace(/\.hbs$/, ''), readTemplate(`partials/${file.replace(/\.hbs$/, '')}`)]),
+  ),
+  classTemplate: readTemplate('class'),
+  interfaceTemplate: readTemplate('interface'),
+  enumTemplate: readTemplate('enum'),
+};
+
+function withPartials(template: string): string {
+  const inlinePartials = Object.entries(PARTIALS)
+    .map(([name, partial]) => `{{#*inline "${name}"}}\n${partial}\n{{/inline}}`)
+    .join('\n');
+  return `${inlinePartials}\n${template}`;
+}
+
 function writeFileAsync(filePath: string, data: string): Promise<void> {
   return new Promise((resolve, reject) => {
     fs.writeFile(filePath, data, (err) => {
@@ -55,7 +85,15 @@ export default {
         frontmatter: frontMatter,
       };
     },
+    // Framework internals that code using the framework never references
+    exclude: ['**/executor/**', '**/TW_ActionRegistry.cls'],
     excludeTags: ['internal'],
+    templates: {
+      class: withPartials(PARTIALS.classTemplate),
+      interface: withPartials(PARTIALS.interfaceTemplate),
+      enum: withPartials(PARTIALS.enumTemplate),
+      customObject: withPartials(readTemplate('customObject')),
+    },
     transformDocs: async (docs) => {
       const apexOnlyDocs = docs.filter((doc) => doc.type !== 'customobject');
       const objectOnlyDocs = docs.filter((doc) => doc.type === 'customobject');
