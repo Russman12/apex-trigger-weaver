@@ -58,6 +58,25 @@ public with sharing class TW_ActionTest {
   }
 
   /**
+   * Ensures getExtension delegates to context
+   */
+  @IsTest
+  static void getExtension() {
+    TW_Action action = new MyAction();
+    action.ctx = ctxStub;
+    TW_Extension ext = new MyExtension();
+
+    MethodSpy spy = ctxMock.spyOn('getExtension');
+    spy.returns(ext);
+
+    Test.startTest();
+    System.Assert.areEqual(ext, action.getExtension(MyExtension.class), 'unexpected result returned');
+    Test.stopTest();
+
+    Expect.that(spy).hasBeenCalledWith(MyExtension.class);
+  }
+
+  /**
    * Ensures InvalidContextException is thrown if context set more than once.
    */
   @IsTest
@@ -166,5 +185,8 @@ public with sharing class TW_ActionTest {
   }
 
   private class MyAction extends TW_Action {
+  }
+
+  private class MyExtension extends TW_Extension {
   }
 }

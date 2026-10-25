@@ -256,4 +256,40 @@ public with sharing class TW_ContextTest {
     System.Assert.isTrue(ctx.allChanged(changeFields), 'expected to be changed');
     Test.stopTest();
   }
+
+  /**
+   * Ensures getExtension returns the extension registered under the type
+   */
+  @IsTest
+  static void getExtension() {
+    TW_Context ctx = new TW_Context();
+    TW_Extension ext = new MyExtension();
+    ctx.setExtensions(new Map<System.Type, TW_Extension>{ MyExtension.class => ext });
+
+    Test.startTest();
+    TW_Extension actual = ctx.getExtension(MyExtension.class);
+    Test.stopTest();
+
+    System.Assert.areEqual(ext, actual, 'unexpected extension returned');
+  }
+
+  /**
+   * Ensures getExtension throws when no extension is registered under the type
+   */
+  @IsTest
+  static void getExtensionMissing() {
+    TW_Context ctx = new TW_Context();
+
+    Test.startTest();
+    try {
+      ctx.getExtension(MyExtension.class);
+      System.Assert.fail('expected exception not thrown');
+    } catch (Exception e) {
+      System.Assert.isInstanceOfType(e, TW_Context.MissingExtensionException.class, 'unexpected exception thrown');
+    }
+    Test.stopTest();
+  }
+
+  private class MyExtension extends TW_Extension {
+  }
 }

@@ -39,6 +39,8 @@ public virtual class TW_Handler {
   private TW_ExecutorFactory executorFactory;
   @TestVisible
   private final List<TW_Extension> extensions = new List<TW_Extension>();
+  @TestVisible
+  private final Map<System.Type, TW_Extension> extensionsByType = new Map<System.Type, TW_Extension>();
 
   public TW_Handler(Schema.SObjectType sObjType) {
     //throw execption if not in trigger context
@@ -49,7 +51,9 @@ public virtual class TW_Handler {
     this.sObjType = sObjType;
     this.ctx = new TW_Context();
     this.executorFactory = new TW_ExecutorFactory(this.ctx);
-    this.extensions.addAll(newExtensions());
+    for (System.Type t : newExtensions()) {
+      addExtension(t);
+    }
   }
 
   @TestVisible
@@ -57,28 +61,52 @@ public virtual class TW_Handler {
   }
 
   /**
-   * @description Registers an extension whose lifecycle hooks are invoked during execution. Extensions
-   * are invoked in the order they are registered.
-   * @param extension The extension to register.
+   * @description Registers a new instance of the given extension type. The type must extend
+   * TW_Extension and have a public no-arg constructor. A new instance is created for each handler,
+   * so the extension is shared by every action in this execution only. Actions access it with
+   * `getExtension(extensionType)`. Extensions are invoked in the order they are registered.
+   * @param extensionType The extension type to register.
    * @return This handler, to allow chaining.
    * @example
    * ```
-   * new TW_Handler(Account.getSObjectType()).addExtension(new MyExtension()).execute();
+   * new TW_Handler(Account.getSObjectType()).addExtension(MyExtension.class).execute();
    * ```
    */
-  public TW_Handler addExtension(TW_Extension extension) {
+  public TW_Handler addExtension(System.Type extensionType) {
+    return addExtension(extensionType, (TW_Extension) extensionType.newInstance());
+  }
+
+  /**
+   * @description Registers the given extension instance under the given type. Use this when the
+   * extension requires constructor arguments, or to substitute an implementation for the type.
+   * Always pass a new instance; an instance shared between handlers (e.g. held in a static variable)
+   * is shared with nested trigger executions.
+   * @param extensionType The type actions use to look up the extension.
+   * @param extension The extension instance.
+   * @return This handler, to allow chaining.
+   * @example
+   * ```
+   * new TW_Handler(Account.getSObjectType()).addExtension(MyExtension.class, new MyExtension('config')).execute();
+   * ```
+   */
+  public TW_Handler addExtension(System.Type extensionType, TW_Extension extension) {
+    if (extensionsByType.containsKey(extensionType)) {
+      throw new InvalidExtensionException('Extension already registered for ' + extensionType);
+    }
     this.extensions.add(extension);
+    this.extensionsByType.put(extensionType, extension);
     return this;
   }
 
   /**
-   * @description Creates the extensions registered for every execution of this handler. This method
-   * can be overridden to provide default extensions. Extensions added with addExtension run after these.
-   * @return Empty list of extensions by default.
+   * @description Returns the extension types registered for every execution of this handler. This
+   * method can be overridden to provide default extensions. Extensions added with addExtension run
+   * after these.
+   * @return Empty list of extension types by default.
    */
   @TestVisible
-  protected virtual List<TW_Extension> newExtensions() {
-    return new List<TW_Extension>();
+  protected virtual List<System.Type> newExtensions() {
+    return new List<System.Type>();
   }
 
   private List<TW_Action> registeredActions() {
@@ -110,6 +138,7 @@ public virtual class TW_Handler {
       return;
     }
 
+    ctx.setExtensions(extensionsByType);
     TW_Executor e = executorFactory.make();
 
     try {
@@ -161,5 +190,11 @@ public virtual class TW_Handler {
    * @description Represents an exception relating to the context.
    */
   public class InvalidContextException extends Exception {
+  }
+
+  /**
+   * @description Represents an exception relating to extension registration.
+   */
+  public class InvalidExtensionException extends Exception {
   }
 }

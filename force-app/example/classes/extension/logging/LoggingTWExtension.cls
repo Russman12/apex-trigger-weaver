@@ -1,11 +1,11 @@
 /**
  * Example extension that logs a summary of each trigger execution: the operation, how many
  * actions had records to process, and the SOQL queries and DML statements consumed (including
- * any nested trigger executions caused by flushing the DML queue).
+ * any nested trigger executions caused by DMLTWExtension flushing its queued DML).
  *
  * Register it on a trigger handler with addExtension:
  * ```
- * new TW_Handler(Account.getSObjectType()).addExtension(new LoggingTWExtension()).execute();
+ * new TW_Handler(Account.getSObjectType()).addExtension(LoggingTWExtension.class).execute();
  * ```
  */
 public with sharing class LoggingTWExtension extends TW_Extension {

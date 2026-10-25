@@ -34,6 +34,22 @@ public abstract class TW_Action {
   }
 
   /**
+   * @description Returns the extension registered under the given type, allowing the action to use
+   * the functionality the extension provides. Throws TW_Context.MissingExtensionException if no
+   * extension is registered under the type.
+   * @param extensionType The type the extension was registered under.
+   * @return The registered extension.
+   * @example
+   * ```
+   * MyExtension ext = (MyExtension) getExtension(MyExtension.class);
+   * ```
+   */
+  @TestVisible
+  protected TW_Extension getExtension(System.Type extensionType) {
+    return ctx.getExtension(extensionType);
+  }
+
+  /**
    * @description Returns true if the field has changed for the current record. Returns false if
    * not update context.
    * @param field Field to check.

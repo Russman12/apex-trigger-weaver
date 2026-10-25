@@ -213,27 +213,93 @@ public class TW_HandlerTest {
     TW_Handler handler = new TW_Handler();
 
     Test.startTest();
-    List<TW_Extension> exts = handler.newExtensions();
+    List<System.Type> exts = handler.newExtensions();
     Test.stopTest();
 
     System.Assert.isTrue(exts.isEmpty(), 'unexpected default extensions returned');
   }
 
   /**
-   * Ensures addExtension registers extensions in order and returns the handler
+   * Ensures addExtension creates and registers a new instance of the extension type
    */
   @IsTest
-  static void addExtension() {
+  static void addExtensionType() {
     TW_Handler handler = new TW_Handler();
-    TW_Extension ext1 = new RecordingExtension();
-    TW_Extension ext2 = new RecordingExtension();
 
     Test.startTest();
-    TW_Handler result = handler.addExtension(ext1).addExtension(ext2);
+    TW_Handler result = handler.addExtension(RecordingExtension.class);
     Test.stopTest();
 
     System.Assert.areEqual(handler, result, 'handler not returned');
-    System.Assert.areEqual(new List<TW_Extension>{ ext1, ext2 }, handler.extensions, 'extensions not registered as expected');
+    System.Assert.areEqual(1, handler.extensions.size(), 'extension not registered');
+    System.Assert.isInstanceOfType(handler.extensions[0], RecordingExtension.class, 'unexpected extension registered');
+    System.Assert.areEqual(
+      handler.extensions[0],
+      handler.extensionsByType.get(RecordingExtension.class),
+      'extension not registered under its type'
+    );
+  }
+
+  /**
+   * Ensures addExtension registers instances in order under their types and returns the handler
+   */
+  @IsTest
+  static void addExtensionInstance() {
+    TW_Handler handler = new TW_Handler();
+    TW_Extension ext1 = new RecordingExtension();
+    TW_Extension ext2 = new OtherExtension();
+
+    Test.startTest();
+    TW_Handler result = handler.addExtension(RecordingExtension.class, ext1).addExtension(OtherExtension.class, ext2);
+    Test.stopTest();
+
+    System.Assert.areEqual(handler, result, 'handler not returned');
+    System.Assert.areEqual(new List<TW_Extension>{ ext1, ext2 }, handler.extensions, 'extensions not registered in order');
+    System.Assert.areEqual(ext1, handler.extensionsByType.get(RecordingExtension.class), 'extension not registered under its type');
+    System.Assert.areEqual(ext2, handler.extensionsByType.get(OtherExtension.class), 'extension not registered under its type');
+  }
+
+  /**
+   * Ensures addExtension throws when the type is already registered
+   */
+  @IsTest
+  static void addExtensionDuplicate() {
+    TW_Handler handler = new TW_Handler();
+    handler.addExtension(RecordingExtension.class);
+
+    Test.startTest();
+    try {
+      handler.addExtension(RecordingExtension.class);
+      System.Assert.fail('expected exception not thrown');
+    } catch (Exception e) {
+      System.Assert.isInstanceOfType(e, TW_Handler.InvalidExtensionException.class, 'unexpected exception thrown');
+    }
+    Test.stopTest();
+
+    System.Assert.areEqual(1, handler.extensions.size(), 'duplicate extension registered');
+  }
+
+  /**
+   * Ensures execute makes registered extensions available through the context
+   */
+  @IsTest
+  static void executeSetsContextExtensions() {
+    EXEC_FACTORY_MOCK.spyOn('make').returns(EXEC_STUB);
+    ACTION_REG_MOCK.spyOn('activeActions').returns(new List<System.Type>{ MyAction1.class });
+    EXEC_MOCK.spyOn('filteredRecords').returns(new List<SObject>());
+    MethodSpy setExtensionsSpy = CTX_MOCK.spyOn('setExtensions');
+
+    TW_Handler.actionRegistry = ACTION_REG_STUB;
+    TW_Handler handler = new TW_Handler();
+    handler.ctx = CTX_STUB;
+    handler.executorFactory = EXEC_FACTORY_STUB;
+    handler.addExtension(RecordingExtension.class);
+
+    Test.startTest();
+    handler.execute();
+    Test.stopTest();
+
+    Expect.that(setExtensionsSpy).hasBeenCalledWith(handler.extensionsByType);
   }
 
   /**
@@ -256,7 +322,7 @@ public class TW_HandlerTest {
     handler.ctx = CTX_STUB;
     handler.executorFactory = EXEC_FACTORY_STUB;
     RecordingExtension ext = new RecordingExtension();
-    handler.addExtension(ext);
+    handler.addExtension(RecordingExtension.class, ext);
 
     Test.startTest();
     handler.execute();
@@ -288,7 +354,7 @@ public class TW_HandlerTest {
     handler.ctx = CTX_STUB;
     handler.executorFactory = EXEC_FACTORY_STUB;
     RecordingExtension ext = new RecordingExtension();
-    handler.addExtension(ext);
+    handler.addExtension(RecordingExtension.class, ext);
 
     Test.startTest();
     try {
@@ -318,7 +384,7 @@ public class TW_HandlerTest {
     handler.ctx = CTX_STUB;
     handler.executorFactory = EXEC_FACTORY_STUB;
     RecordingExtension ext = new RecordingExtension();
-    handler.addExtension(ext);
+    handler.addExtension(RecordingExtension.class, ext);
 
     Test.startTest();
     handler.execute();
@@ -354,6 +420,9 @@ public class TW_HandlerTest {
     public override void onFinish(TW_Context ctx) {
       calls.add('onFinish');
     }
+  }
+
+  private class OtherExtension extends TW_Extension {
   }
 
   private class MyException extends Exception {

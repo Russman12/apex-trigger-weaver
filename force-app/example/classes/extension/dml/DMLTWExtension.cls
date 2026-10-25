@@ -1,14 +1,22 @@
 /**
- * Example DML queue that collects records and performs one DML statement per operation when
- * flushed. Execution is AllOrNone so if any record fails DML, an exception is thrown.
+ * Example extension that collects DML from every action in the trigger execution and performs one
+ * DML statement per operation once every action has executed. This keeps DML bulkified across
+ * actions. Execution is AllOrNone so if any record fails DML, an exception is thrown.
  *
+ * Register it on a trigger handler with addExtension:
  * ```
- * DMLQueue dmlQueue = new DMLQueue();
- * dmlQueue.enqueueInsert(new Account(Name = 'Test Account'));
- * dmlQueue.flush();
+ * new TW_Handler(Account.getSObjectType()).addExtension(DMLTWExtension.class).execute();
+ * ```
+ *
+ * Then enqueue DML from any action:
+ * ```
+ * public override void afterInsert(SObject newRecord) {
+ *   DMLTWExtension dml = (DMLTWExtension) getExtension(DMLTWExtension.class);
+ *   dml.enqueueInsert(new Task(WhatId = newRecord.Id, Subject = 'Follow up'));
+ * }
  * ```
  */
-public with sharing class DMLQueue {
+public with sharing class DMLTWExtension extends TW_Extension {
   private final List<SObject> inserts = new List<SObject>();
   private final List<SObject> updates = new List<SObject>();
   private final List<SObject> deletes = new List<SObject>();
@@ -47,10 +55,10 @@ public with sharing class DMLQueue {
   }
 
   /**
-   * Executes DML for all queued records and clears the queue. Records are sorted so records of
-   * the same SObject type are grouped together.
+   * Executes DML for all queued records once every action has executed. Records are sorted so
+   * records of the same SObject type are grouped together.
    */
-  public void flush() {
+  public override void afterExecute(TW_Context ctx) {
     if (!inserts.isEmpty()) {
       inserts.sort();
       insert inserts;

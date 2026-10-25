@@ -3,10 +3,17 @@
  * and override the hooks needed, then register the extension with `TW_Handler.addExtension` or by
  * overriding `TW_Handler.newExtensions`. Extensions are invoked in the order they are registered.
  * Hooks are only invoked when at least one non-bypassed action is registered for the SObject.
+ *
+ * One instance is created per trigger execution and shared by every action in that execution.
+ * Public methods added to the extension are available to actions through `TW_Action.getExtension`,
+ * so a single class can hold both the lifecycle behaviour and the API actions use.
  * @group Framework
  * @example
  * ```
- * new TW_Handler(Account.getSObjectType()).addExtension(new MyExtension()).execute();
+ * new TW_Handler(Account.getSObjectType()).addExtension(MyExtension.class).execute();
+ *
+ * // within an action
+ * MyExtension ext = (MyExtension) getExtension(MyExtension.class);
  * ```
  */
 public abstract class TW_Extension {

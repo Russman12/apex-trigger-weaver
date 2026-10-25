@@ -109,13 +109,7 @@ public class BeforeInsertITest {
   /**
    * Automatically assigns email based on first/last name
    */
-  public class MyAction extends TW_Action implements DMLQueueAware {
-    private DMLQueue dml;
-
-    public void setDMLQueue(DMLQueue queue) {
-      this.dml = queue;
-    }
-
+  public class MyAction extends TW_Action {
     public override Boolean beforeInsertFilter(SObject newRecord) {
       return ((Contact) newRecord).FirstName != 'skip';
     }
@@ -124,6 +118,7 @@ public class BeforeInsertITest {
       Contact contact = (Contact) record;
       contact.Email = contact.FirstName + '.' + contact.LastName + '@example.com';
 
+      DMLTWExtension dml = (DMLTWExtension) getExtension(DMLTWExtension.class);
       dml.enqueueInsert(new Account(Name = contact.Email));
     }
   }

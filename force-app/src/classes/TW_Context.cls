@@ -17,6 +17,8 @@ public with sharing class TW_Context {
   private Map<Id, SObject> oldRecsMap = Trigger.oldMap;
   @TestVisible
   private Boolean isUpdate = Trigger.isUpdate;
+  @TestVisible
+  private Map<System.Type, TW_Extension> extensions = new Map<System.Type, TW_Extension>();
 
   /**
    * @description The current record which is being executed.
@@ -32,6 +34,33 @@ public with sharing class TW_Context {
    * ```
    */
   public TW_Context() {
+  }
+
+  /**
+   * @description Sets the extensions registered for the running execution, keyed by the type they
+   * were registered under.
+   * @param extensions The registered extensions.
+   */
+  public void setExtensions(Map<System.Type, TW_Extension> extensions) {
+    this.extensions = extensions;
+  }
+
+  /**
+   * @description Returns the extension registered under the given type. Throws an exception if no
+   * extension is registered under the type.
+   * @param extensionType The type the extension was registered under.
+   * @return The registered extension.
+   * @example
+   * ```
+   * MyExtension ext = (MyExtension) ctx.getExtension(MyExtension.class);
+   * ```
+   */
+  public TW_Extension getExtension(System.Type extensionType) {
+    TW_Extension extension = extensions.get(extensionType);
+    if (extension == null) {
+      throw new MissingExtensionException('No extension registered for ' + extensionType);
+    }
+    return extension;
   }
 
   /**
@@ -168,5 +197,11 @@ public with sharing class TW_Context {
    * @description Represents an exception relating to the context.
    */
   public class InvalidContextException extends Exception {
+  }
+
+  /**
+   * @description Represents an exception thrown when a required extension is not registered.
+   */
+  public class MissingExtensionException extends Exception {
   }
 }
