@@ -3,12 +3,9 @@
  * actions had records to process, and the SOQL queries and DML statements consumed (including
  * any nested trigger executions caused by TW_Plugin_DML flushing its queued DML).
  *
- * Register it on a trigger handler with addPlugin:
- * ```
- * new TW_Handler(Account.getSObjectType()).addPlugin(TW_Plugin_Logging.class).execute();
- * ```
+ * Runs for every SObject using the framework once listed in TW_PluginRegistry.
  */
-public with sharing class TW_Plugin_Logging extends TW_Plugin {
+public with sharing class TW_Plugin_Logging implements TW_Plugin.OnStart, TW_Plugin.OnActionSetup, TW_Plugin.OnError, TW_Plugin.OnFinish {
   private Integer startQueries;
   private Integer startDmlStatements;
   private Integer activeActions = 0;
@@ -16,7 +13,7 @@ public with sharing class TW_Plugin_Logging extends TW_Plugin {
   /**
    * Capture limits before any action logic runs
    */
-  public override void onStart(TW_Context ctx, List<TW_Action> actions) {
+  public void onStart(TW_Context ctx, List<TW_Action> actions) {
     startQueries = Limits.getQueries();
     startDmlStatements = Limits.getDmlStatements();
   }
@@ -24,21 +21,21 @@ public with sharing class TW_Plugin_Logging extends TW_Plugin {
   /**
    * Count each action that has records to process
    */
-  public override void onActionSetup(TW_Context ctx, TW_Action action, List<SObject> records) {
+  public void onActionSetup(TW_Context ctx, TW_Action action, List<SObject> records) {
     activeActions++;
   }
 
   /**
    * Log failures before the exception is rethrown by the handler
    */
-  public override void onError(TW_Context ctx, Exception e) {
+  public void onError(TW_Context ctx, Exception e) {
     System.debug(LoggingLevel.ERROR, ctx.getOperation() + ' failed: ' + e.getMessage());
   }
 
   /**
    * Log the execution summary
    */
-  public override void onFinish(TW_Context ctx) {
+  public void onFinish(TW_Context ctx) {
     System.debug(
       LoggingLevel.INFO,
       ctx.getOperation() +

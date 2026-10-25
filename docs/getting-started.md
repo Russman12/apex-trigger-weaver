@@ -49,6 +49,6 @@ Create a `TW_Action__mdt` record whose **DeveloperName matches the Apex class na
 
 ## Next steps
 
-- Add plugins to a handler with `addPlugin` to hook into the trigger lifecycle. See [TW_Plugin](/framework/TW_Plugin).
+- Hook into the trigger lifecycle with plugins, which run for every SObject once listed in a `TW_PluginRegistry` class. See [TW_Plugin](/framework/TW_Plugin).
 - Turn off an action for the rest of a transaction with `TW_Handler.addBypass`. See [TW_Handler](/framework/TW_Handler).
 - See the [API Reference Guide](/#reference-guide) for every public method.

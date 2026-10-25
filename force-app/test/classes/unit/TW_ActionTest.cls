@@ -64,7 +64,7 @@ public with sharing class TW_ActionTest {
   static void getPlugin() {
     TW_Action action = new MyAction();
     action.ctx = ctxStub;
-    TW_Plugin plugin = new MyPlugin();
+    TW_Plugin.Plugin plugin = new MyPlugin();
 
     MethodSpy spy = ctxMock.spyOn('getPlugin');
     spy.returns(plugin);
@@ -187,6 +187,6 @@ public with sharing class TW_ActionTest {
   private class MyAction extends TW_Action {
   }
 
-  private class MyPlugin extends TW_Plugin {
+  private class MyPlugin implements TW_Plugin.Plugin {
   }
 }

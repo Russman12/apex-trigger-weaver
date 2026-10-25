@@ -3,12 +3,8 @@
  * DML statement per operation once every action has executed. This keeps DML bulkified across
  * actions. Execution is AllOrNone so if any record fails DML, an exception is thrown.
  *
- * Register it on a trigger handler with addPlugin:
- * ```
- * new TW_Handler(Account.getSObjectType()).addPlugin(TW_Plugin_DML.class).execute();
- * ```
- *
- * Then enqueue DML from any action:
+ * Runs for every SObject using the framework once listed in TW_PluginRegistry. Enqueue DML from
+ * any action:
  * ```
  * public override void afterInsert(SObject newRecord) {
  *   TW_Plugin_DML dml = (TW_Plugin_DML) getPlugin(TW_Plugin_DML.class);
@@ -16,7 +12,7 @@
  * }
  * ```
  */
-public with sharing class TW_Plugin_DML extends TW_Plugin {
+public with sharing class TW_Plugin_DML implements TW_Plugin.AfterExecute {
   private final List<SObject> inserts = new List<SObject>();
   private final List<SObject> updates = new List<SObject>();
   private final List<SObject> deletes = new List<SObject>();
@@ -58,7 +54,7 @@ public with sharing class TW_Plugin_DML extends TW_Plugin {
    * Executes DML for all queued records once every action has executed. Records are sorted so
    * records of the same SObject type are grouped together.
    */
-  public override void afterExecute(TW_Context ctx) {
+  public void afterExecute(TW_Context ctx) {
     if (!inserts.isEmpty()) {
       inserts.sort();
       insert inserts;

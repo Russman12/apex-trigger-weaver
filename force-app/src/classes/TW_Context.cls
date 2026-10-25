@@ -1,7 +1,7 @@
 /**
  * @description Holds the trigger state for a single TW_Handler execution and is shared by every
  * action and plugin in that execution. Provides access to the trigger records, the record
- * currently being processed, and the registered plugins.
+ * currently being processed, and the plugins listed in the plugin registry.
  * @internal
  */
 public with sharing class TW_Context {
@@ -18,7 +18,7 @@ public with sharing class TW_Context {
   @TestVisible
   private Boolean isUpdate = Trigger.isUpdate;
   @TestVisible
-  private Map<System.Type, TW_Plugin> plugins = new Map<System.Type, TW_Plugin>();
+  private Map<System.Type, TW_Plugin.Plugin> plugins = new Map<System.Type, TW_Plugin.Plugin>();
 
   /**
    * @description The record currently being filtered or executed. Set by the framework before each
@@ -38,26 +38,26 @@ public with sharing class TW_Context {
   }
 
   /**
-   * @description Sets the plugins registered for the running execution, keyed by the type they
-   * were registered under.
-   * @param plugins The registered plugins.
+   * @description Creates a new TW_Context instance from the running trigger with the plugins for the
+   * execution, keyed by their type.
+   * @param plugins The plugins for the execution.
    */
-  public void setPlugins(Map<System.Type, TW_Plugin> plugins) {
+  public TW_Context(Map<System.Type, TW_Plugin.Plugin> plugins) {
     this.plugins = plugins;
   }
 
   /**
-   * @description Returns the plugin registered under the given type. Throws MissingPluginException
-   * if no plugin is registered under the type.
-   * @param pluginType The type the plugin was registered under.
-   * @return The registered plugin.
+   * @description Returns this execution's instance of the given plugin type. Throws
+   * MissingPluginException if the type is not listed in the plugin registry.
+   * @param pluginType The plugin type, as listed in the plugin registry.
+   * @return The plugin instance.
    * @example
    * ```
    * MyPlugin plugin = (MyPlugin) ctx.getPlugin(MyPlugin.class);
    * ```
    */
-  public TW_Plugin getPlugin(System.Type pluginType) {
-    TW_Plugin plugin = plugins.get(pluginType);
+  public TW_Plugin.Plugin getPlugin(System.Type pluginType) {
+    TW_Plugin.Plugin plugin = plugins.get(pluginType);
     if (plugin == null) {
       throw new MissingPluginException('No plugin registered for ' + pluginType);
     }
@@ -208,7 +208,7 @@ public with sharing class TW_Context {
   }
 
   /**
-   * @description Represents an exception thrown when a required plugin is not registered.
+   * @description Represents an exception thrown when a requested plugin is not listed in the plugin registry.
    */
   public class MissingPluginException extends Exception {
   }

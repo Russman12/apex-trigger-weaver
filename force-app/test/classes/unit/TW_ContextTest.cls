@@ -262,12 +262,11 @@ public with sharing class TW_ContextTest {
    */
   @IsTest
   static void getPlugin() {
-    TW_Context ctx = new TW_Context();
-    TW_Plugin plugin = new MyPlugin();
-    ctx.setPlugins(new Map<System.Type, TW_Plugin>{ MyPlugin.class => plugin });
+    TW_Plugin.Plugin plugin = new MyPlugin();
+    TW_Context ctx = new TW_Context(new Map<System.Type, TW_Plugin.Plugin>{ MyPlugin.class => plugin });
 
     Test.startTest();
-    TW_Plugin actual = ctx.getPlugin(MyPlugin.class);
+    TW_Plugin.Plugin actual = ctx.getPlugin(MyPlugin.class);
     Test.stopTest();
 
     System.Assert.areEqual(plugin, actual, 'unexpected plugin returned');
@@ -290,6 +289,6 @@ public with sharing class TW_ContextTest {
     Test.stopTest();
   }
 
-  private class MyPlugin extends TW_Plugin {
+  private class MyPlugin implements TW_Plugin.Plugin {
   }
 }

@@ -113,7 +113,7 @@ When `TW_Handler.execute()` runs:
 1. **Resolve actions.** The handler loads active `TW_Action__mdt` records for the SObject and caches them for the transaction. It removes any bypassed actions and creates a new instance of each remaining action. If no actions remain, the handler exits without invoking any plugins. Action order is not guaranteed.
 2. **Filter.** For each action, the handler calls the filter for the current operation on every trigger record and keeps the records that pass.
 3. **Execute.** For each action, the handler calls the handler method for the current operation once per filtered record.
-4. **Plugins.** The handler invokes plugin hooks around each stage. See [Plugins](#plugins).
+4. **Plugins.** The handler invokes plugin hooks around each stage. The handler constructor creates the plugins. See [Plugins](#plugins).
 
 Every filter runs before any handler method runs. Because one action instance handles all records in an execution, actions can cache bulk query results in instance variables. Query once for all `newRecords()` on first use, then read from the cache for each record.
 
@@ -126,7 +126,7 @@ Every filter runs before any handler method runs. Because one action instance ha
 | `newRecords()` / `oldRecords()`             | All records in the trigger (`Trigger.new` / `Trigger.old`).                     |
 | `isChanged(field)`                          | Whether the field changed on the current record. Throws outside update context. |
 | `anyChanged(fields)` / `allChanged(fields)` | Whether any or every field changed. Throws outside update context.              |
-| `getPlugin(pluginType)`                     | Returns a plugin registered on the handler. Throws if the handler has none.     |
+| `getPlugin(pluginType)`                     | Returns a plugin listed in the plugin registry. Throws if not listed.           |
 
 Operations: `beforeInsert`, `afterInsert`, `beforeUpdate`, `afterUpdate`, `beforeDelete`, `afterDelete`, `afterUndelete`. Insert and undelete methods receive `newRecord`. Delete methods receive `oldRecord`. Update methods receive both.
 
@@ -144,22 +144,49 @@ TW_Handler.removeBypass(AccountTWNameChange.class);
 
 ## Plugins
 
-A plugin extends `TW_Plugin` and overrides any of these lifecycle hooks:
+A plugin implements one or more of the hook interfaces nested in `TW_Plugin`. The handler calls each hook a plugin declares and skips the rest:
 
-| Hook                                  | When it runs                                                   |
-| ------------------------------------- | -------------------------------------------------------------- |
-| `onStart(ctx, actions)`               | Once, after the handler resolves actions and applies bypasses. |
-| `onActionSetup(ctx, action, records)` | Once per action that has at least one record after filtering.  |
-| `beforeExecute(ctx)`                  | Once, after all filters and before any action logic.           |
-| `afterExecute(ctx)`                   | Once, after all action logic completes.                        |
-| `onError(ctx, e)`                     | When an exception occurs. The handler rethrows the exception.  |
-| `onFinish(ctx)`                       | Once at the end, even if an exception occurred.                |
+| Interface                 | Method                                | When it runs                                                   |
+| ------------------------- | ------------------------------------- | -------------------------------------------------------------- |
+| `TW_Plugin.OnStart`       | `onStart(ctx, actions)`               | Once, after the handler resolves actions and applies bypasses. |
+| `TW_Plugin.OnActionSetup` | `onActionSetup(ctx, action, records)` | Once per action that has at least one record after filtering.  |
+| `TW_Plugin.BeforeExecute` | `beforeExecute(ctx)`                  | Once, after all filters and before any action logic.           |
+| `TW_Plugin.AfterExecute`  | `afterExecute(ctx)`                   | Once, after all action logic completes.                        |
+| `TW_Plugin.OnError`       | `onError(ctx, e)`                     | When an exception occurs. The handler rethrows the exception.  |
+| `TW_Plugin.OnFinish`      | `onFinish(ctx)`                       | Once at the end, even if an exception occurred.                |
 
-Register plugins on the handler. They run in registration order, and the handler creates a new instance for each trigger execution:
+Every hook interface extends `TW_Plugin.Plugin`. A plugin that provides services to actions without using any hooks implements `TW_Plugin.Plugin` directly. Plugins use interfaces rather than inheritance, so a plugin class is free to extend another class.
 
 ```apex
-new TW_Handler(Account.getSObjectType()).addPlugin(TW_Plugin_DML.class).execute();
+public class MyPlugin implements TW_Plugin.BeforeExecute, TW_Plugin.AfterExecute {
+  public void beforeExecute(TW_Context ctx) {
+  }
+  public void afterExecute(TW_Context ctx) {
+  }
+}
 ```
+
+### Registering Plugins
+
+The framework runs plugins for every SObject that uses it. To register plugins, create a class named `TW_PluginRegistry` that implements `TW_Plugin.Registry`. The handler runs the plugins it returns, in order:
+
+```apex
+public class TW_PluginRegistry implements TW_Plugin.Registry {
+  public List<System.Type> plugins() {
+    return new List<System.Type>{ TW_Plugin_DML.class, TW_Plugin_Logging.class };
+  }
+}
+```
+
+The handler creates the registry once per transaction and calls `plugins()` each time a trigger creates a handler. Each plugin type needs a public no-arg constructor. The handler creates a new instance of each plugin for each trigger execution, including nested executions caused by DML. To share data across the transaction, such as reference records queried once, hold it in a static variable on the plugin class.
+
+The handler throws `TW_Handler.InvalidPluginException` in these cases:
+
+- `TW_PluginRegistry` is not a `TW_Plugin.Registry`.
+- The registry lists a type that is not a `TW_Plugin.Plugin`.
+- The registry lists a type twice.
+
+Without a `TW_PluginRegistry` class, no plugins run.
 
 Actions can call public methods on a plugin, so a plugin can provide shared services:
 
@@ -168,9 +195,7 @@ TW_Plugin_DML dml = (TW_Plugin_DML) getPlugin(TW_Plugin_DML.class);
 dml.enqueueUpdate(new Account(Id = accountId, Name = 'New Name'));
 ```
 
-To pass constructor arguments, register an instance with `addPlugin(pluginType, instance)`. To apply default plugins to every trigger, extend `TW_Handler` and override `newPlugins()`.
-
-`force-app/example` includes two sample plugins:
+`force-app/example` includes two sample plugins, listed in its `TW_PluginRegistry`:
 
 - **`TW_Plugin_DML`** collects DML from all actions and performs one bulk statement per operation in `afterExecute`.
 - **`TW_Plugin_Logging`** logs the operation, the number of actions that ran, and the SOQL and DML used.
@@ -181,7 +206,7 @@ To pass constructor arguments, register an instance with `addPlugin(pluginType, 
 force-app/
 ├── src/        Framework package: TW_Handler, TW_Action, TW_Plugin, TW_Context,
 │               executors, and the TW_Action__mdt custom metadata type
-├── example/    Sample triggers, actions, plugins, and metadata records
+├── example/    Sample triggers, actions, plugins, plugin registry, and metadata records
 └── test/       Unit and integration tests (requires Apex Mockery)
 docs/           VitePress documentation site
 config/         Scratch org definition

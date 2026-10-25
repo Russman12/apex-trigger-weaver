@@ -38,18 +38,18 @@ public abstract class TW_Action {
   }
 
   /**
-   * @description Returns the plugin registered under the given type, allowing the action to use
-   * the functionality the plugin provides. Throws TW_Context.MissingPluginException if no
-   * plugin is registered under the type.
-   * @param pluginType The type the plugin was registered under.
-   * @return The registered plugin.
+   * @description Returns this execution's instance of the given plugin type, allowing the action to
+   * use the functionality the plugin provides. Throws TW_Context.MissingPluginException if the type
+   * is not listed in the plugin registry.
+   * @param pluginType The plugin type, as listed in the plugin registry.
+   * @return The plugin instance.
    * @example
    * ```
    * MyPlugin plugin = (MyPlugin) getPlugin(MyPlugin.class);
    * ```
    */
   @TestVisible
-  protected TW_Plugin getPlugin(System.Type pluginType) {
+  protected TW_Plugin.Plugin getPlugin(System.Type pluginType) {
     return ctx.getPlugin(pluginType);
   }
 

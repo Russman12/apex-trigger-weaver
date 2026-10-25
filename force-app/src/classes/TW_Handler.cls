@@ -1,7 +1,8 @@
 /**
  * @description Entry point for trigger weaver. Create a handler in an SObject's trigger and call
- * execute to run the active actions configured for that SObject, along with any registered plugins.
- * Extend this class to provide default plugins by overriding newPlugins.
+ * execute to run the active actions configured for that SObject, along with the org's plugins.
+ * Plugins are listed by the org's plugin registry, a class named `TW_PluginRegistry` that implements
+ * `TW_Plugin.Registry`, and run for every SObject.
  * @example
  * ```
  * trigger AccountTrigger on Account(before insert, after insert, before update, after update) {
@@ -10,11 +11,17 @@
  * ```
  * @group Framework
  */
-public virtual class TW_Handler {
+public class TW_Handler {
   @TestVisible
   private static final Set<Type> BYPASSES = new Set<Type>();
   @TestVisible
   private static TW_ActionRegistry actionRegistry = new TW_ActionRegistry();
+  @TestVisible
+  private static String pluginRegistryName = 'TW_PluginRegistry';
+  @TestVisible
+  private static TW_Plugin.Registry pluginRegistry;
+  @TestVisible
+  private static Boolean pluginRegistryLoaded = false;
 
   /**
    * @description Prevents the given action from running in any handler execution for the rest of
@@ -47,13 +54,15 @@ public virtual class TW_Handler {
   @TestVisible
   private TW_ExecutorFactory executorFactory;
   @TestVisible
-  private final List<TW_Plugin> plugins = new List<TW_Plugin>();
+  private final List<TW_Plugin.Plugin> plugins = new List<TW_Plugin.Plugin>();
   @TestVisible
-  private final Map<System.Type, TW_Plugin> pluginsByType = new Map<System.Type, TW_Plugin>();
+  private final Map<System.Type, TW_Plugin.Plugin> pluginsByType = new Map<System.Type, TW_Plugin.Plugin>();
 
   /**
-   * @description Creates a handler for the given SObject type from the running trigger and registers
-   * the plugins returned by newPlugins. Throws InvalidContextException if called outside a trigger.
+   * @description Creates a handler for the given SObject type from the running trigger and creates a
+   * new instance of each plugin listed by the org's plugin registry, shared by every action in this
+   * execution. Throws InvalidContextException if called outside a trigger, and InvalidPluginException
+   * if the registry does not implement TW_Plugin.Registry or lists an invalid or duplicate plugin type.
    * @param sObjType The SObject type the trigger is running on.
    */
   public TW_Handler(Schema.SObjectType sObjType) {
@@ -63,65 +72,56 @@ public virtual class TW_Handler {
     }
 
     this.sObjType = sObjType;
-    this.ctx = new TW_Context();
+    registerPlugins();
+    this.ctx = new TW_Context(pluginsByType);
     this.executorFactory = new TW_ExecutorFactory(this.ctx);
-    for (System.Type t : newPlugins()) {
-      addPlugin(t);
-    }
   }
 
   @TestVisible
   private TW_Handler() {
   }
 
-  /**
-   * @description Registers a new instance of the given plugin type. The type must extend
-   * TW_Plugin and have a public no-arg constructor. A new instance is created for each handler,
-   * so the plugin is shared by every action in this execution only. Actions access it with
-   * `getPlugin(pluginType)`. Plugins are invoked in the order they are registered. Throws
-   * InvalidPluginException if a plugin is already registered under the type.
-   * @param pluginType The plugin type to register.
-   * @return This handler, to allow chaining.
-   * @example
-   * ```
-   * new TW_Handler(Account.getSObjectType()).addPlugin(MyPlugin.class).execute();
-   * ```
-   */
-  public TW_Handler addPlugin(System.Type pluginType) {
-    return addPlugin(pluginType, (TW_Plugin) pluginType.newInstance());
-  }
-
-  /**
-   * @description Registers the given plugin instance under the given type. Use this when the
-   * plugin requires constructor arguments, or to substitute an implementation for the type.
-   * Always pass a new instance; an instance shared between handlers (e.g. held in a static variable)
-   * is shared with nested trigger executions. Throws InvalidPluginException if a plugin is already
-   * registered under the type.
-   * @param pluginType The type actions use to look up the plugin.
-   * @param plugin The plugin instance.
-   * @return This handler, to allow chaining.
-   * @example
-   * ```
-   * new TW_Handler(Account.getSObjectType()).addPlugin(MyPlugin.class, new MyPlugin('config')).execute();
-   * ```
-   */
-  public TW_Handler addPlugin(System.Type pluginType, TW_Plugin plugin) {
-    if (pluginsByType.containsKey(pluginType)) {
-      throw new InvalidPluginException('Plugin already registered for ' + pluginType);
-    }
-    this.plugins.add(plugin);
-    this.pluginsByType.put(pluginType, plugin);
-    return this;
-  }
-
-  /**
-   * @description Returns the plugin types registered when the handler is constructed. Override to
-   * provide default plugins. Plugins added with addPlugin run after these.
-   * @return Empty list of plugin types by default.
-   */
   @TestVisible
-  protected virtual List<System.Type> newPlugins() {
-    return new List<System.Type>();
+  private void registerPlugins() {
+    TW_Plugin.Registry registry = loadPluginRegistry();
+    if (registry == null) {
+      return;
+    }
+
+    List<System.Type> pluginTypes = registry.plugins();
+    if (pluginTypes == null) {
+      return;
+    }
+
+    for (System.Type t : pluginTypes) {
+      if (pluginsByType.containsKey(t)) {
+        throw new InvalidPluginException('Plugin already registered for ' + t);
+      }
+      Object plugin = t.newInstance();
+      if (!(plugin instanceof TW_Plugin.Plugin)) {
+        throw new InvalidPluginException(t + ' does not implement TW_Plugin.Plugin');
+      }
+      plugins.add((TW_Plugin.Plugin) plugin);
+      pluginsByType.put(t, (TW_Plugin.Plugin) plugin);
+    }
+  }
+
+  @TestVisible
+  private static TW_Plugin.Registry loadPluginRegistry() {
+    if (pluginRegistryLoaded) {
+      return pluginRegistry;
+    }
+
+    System.Type registryType = System.Type.forName(pluginRegistryName);
+    if (registryType != null) {
+      Object registry = registryType.newInstance();
+      if (!(registry instanceof TW_Plugin.Registry)) {
+        throw new InvalidPluginException(pluginRegistryName + ' does not implement TW_Plugin.Registry');
+      }
+      pluginRegistry = (TW_Plugin.Registry) registry;
+    }
+    pluginRegistryLoaded = true;
+    return pluginRegistry;
   }
 
   private List<TW_Action> registeredActions() {
@@ -156,12 +156,13 @@ public virtual class TW_Handler {
       return;
     }
 
-    ctx.setPlugins(pluginsByType);
     TW_Executor e = executorFactory.make();
 
     try {
-      for (TW_Plugin p : plugins) {
-        p.onStart(ctx, registeredActions);
+      for (TW_Plugin.Plugin p : plugins) {
+        if (p instanceof TW_Plugin.OnStart) {
+          ((TW_Plugin.OnStart) p).onStart(ctx, registeredActions);
+        }
       }
 
       Map<TW_Action, List<SObject>> actionRecords = new Map<TW_Action, List<SObject>>();
@@ -170,14 +171,18 @@ public virtual class TW_Handler {
         List<SObject> filteredRecs = e.filteredRecords(a);
         if (!filteredRecs.isEmpty()) {
           actionRecords.put(a, filteredRecs);
-          for (TW_Plugin p : plugins) {
-            p.onActionSetup(ctx, a, filteredRecs);
+          for (TW_Plugin.Plugin p : plugins) {
+            if (p instanceof TW_Plugin.OnActionSetup) {
+              ((TW_Plugin.OnActionSetup) p).onActionSetup(ctx, a, filteredRecs);
+            }
           }
         }
       }
 
-      for (TW_Plugin p : plugins) {
-        p.beforeExecute(ctx);
+      for (TW_Plugin.Plugin p : plugins) {
+        if (p instanceof TW_Plugin.BeforeExecute) {
+          ((TW_Plugin.BeforeExecute) p).beforeExecute(ctx);
+        }
       }
 
       for (TW_Action a : registeredActions) {
@@ -189,17 +194,23 @@ public virtual class TW_Handler {
         }
       }
 
-      for (TW_Plugin p : plugins) {
-        p.afterExecute(ctx);
+      for (TW_Plugin.Plugin p : plugins) {
+        if (p instanceof TW_Plugin.AfterExecute) {
+          ((TW_Plugin.AfterExecute) p).afterExecute(ctx);
+        }
       }
     } catch (Exception ex) {
-      for (TW_Plugin p : plugins) {
-        p.onError(ctx, ex);
+      for (TW_Plugin.Plugin p : plugins) {
+        if (p instanceof TW_Plugin.OnError) {
+          ((TW_Plugin.OnError) p).onError(ctx, ex);
+        }
       }
       throw ex;
     } finally {
-      for (TW_Plugin p : plugins) {
-        p.onFinish(ctx);
+      for (TW_Plugin.Plugin p : plugins) {
+        if (p instanceof TW_Plugin.OnFinish) {
+          ((TW_Plugin.OnFinish) p).onFinish(ctx);
+        }
       }
     }
   }
@@ -211,7 +222,8 @@ public virtual class TW_Handler {
   }
 
   /**
-   * @description Thrown when a plugin is registered under a type that is already registered.
+   * @description Thrown when the plugin registry does not implement TW_Plugin.Registry, or lists a
+   * type that does not implement TW_Plugin.Plugin or is already listed.
    */
   public class InvalidPluginException extends Exception {
   }
