@@ -1,12 +1,15 @@
 /**
- * @description Contains functionality relating to action registry management.
+ * @description Resolves which action classes run for an SObject, based on active TW_Action__mdt
+ * records. Each record's DeveloperName is used as the action class name. Results are loaded once
+ * and cached for the transaction.
  */
 public class TW_ActionRegistry {
   private static Map<Schema.SObjectType, List<System.Type>> activeActionsBySObj;
 
   /**
-   * @description Returns a list of active actions for the given SObject type.
+   * @description Returns the active action types configured for the given SObject type.
    * @param sObjType The SObject type to get active actions for.
+   * @return The active action types, or null if none are configured.
    */
   public List<System.Type> activeActions(Schema.SObjectType sObjType) {
     if (activeActionsBySObj == null) {
@@ -26,8 +29,8 @@ public class TW_ActionRegistry {
   }
 
   /**
-   * @description Manually registers an action. This will prevent actual metadata types from registering.
-   * This should only be used in a test context.
+   * @description Manually registers an action. If called before the registry is loaded, TW_Action__mdt
+   * records are not loaded for the rest of the transaction. This should only be used in a test context.
    * @param sObjType The SObject type to register the action for.
    * @param actionType The action type to register.
    */

@@ -1,10 +1,22 @@
+/**
+ * @description Creates the TW_Executor for the trigger operation of a context.
+ * @internal
+ */
 public with sharing class TW_ExecutorFactory {
   TW_Context ctx;
 
+  /**
+   * @description Creates a factory for the given context.
+   * @param ctx The context whose trigger operation determines the executor.
+   */
   public TW_ExecutorFactory(TW_Context ctx) {
     this.ctx = ctx;
   }
 
+  /**
+   * @description Returns the executor for the context's trigger operation.
+   * @return The executor for the current operation.
+   */
   public TW_Executor make() {
     switch on ctx.getOperation() {
       when BEFORE_INSERT {

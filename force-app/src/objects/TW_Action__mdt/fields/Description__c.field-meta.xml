@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Description__c</fullName>
-    <description>Brief description of this trigger action, the purpose, and a high level explanation of what it does.</description>
+    <description>Brief description of the action&apos;s purpose and a high-level explanation of what it does.</description>
     <fieldManageability>DeveloperControlled</fieldManageability>
-    <inlineHelpText
-  >Brief description of this trigger action, the purpose, and a high level explanation of what it does.</inlineHelpText>
+    <inlineHelpText>Brief description of the action&apos;s purpose and a high-level explanation of what it does.</inlineHelpText>
     <label>Description</label>
     <required>false</required>
     <type>TextArea</type>

@@ -1,7 +1,7 @@
 /**
- * @description Contains functionality relating to the global trigger execution. Data and functions
- * contained within this class should be common to all trigger weaver actions part of the running
- * execution context.
+ * @description Holds the trigger state for a single TW_Handler execution and is shared by every
+ * action and plugin in that execution. Provides access to the trigger records, the record
+ * currently being processed, and the registered plugins.
  * @internal
  */
 public with sharing class TW_Context {
@@ -21,7 +21,8 @@ public with sharing class TW_Context {
   private Map<System.Type, TW_Plugin> plugins = new Map<System.Type, TW_Plugin>();
 
   /**
-   * @description The current record which is being executed.
+   * @description The record currently being filtered or executed. Set by the framework before each
+   * filter and handler method call.
    */
   public SObject currentRecord;
 
@@ -46,8 +47,8 @@ public with sharing class TW_Context {
   }
 
   /**
-   * @description Returns the plugin registered under the given type. Throws an exception if no
-   * plugin is registered under the type.
+   * @description Returns the plugin registered under the given type. Throws MissingPluginException
+   * if no plugin is registered under the type.
    * @param pluginType The type the plugin was registered under.
    * @return The registered plugin.
    * @example
@@ -77,8 +78,8 @@ public with sharing class TW_Context {
   }
 
   /**
-   * @descriptions Returns new trigger records.
-   * @return New trigger records.
+   * @description Returns new trigger records (Trigger.new).
+   * @return New trigger records, or null in delete context.
    * @example
    * ```
    * TW_Context ctx = new TW_Context();
@@ -90,8 +91,8 @@ public with sharing class TW_Context {
   }
 
   /**
-   * @description Returns new trigger records as a Map<Id, SObject>.
-   * @return New trigger records map.
+   * @description Returns new trigger records as a Map<Id, SObject> (Trigger.newMap).
+   * @return New trigger records map, or null in before insert and delete contexts.
    * @example
    * ```
    * TW_Context ctx = new TW_Context();
@@ -103,8 +104,8 @@ public with sharing class TW_Context {
   }
 
   /**
-   * @description Returns old trigger records.
-   * @return Old trigger records.
+   * @description Returns old trigger records (Trigger.old).
+   * @return Old trigger records, or null in insert and undelete contexts.
    * @example
    * ```
    * TW_Context ctx = new TW_Context();
@@ -116,17 +117,18 @@ public with sharing class TW_Context {
   }
 
   /**
-   * @description Returns old trigger record for the given record. The
-   * given record must have an Id set.
-   * @return The old record.
+   * @description Returns the old version of the given record. The given record must have an Id
+   * set and old records must be available (update or delete context).
+   * @param r The record to get the old version of.
+   * @return The old record, or null if no old record exists for the Id.
    */
   public SObject getOld(SObject r) {
     return oldRecsMap.get(r.Id);
   }
 
   /**
-   * @description Returns old trigger records as a Map<Id, SObject>.
-   * @return Old trigger records map.
+   * @description Returns old trigger records as a Map<Id, SObject> (Trigger.oldMap).
+   * @return Old trigger records map, or null in insert and undelete contexts.
    * @example
    * ```
    * TW_Context ctx = new TW_Context();
@@ -138,8 +140,8 @@ public with sharing class TW_Context {
   }
 
   /**
-   * @description Returns either new trigger records if set, else returns old records.
-   * @return The list of trigger records
+   * @description Returns the new trigger records if any exist, otherwise the old trigger records.
+   * @return The list of trigger records.
    */
   public List<SObject> getRecords() {
     if (newRecs != null && !newRecs.isEmpty()) {
@@ -149,8 +151,10 @@ public with sharing class TW_Context {
   }
 
   /**
-   * @Returns True if the field has changed for the current record. Throws exception if not update context.
+   * @description Returns true if the field value differs between the old and new versions of
+   * currentRecord. Throws InvalidContextException if not in update context.
    * @param field Field to check.
+   * @return True if the field has changed.
    */
   public Boolean isChanged(Schema.SObjectField field) {
     if (!isUpdate) {
@@ -160,8 +164,10 @@ public with sharing class TW_Context {
   }
 
   /**
-   * @Returns True if any of the given fields have changed for the current record. Throws exception if not update context.
+   * @description Returns true if any of the given field values differ between the old and new
+   * versions of currentRecord. Throws InvalidContextException if not in update context.
    * @param fields Fields to check.
+   * @return True if any of the fields have changed.
    */
   public Boolean anyChanged(List<Schema.SObjectField> fields) {
     if (!isUpdate) {
@@ -177,8 +183,10 @@ public with sharing class TW_Context {
   }
 
   /**
-   * @Returns True if all of the given fields have changed for the current record. Throws exception if not update context.
+   * @description Returns true if all of the given field values differ between the old and new
+   * versions of currentRecord. Throws InvalidContextException if not in update context.
    * @param fields Fields to check.
+   * @return True if all of the fields have changed.
    */
   public Boolean allChanged(List<Schema.SObjectField> fields) {
     if (!isUpdate) {
@@ -194,7 +202,7 @@ public with sharing class TW_Context {
   }
 
   /**
-   * @description Represents an exception relating to the context.
+   * @description Thrown when a context method is called in a trigger operation that does not support it.
    */
   public class InvalidContextException extends Exception {
   }

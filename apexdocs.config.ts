@@ -43,7 +43,6 @@ export default {
     includeMetadata: false,
     scope: ['global', 'public', 'protected'],
     sortAlphabetically: true,
-    namespace: 'apexdocs',
     transformReference: (reference) => {
       return {
         // remove the trailing .md
@@ -66,10 +65,6 @@ export default {
         {
           text: "Getting Started",
           link: "/getting-started.md"
-        },   
-        {
-          text: "Technical Details",
-          link: "/technical-details.md"
         },
         {
           text: 'API Reference',

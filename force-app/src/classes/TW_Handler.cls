@@ -1,5 +1,13 @@
 /**
- * @description Contains functionality relating to the global trigger execution.
+ * @description Entry point for trigger weaver. Create a handler in an SObject's trigger and call
+ * execute to run the active actions configured for that SObject, along with any registered plugins.
+ * Extend this class to provide default plugins by overriding newPlugins.
+ * @example
+ * ```
+ * trigger AccountTrigger on Account(before insert, after insert, before update, after update) {
+ *   new TW_Handler(Account.getSObjectType()).execute();
+ * }
+ * ```
  * @group Framework
  */
 public virtual class TW_Handler {
@@ -9,23 +17,24 @@ public virtual class TW_Handler {
   private static TW_ActionRegistry actionRegistry = new TW_ActionRegistry();
 
   /**
-   * @description Bypasses given trigger weaver action to prevent multiple executions.
-   * @param action TW_Action to bypass.
+   * @description Prevents the given action from running in any handler execution for the rest of
+   * the transaction, or until the bypass is removed.
+   * @param action The TW_Action type to bypass.
    */
   public static void addBypass(System.Type action) {
     BYPASSES.add(action);
   }
 
   /**
-   * @description Removes given trigger weaver action from bypasses allowing it to be executed multiple times.
-   * @param action TW_Action to bypass.
+   * @description Removes the bypass for the given action so it runs in subsequent handler executions.
+   * @param action The TW_Action type to stop bypassing.
    */
   public static void removeBypass(System.Type action) {
     BYPASSES.remove(action);
   }
 
   /**
-   * @description Removes all bypasses allowing all trigger weaver actions to be executed multiple times.
+   * @description Removes all bypasses so every active action runs in subsequent handler executions.
    */
   public static void clearBypasses() {
     BYPASSES.clear();
@@ -42,6 +51,11 @@ public virtual class TW_Handler {
   @TestVisible
   private final Map<System.Type, TW_Plugin> pluginsByType = new Map<System.Type, TW_Plugin>();
 
+  /**
+   * @description Creates a handler for the given SObject type from the running trigger and registers
+   * the plugins returned by newPlugins. Throws InvalidContextException if called outside a trigger.
+   * @param sObjType The SObject type the trigger is running on.
+   */
   public TW_Handler(Schema.SObjectType sObjType) {
     //throw execption if not in trigger context
     if (!Trigger.isExecuting) {
@@ -64,7 +78,8 @@ public virtual class TW_Handler {
    * @description Registers a new instance of the given plugin type. The type must extend
    * TW_Plugin and have a public no-arg constructor. A new instance is created for each handler,
    * so the plugin is shared by every action in this execution only. Actions access it with
-   * `getPlugin(pluginType)`. Plugins are invoked in the order they are registered.
+   * `getPlugin(pluginType)`. Plugins are invoked in the order they are registered. Throws
+   * InvalidPluginException if a plugin is already registered under the type.
    * @param pluginType The plugin type to register.
    * @return This handler, to allow chaining.
    * @example
@@ -80,7 +95,8 @@ public virtual class TW_Handler {
    * @description Registers the given plugin instance under the given type. Use this when the
    * plugin requires constructor arguments, or to substitute an implementation for the type.
    * Always pass a new instance; an instance shared between handlers (e.g. held in a static variable)
-   * is shared with nested trigger executions.
+   * is shared with nested trigger executions. Throws InvalidPluginException if a plugin is already
+   * registered under the type.
    * @param pluginType The type actions use to look up the plugin.
    * @param plugin The plugin instance.
    * @return This handler, to allow chaining.
@@ -99,9 +115,8 @@ public virtual class TW_Handler {
   }
 
   /**
-   * @description Returns the plugin types registered for every execution of this handler. This
-   * method can be overridden to provide default plugins. Plugins added with addPlugin run
-   * after these.
+   * @description Returns the plugin types registered when the handler is constructed. Override to
+   * provide default plugins. Plugins added with addPlugin run after these.
    * @return Empty list of plugin types by default.
    */
   @TestVisible
@@ -129,7 +144,10 @@ public virtual class TW_Handler {
   }
 
   /**
-   * @description Executes all registered trigger actions, invoking plugin hooks at each lifecycle event.
+   * @description Runs the active, non-bypassed actions for the SObject against the current trigger
+   * operation. Each action's filter is evaluated for every record first, then each action's handler
+   * method runs for its filtered records. Plugin hooks are invoked at each lifecycle event. Does
+   * nothing, including invoking plugins, if no active, non-bypassed actions exist.
    */
   public void execute() {
     List<TW_Action> registeredActions = registeredActions();
@@ -187,13 +205,13 @@ public virtual class TW_Handler {
   }
 
   /**
-   * @description Represents an exception relating to the context.
+   * @description Thrown when a handler is created outside of a trigger context.
    */
   public class InvalidContextException extends Exception {
   }
 
   /**
-   * @description Represents an exception relating to plugin registration.
+   * @description Thrown when a plugin is registered under a type that is already registered.
    */
   public class InvalidPluginException extends Exception {
   }

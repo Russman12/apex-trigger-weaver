@@ -5,46 +5,38 @@ layout: home
 hero:
   name: "Apex Trigger Weaver"
   text: "Take control of your triggers"
-  tagline: My great project tagline
+  tagline: A metadata-driven Apex trigger framework for Salesforce
   actions:
     - theme: brand
       text: Getting Started
       link: /getting-started
     - theme: alt
       text: API Reference Guide
-      link: /api-reference-guide
+      link: "#reference-guide"
 ---
 
-Trigger Weaver is a complete trigger framework designed to simplify the way you write triggers in Salesforce.
+Trigger Weaver is an Apex trigger framework for Salesforce. Each SObject gets a single one-line trigger. Business logic lives in small action classes that you activate with custom metadata.
+
 It includes the following features:
 
-- Context bypass
-- Declarive activation
-- Automatic registration
-- Isolated action source
-- Elegant syntax
-- abstracted bulkification
-- Easy implementation
-- Complete documentation
-- Much more
+- **One trigger per object:** every trigger has the same one-line body.
+- **Declarative activation:** register and activate actions with `TW_Action__mdt` records.
+- **Per-record logic:** actions handle one record at a time, and the framework iterates over the trigger records.
+- **Filters:** each action selects the records it processes before any action logic runs.
+- **Bypasses:** turn off individual actions for the rest of a transaction.
+- **Field change checks:** `isChanged`, `anyChanged`, and `allChanged` for update logic.
+- **Plugins:** lifecycle hooks for shared behaviour such as bulk DML or logging.
 
-## Core Principals
-
-The design of the package was done with much consideration and intent. The following are the core guiding principals
+## Core Principles
 
 ### Ease of use
 
-This framework was designed to be very easy to use. So easy in fact, that you don't even have to
-implement bulkification logic. Just describe how your functionaltiy applies to a single record, and
-the framework will handle the rest.
+Describe how your functionality applies to a single record, and the framework handles iterating over the trigger records and routing each trigger operation to the right method.
 
-### Optimization
+### Efficiency
 
-Effeciency is crucial in a trigger context because so your org has many things that fire in this context. This framework is desigend to be effecient
-as possible. It consolidates queries, and DML operations for you. It also includes checks that minimize iterations.
+Filters run before any action logic, and the framework skips actions that have no matching records. Each action instance handles every record in a trigger execution, so actions can query once for all records and reuse the results.
 
-### Resiliancy
+### Resiliency
 
-This framework must be compatible with any reasonable functionality that needs to be triggered. Tests should be complete and ensure
-the functionality has not broken. Any time a breaking change is made, there must be a proper deprecation period, allowing consumers
-to make the necessary changes for they are broken.
+Tests must cover the framework's behaviour so changes don't break consumers. Breaking changes require a deprecation period so consumers have time to update.

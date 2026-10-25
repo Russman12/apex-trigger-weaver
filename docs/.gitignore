@@ -1,5 +1,6 @@
 *
 !.gitignore
 !index-frontmatter.md
+!getting-started.md
 !.vitepress
 !.vitepress/config.mts

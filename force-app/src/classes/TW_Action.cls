@@ -1,5 +1,8 @@
 /**
- * @description Contains common functionality relating to a specific trigger weaver action.
+ * @description Base class for a unit of trigger logic. Extend this class and override the filter
+ * and handler methods for the trigger operations the action handles; methods that are not
+ * overridden do nothing. An action runs when an active TW_Action__mdt record whose DeveloperName
+ * matches the class name is configured for the SObject.
  * @group Framework
  */
 public abstract class TW_Action {
@@ -7,7 +10,8 @@ public abstract class TW_Action {
   private TW_Context ctx;
 
   /**
-   * @description Sets the context for the trigger weaver action.
+   * @description Sets the trigger context used by this action. Called by TW_Handler when the
+   * action is created. Throws InvalidActionException if the context has already been set.
    * @param ctx The context to set.
    */
   public void setContext(TW_Context ctx) {
@@ -18,16 +22,16 @@ public abstract class TW_Action {
   }
 
   /**
-   * @description Returns the old records for the current trigger context.
-   * @return Old records.
+   * @description Returns the old versions of all records in the trigger (Trigger.old).
+   * @return Old records, or null in insert context.
    */
   public List<SObject> oldRecords() {
     return ctx.getOld();
   }
 
   /**
-   * @description Returns the new records for the current trigger context.
-   * @return New records.
+   * @description Returns the new versions of all records in the trigger (Trigger.new).
+   * @return New records, or null in delete context.
    */
   public List<SObject> newRecords() {
     return ctx.getNew();
@@ -50,8 +54,9 @@ public abstract class TW_Action {
   }
 
   /**
-   * @description Returns true if the field has changed for the current record. Returns false if
-   * not update context.
+   * @description Returns true if the field value differs between the old and new versions of the
+   * record currently being filtered or executed. Throws TW_Context.InvalidContextException if not
+   * in update context.
    * @param field Field to check.
    * @return True if the field has changed.
    */
@@ -61,8 +66,9 @@ public abstract class TW_Action {
   }
 
   /**
-   * @description Returns true if any of the provided fields have changed for the current record.
-   * Returns false if not update context.
+   * @description Returns true if any of the given field values differ between the old and new
+   * versions of the record currently being filtered or executed. Throws
+   * TW_Context.InvalidContextException if not in update context.
    * @param fields Fields to check.
    * @return True if any of the fields have changed.
    */
@@ -72,8 +78,9 @@ public abstract class TW_Action {
   }
 
   /**
-   * @description Returns true if all of the provided fields have changed for the current record.
-   * Returns false if not update context.
+   * @description Returns true if all of the given field values differ between the old and new
+   * versions of the record currently being filtered or executed. Throws
+   * TW_Context.InvalidContextException if not in update context.
    * @param fields Fields to check.
    * @return True if all of the fields have changed.
    */
@@ -83,77 +90,79 @@ public abstract class TW_Action {
   }
 
   /**
-   * @description Overridable method used to determine which records should be processed
-   * in before insert context. This method is called before the primary logic for each
-   * record. If true, the record will be processed. Default true.
-   * @param SObject newRecord The new record from trigger.
-   * @return Boolean indicating whether the record should be processed.
+   * @description Determines whether a record is processed by this action in before insert context.
+   * Called for every trigger record before any action's handler method runs. Override to limit
+   * which records are processed; returns true by default.
+   * @param newRecord The new version of the record from the trigger.
+   * @return True if the record should be processed.
    */
   @TestVisible
   public virtual Boolean beforeInsertFilter(SObject newRecord) {
     return true;
   }
   /**
-   * @description Overridable method used to determine which records should be processed
-   * in after insert context. This method is called before the primary logic for each
-   * record. If true, the record will be processed. Default true.
-   * @param SObject newRecord The new record from trigger.
-   * @return Boolean indicating whether the record should be processed.
+   * @description Determines whether a record is processed by this action in after insert context.
+   * Called for every trigger record before any action's handler method runs. Override to limit
+   * which records are processed; returns true by default.
+   * @param newRecord The new version of the record from the trigger.
+   * @return True if the record should be processed.
    */
   @TestVisible
   public virtual Boolean afterInsertFilter(SObject newRecord) {
     return true;
   }
   /**
-   * @description Overridable method used to determine which records should be processed
-   * in before update context. This method is called before the primary logic for each
-   * record. If true, the record will be processed. Default true.
-   * @param SObject newRecord The new record from trigger.
-   * @return Boolean indicating whether the record should be processed.
+   * @description Determines whether a record is processed by this action in before update context.
+   * Called for every trigger record before any action's handler method runs. Override to limit
+   * which records are processed; returns true by default.
+   * @param oldRecord The old version of the record from the trigger.
+   * @param newRecord The new version of the record from the trigger.
+   * @return True if the record should be processed.
    */
   @TestVisible
   public virtual Boolean beforeUpdateFilter(SObject oldRecord, SObject newRecord) {
     return true;
   }
   /**
-   * @description Overridable method used to determine which records should be processed
-   * in after update context. This method is called before the primary logic for each
-   * record. If true, the record will be processed. Default true.
-   * @param SObject newRecord The new record from trigger.
-   * @return Boolean indicating whether the record should be processed.
+   * @description Determines whether a record is processed by this action in after update context.
+   * Called for every trigger record before any action's handler method runs. Override to limit
+   * which records are processed; returns true by default.
+   * @param oldRecord The old version of the record from the trigger.
+   * @param newRecord The new version of the record from the trigger.
+   * @return True if the record should be processed.
    */
   @TestVisible
   public virtual Boolean afterUpdateFilter(SObject oldRecord, SObject newRecord) {
     return true;
   }
   /**
-   * @description Overridable method used to determine which records should be processed
-   * in before delete context. This method is called before the primary logic for each
-   * record. If true, the record will be processed. Default true.
-   * @param SObject newRecord The new record from trigger.
-   * @return Boolean indicating whether the record should be processed.
+   * @description Determines whether a record is processed by this action in before delete context.
+   * Called for every trigger record before any action's handler method runs. Override to limit
+   * which records are processed; returns true by default.
+   * @param oldRecord The old version of the record from the trigger.
+   * @return True if the record should be processed.
    */
   @TestVisible
   public virtual Boolean beforeDeleteFilter(SObject oldRecord) {
     return true;
   }
   /**
-   * @description Overridable method used to determine which records should be processed
-   * in after delete context. This method is called before the primary logic for each
-   * record. If true, the record will be processed. Default true.
-   * @param SObject newRecord The new record from trigger.
-   * @return Boolean indicating whether the record should be processed.
+   * @description Determines whether a record is processed by this action in after delete context.
+   * Called for every trigger record before any action's handler method runs. Override to limit
+   * which records are processed; returns true by default.
+   * @param oldRecord The old version of the record from the trigger.
+   * @return True if the record should be processed.
    */
   @TestVisible
   public virtual Boolean afterDeleteFilter(SObject oldRecord) {
     return true;
   }
   /**
-   * @description Overridable method used to determine which records should be processed
-   * in after undelete context. This method is called before the primary logic for each
-   * record. If true, the record will be processed. Default true.
-   * @param SObject newRecord The new record from trigger.
-   * @return Boolean indicating whether the record should be processed.
+   * @description Determines whether a record is processed by this action in after undelete context.
+   * Called for every trigger record before any action's handler method runs. Override to limit
+   * which records are processed; returns true by default.
+   * @param newRecord The new version of the record from the trigger.
+   * @return True if the record should be processed.
    */
   @TestVisible
   public virtual Boolean afterUndeleteFilter(SObject newRecord) {
@@ -161,57 +170,67 @@ public abstract class TW_Action {
   }
 
   /**
-   * @description Primary logic that executes for each record before insert.
-   * @param SObject newRecord The new record from trigger.
+   * @description Runs the action's logic in before insert context. Called once for each record that
+   * passed the filter. Override to implement the action; does nothing by default.
+   * @param newRecord The new version of the record from the trigger.
    */
   @TestVisible
   public virtual void beforeInsert(SObject newRecord) {
   }
   /**
-   * @description Primary logic that executes for each record after insert.
-   * @param SObject newRecord The new record from trigger.
+   * @description Runs the action's logic in after insert context. Called once for each record that
+   * passed the filter. Override to implement the action; does nothing by default.
+   * @param newRecord The new version of the record from the trigger.
    */
   @TestVisible
   public virtual void afterInsert(SObject newRecord) {
   }
   /**
-   * @description Primary logic that executes for each record before update.
-   * @param SObject oldRecord The old record from trigger.
-   * @param SObject newRecord The new record from trigger.
+   * @description Runs the action's logic in before update context. Called once for each record that
+   * passed the filter. Override to implement the action; does nothing by default.
+   * @param oldRecord The old version of the record from the trigger.
+   * @param newRecord The new version of the record from the trigger.
    */
   @TestVisible
   public virtual void beforeUpdate(SObject oldRecord, SObject newRecord) {
   }
   /**
-   * @description Primary logic that executes for each record after update.
-   * @param SObject oldRecord The old record from trigger.
-   * @param SObject newRecord The new record from trigger.
+   * @description Runs the action's logic in after update context. Called once for each record that
+   * passed the filter. Override to implement the action; does nothing by default.
+   * @param oldRecord The old version of the record from the trigger.
+   * @param newRecord The new version of the record from the trigger.
    */
   @TestVisible
   public virtual void afterUpdate(SObject oldRecord, SObject newRecord) {
   }
   /**
-   * @description Primary logic that executes for each record before delete.
-   * @param SObject oldRecord The old record from trigger.
+   * @description Runs the action's logic in before delete context. Called once for each record that
+   * passed the filter. Override to implement the action; does nothing by default.
+   * @param oldRecord The old version of the record from the trigger.
    */
   @TestVisible
   public virtual void beforeDelete(SObject oldRecord) {
   }
   /**
-   * @description Primary logic that executes for each record after delete.
-   * @param SObject oldRecord The old record from trigger.
+   * @description Runs the action's logic in after delete context. Called once for each record that
+   * passed the filter. Override to implement the action; does nothing by default.
+   * @param oldRecord The old version of the record from the trigger.
    */
   @TestVisible
   public virtual void afterDelete(SObject oldRecord) {
   }
   /**
-   * @description Primary logic that executes for each record after undelete.
-   * @param SObject newRecord The new record from trigger.
+   * @description Runs the action's logic in after undelete context. Called once for each record that
+   * passed the filter. Override to implement the action; does nothing by default.
+   * @param newRecord The new version of the record from the trigger.
    */
   @TestVisible
   public virtual void afterUndelete(SObject newRecord) {
   }
 
+  /**
+   * @description Thrown when an action is used incorrectly, such as setting its context more than once.
+   */
   public class InvalidActionException extends Exception {
   }
 }

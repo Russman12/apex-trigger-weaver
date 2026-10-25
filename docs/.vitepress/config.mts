@@ -5,17 +5,21 @@ import * as sidebar from './sidebar.json';
 export default defineConfig({
   title: "Apex Trigger Weaver",
   description: "Take control of your triggers",
+  // render raw HTML as text so Apex generics like List<SObject> aren't parsed as Vue tags
+  markdown: {
+    html: false
+  },
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
     nav: [
       { text: 'Home', link: '/' },
-      { text: 'Examples', link: '/markdown-examples' }
+      { text: 'Getting Started', link: '/getting-started' }
     ],
 
     sidebar: sidebar.default,
 
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/vuejs/vitepress' }
+      { icon: 'github', link: 'https://github.com/Russman12/apex-trigger-weaver' }
     ]
   }
 })
