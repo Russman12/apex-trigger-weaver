@@ -27,14 +27,12 @@
   "devDependencies": {
     "@commitlint/cli": "^19.5.0",
     "@commitlint/config-conventional": "^19.5.0",
+    "@cparra/apexdocs": "^3.24.2",
     "@prettier/plugin-xml": "^3.4.1",
     "husky": "^9.1.6",
     "prettier": "^3.3.3",
     "prettier-plugin-apex": "^2.2.0",
     "vitepress": "^1.6.4",
     "write-good": "^1.0.8"
-  },
-  "dependencies": {
-    "@cparra/apexdocs": "^3.16.1"
   }
 }
