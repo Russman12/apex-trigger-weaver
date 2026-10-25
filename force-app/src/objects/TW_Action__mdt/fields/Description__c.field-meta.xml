@@ -5,6 +5,6 @@
     <fieldManageability>DeveloperControlled</fieldManageability>
     <inlineHelpText>Brief description of the action&apos;s purpose and a high-level explanation of what it does.</inlineHelpText>
     <label>Description</label>
-    <required>false</required>
+    <required>true</required>
     <type>TextArea</type>
 </CustomField>

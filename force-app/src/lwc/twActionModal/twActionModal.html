@@ -1,0 +1,63 @@
+<template>
+  <lightning-modal-header label={heading}>
+    <template lwc:if={developerName}>
+      <p class="slds-text-font_monospace slds-text-color_weak" title="The record's name">{developerName}</p>
+    </template>
+    <template lwc:else>
+      <p class="slds-text-color_weak">The name is generated from the Apex class.</p>
+    </template>
+  </lightning-modal-header>
+  <lightning-modal-body>
+    <template lwc:if={error}>
+      <div class="slds-notify slds-notify_alert slds-alert_error slds-m-bottom_small" role="alert">{error}</div>
+    </template>
+    <div>
+      <template lwc:if={isEdit}>
+        <lightning-input label="Apex Class" readonly value={className}></lightning-input>
+      </template>
+      <template lwc:else>
+        <c-tw-lookup
+          label="Apex Class"
+          required
+          options={classOptions}
+          value={className}
+          disabled={isLoadingClasses}
+          placeholder={classPlaceholder}
+          empty-text="No Apex class extends TW_Action."
+          field-level-help="Lists the classes that extend TW_Action. A class can run for any number of SObjects, once for each."
+          onchange={handleClassNameChange}
+        ></c-tw-lookup>
+      </template>
+    </div>
+    <lightning-textarea
+      label="Description"
+      required
+      max-length="255"
+      class="slds-m-top_small"
+      value={description}
+      onchange={handleDescriptionChange}
+    ></lightning-textarea>
+    <lightning-input
+      type="toggle"
+      label="Active"
+      class="slds-m-top_small"
+      checked={active}
+      message-toggle-active={activeMessage}
+      message-toggle-inactive="Doesn't run"
+      onchange={handleActiveChange}
+    ></lightning-input>
+    <template lwc:if={isEdit}>
+      <p class="slds-m-top_small slds-text-color_weak">Only the active setting and description can change.</p>
+    </template>
+    <template lwc:else>
+      <p class="slds-m-top_small slds-text-color_weak">
+        The action runs after the object's existing actions. You can reorder it afterwards.
+      </p>
+    </template>
+  </lightning-modal-body>
+  <lightning-modal-footer>
+    <lightning-button label="Cancel" disabled={isSaving} onclick={handleCancel}></lightning-button>
+    <lightning-button variant="brand" label={saveLabel} class="slds-m-left_x-small" disabled={isSaving} onclick={handleSave}>
+    </lightning-button>
+  </lightning-modal-footer>
+</template>

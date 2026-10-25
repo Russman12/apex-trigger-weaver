@@ -1,0 +1,210 @@
+.tw-sobjects,
+.tw-actions {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.tw-sobject {
+  border-bottom: 1px solid var(--slds-g-color-border-base-1, #e5e5e5);
+  padding: 0.5rem 0;
+}
+
+.tw-sobject-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-right: 0.75rem;
+}
+
+.tw-toggle {
+  flex: 1 1 auto;
+  min-width: 0;
+  justify-content: flex-start;
+  text-align: left;
+  color: inherit;
+}
+
+.tw-sobject-label {
+  font-weight: 700;
+}
+
+.tw-section-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.tw-section {
+  padding: 0.5rem 0 0.25rem 1.5rem;
+}
+
+/* One bordered list with a divider between rows. The list defines the columns and each row uses
+   them through subgrid, so every row lines up: position, status, class, description, buttons. The
+   class column fits the widest class name up to a limit. Problems span the columns after status. */
+.tw-actions {
+  display: grid;
+  grid-template-columns: 3.75rem max-content fit-content(24rem) minmax(0, 1fr) max-content;
+  column-gap: 0.75rem;
+  border: 1px solid var(--slds-g-color-border-base-1, #e5e5e5);
+  border-radius: 0.25rem;
+}
+
+.tw-action {
+  position: relative;
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  align-items: center;
+  min-height: 2.25rem;
+  padding: 0.25rem 0.75rem 0.25rem 0.5rem;
+  background: var(--slds-g-color-neutral-base-100, #fff);
+}
+
+.tw-action + .tw-action {
+  border-top: 1px solid var(--slds-g-color-border-base-1, #e5e5e5);
+}
+
+.tw-action:first-child {
+  border-radius: 0.25rem 0.25rem 0 0;
+}
+
+.tw-action:last-child {
+  border-radius: 0 0 0.25rem 0.25rem;
+}
+
+.tw-action_inactive .tw-class,
+.tw-action_inactive .tw-description {
+  color: var(--slds-g-color-neutral-base-50, #747474);
+}
+
+.tw-action_dragging {
+  opacity: 0.5;
+}
+
+/* Drop bar, drawn over the divider above or below the row */
+.tw-action_drop-before::before,
+.tw-action_drop-after::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--slds-g-color-brand-base-50, #0176d3);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.tw-action_drop-before::before {
+  top: -2px;
+}
+
+.tw-action_drop-after::after {
+  bottom: -2px;
+}
+
+.tw-position {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-weight: 700;
+}
+
+/* The position number is a button that turns into tw-position-input when clicked */
+.tw-number {
+  min-width: 1.25rem;
+  padding: 0 0.125rem;
+  border: none;
+  border-radius: 0.25rem;
+  background: none;
+  font: inherit;
+  font-weight: 700;
+  text-align: right;
+  color: inherit;
+  cursor: text;
+}
+
+.tw-number:hover:not([disabled]),
+.tw-number:focus {
+  background: var(--slds-g-color-neutral-base-95, #f3f3f3);
+}
+
+.tw-position-input {
+  width: 2.5rem;
+  height: 1.5rem;
+  min-height: 1.5rem;
+  padding: 0 0.25rem;
+  line-height: 1.5rem;
+}
+
+/* Rows can only be dragged from the grip, which is always shown */
+.tw-grip {
+  display: inline-flex;
+  cursor: grab;
+}
+
+.tw-moved {
+  font-weight: 400;
+  font-size: 0.75rem;
+  color: var(--slds-g-color-neutral-base-50, #747474);
+}
+
+.tw-truncate {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tw-class {
+  font-weight: 700;
+}
+
+.tw-status {
+  line-height: 1;
+}
+
+.tw-status_active {
+  color: var(--slds-g-color-success-base-50, #2e844a);
+}
+
+.tw-status_active::before {
+  content: "●";
+}
+
+.tw-status_inactive {
+  color: var(--slds-g-color-neutral-base-50, #747474);
+}
+
+.tw-status_inactive::before {
+  content: "○";
+}
+
+.tw-description {
+  color: var(--slds-g-color-neutral-base-30, #444);
+}
+
+.tw-buttons {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* Separates the reorder buttons from edit */
+.tw-separator {
+  align-self: stretch;
+  width: 1px;
+  margin: 0.125rem 0.25rem;
+  background: var(--slds-g-color-border-base-1, #c9c9c9);
+}
+
+.tw-problem {
+  grid-column: 3 / -1;
+  padding-bottom: 0.125rem;
+}
+
+.tw-loading {
+  height: 3rem;
+}

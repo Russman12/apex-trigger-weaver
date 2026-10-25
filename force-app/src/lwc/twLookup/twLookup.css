@@ -1,0 +1,28 @@
+.tw-lookup {
+  position: relative;
+}
+
+/* Floats over the content below so the page around the lookup doesn't move or resize */
+.tw-results {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 9100;
+  max-height: 12rem;
+  overflow-y: auto;
+  margin-top: 0.25rem;
+  box-shadow: 0 2px 3px 0 rgba(0, 0, 0, 0.16);
+  border: 1px solid var(--slds-g-color-border-base-1, #c9c9c9);
+  border-radius: 0.25rem;
+  background: var(--slds-g-color-neutral-base-100, #fff);
+}
+
+.tw-option {
+  cursor: pointer;
+}
+
+.tw-option_highlighted,
+.tw-option:hover {
+  background: var(--slds-g-color-neutral-base-95, #f3f3f3);
+}

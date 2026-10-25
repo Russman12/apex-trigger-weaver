@@ -39,17 +39,19 @@ For each trigger operation, the handler first calls every action's filter on eac
 
 ## 3. Register the action
 
-Create a `TW_Action__mdt` record whose **DeveloperName matches the Apex class name**:
+Create a `TW_Action__mdt` record and set `Apex_Class__c` to the action's class. Name the record `<SObject>_<Class>`, such as `Account_AccountTWNameChange`, the convention the Trigger Weaver tab uses. To run one class for several SObjects, create a record for each SObject:
 
 | Field             | Description                                                                 |
 | ----------------- | --------------------------------------------------------------------------- |
+| `Apex_Class__c`   | Apex class that runs. Leave blank to use the record's DeveloperName.        |
 | `SObject_Name__c` | API name of the SObject whose trigger runs the action.                      |
 | `Order__c`        | Position in the SObject's execution order. Unique among its active actions. |
 | `Active__c`       | When checked, the action runs. Defaults to checked.                         |
-| `Description__c`  | Optional description of the action's purpose.                               |
+| `Description__c`  | Required description of the action's purpose.                               |
 
 ## Next steps
 
+- Reorder and create actions from the **Trigger Weaver** tab. Assign the **Trigger Weaver Action Manager** permission set to see it.
 - Hook into the trigger lifecycle with plugins, which run for every SObject once listed in a `TW_PluginRegistry` class. See [TW_Plugin](/framework/TW_Plugin).
 - Turn off an action for the rest of a transaction with `TW_Handler.addBypass`. See [TW_Handler](/framework/TW_Handler).
 - See the [API Reference Guide](/#reference-guide) for every public method.

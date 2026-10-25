@@ -4,8 +4,18 @@
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xmlns:xsd="http://www.w3.org/2001/XMLSchema"
 >
-    <label>ContactTWAccNameMismatch</label>
+    <label>ContactTWAccNameMismatch (Contact)</label>
     <protected>false</protected>
+    <values>
+        <field>Apex_Class__c</field>
+        <value xsi:type="xsd:string">ContactTWAccNameMismatch</value>
+    </values>
+    <values>
+        <field>Description__c</field>
+        <value
+      xsi:type="xsd:string"
+    >Renames the parent account to match the contact's full name when the contact's name changes.</value>
+    </values>
     <values>
         <field>Active__c</field>
         <value xsi:type="xsd:boolean">true</value>

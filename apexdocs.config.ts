@@ -86,7 +86,7 @@ export default {
       };
     },
     // Framework internals that code using the framework never references
-    exclude: ['**/executor/**', '**/TW_ActionRegistry.cls'],
+    exclude: ['**/executor/**', '**/manager/**', '**/TW_ActionRegistry.cls', '**/TW_Action_Deployment__e/**'],
     excludeTags: ['internal'],
     templates: {
       class: withPartials(PARTIALS.classTemplate),

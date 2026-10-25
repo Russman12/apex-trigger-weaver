@@ -1,6 +1,7 @@
 /**
  * @description Resolves which action classes run for an SObject, based on active TW_Action__mdt
- * records. Each record's DeveloperName is used as the action class name, and actions run in
+ * records. Each record runs the class named by Apex_Class__c, or by its DeveloperName when
+ * Apex_Class__c is blank, so one class can run for several SObjects. Actions run in
  * ascending Order__c. Records are loaded once per transaction, and each SObject's actions are
  * sorted and validated the first time they are requested, so a duplicate order or missing class
  * only affects its own SObject. An active record with an invalid SObject_Name__c cannot be matched
@@ -17,7 +18,7 @@ public class TW_ActionRegistry {
    * @description Returns the active action types configured for the given SObject type, in
    * ascending Order__c. Throws InvalidActionConfigException if any active action has an invalid
    * SObject_Name__c, or if an active action for the SObject has no order, shares its order with
-   * another active action, or has no matching Apex class.
+   * another active action, or names an Apex class that does not exist.
    * @param sObjType The SObject type to get active actions for.
    * @return The active action types in execution order, or null if none are configured.
    */
@@ -60,9 +61,10 @@ public class TW_ActionRegistry {
         );
       }
 
-      System.Type t = System.Type.forName(r.DeveloperName);
+      String className = className(r);
+      System.Type t = System.Type.forName(className);
       if (t == null) {
-        throw new InvalidActionConfigException('No Apex class named ' + r.DeveloperName + ' for TW_Action__mdt ' + r.DeveloperName);
+        throw new InvalidActionConfigException('No Apex class named ' + className + ' for TW_Action__mdt ' + r.DeveloperName);
       }
       types.add(t);
     }
@@ -71,6 +73,16 @@ public class TW_ActionRegistry {
 
   // Built in a local map and cached only once every record is valid, so an invalid record keeps
   // throwing in later trigger executions instead of leaving a partially loaded cache
+  /**
+   * @description Returns the name of the Apex class a record runs: its Apex_Class__c, or its
+   * DeveloperName when Apex_Class__c is blank.
+   * @param r The action record.
+   * @return The class name.
+   */
+  public static String className(TW_Action__mdt r) {
+    return String.isBlank(r.Apex_Class__c) ? r.DeveloperName : r.Apex_Class__c.trim();
+  }
+
   private static Map<String, List<TW_Action__mdt>> activeRecordsBySObj() {
     if (activeRecordsBySObj == null) {
       Map<String, List<TW_Action__mdt>> recordsBySObj = new Map<String, List<TW_Action__mdt>>();

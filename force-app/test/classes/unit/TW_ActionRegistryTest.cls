@@ -98,6 +98,48 @@ public class TW_ActionRegistryTest {
   }
 
   /**
+   * Ensures activeActions runs the class named by Apex_Class__c, so one class can run for several SObjects
+   */
+  @IsTest
+  static void activeActionsApexClass() {
+    TW_Action__mdt forAccount = record('Name_Change_Account', 'Account', '1');
+    forAccount.Apex_Class__c = 'AccountTWNameChange';
+    TW_Action__mdt forContact = record('Name_Change_Contact', 'Contact', '1');
+    forContact.Apex_Class__c = ' AccountTWNameChange ';
+    TW_ActionRegistry.actionRecords = new List<TW_Action__mdt>{ forAccount, forContact };
+    TW_ActionRegistry registry = new TW_ActionRegistry();
+
+    Test.startTest();
+    List<System.Type> accountTypes = registry.activeActions(Account.getSObjectType());
+    List<System.Type> contactTypes = registry.activeActions(Contact.getSObjectType());
+    Test.stopTest();
+
+    System.Assert.areEqual(new List<System.Type>{ AccountTWNameChange.class }, accountTypes, 'class not resolved for Account');
+    System.Assert.areEqual(new List<System.Type>{ AccountTWNameChange.class }, contactTypes, 'class not resolved for Contact');
+  }
+
+  /**
+   * Ensures activeActions throws when Apex_Class__c names a class that does not exist
+   */
+  @IsTest
+  static void activeActionsMissingApexClass() {
+    TW_Action__mdt r = record('AccountTWNameChange', 'Account', '1');
+    r.Apex_Class__c = 'TW_DoesNotExist';
+    TW_ActionRegistry.actionRecords = new List<TW_Action__mdt>{ r };
+    TW_ActionRegistry registry = new TW_ActionRegistry();
+
+    Test.startTest();
+    try {
+      registry.activeActions(Account.getSObjectType());
+      System.Assert.fail('expected exception not thrown');
+    } catch (Exception e) {
+      System.Assert.isInstanceOfType(e, TW_ActionRegistry.InvalidActionConfigException.class, 'unexpected exception thrown');
+      System.Assert.isTrue(e.getMessage().contains('TW_DoesNotExist'), 'class name not reported: ' + e.getMessage());
+    }
+    Test.stopTest();
+  }
+
+  /**
    * Ensures activeActions throws when two active actions for an SObject share an order
    */
   @IsTest

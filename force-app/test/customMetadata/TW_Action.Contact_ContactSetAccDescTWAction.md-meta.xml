@@ -4,15 +4,25 @@
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xmlns:xsd="http://www.w3.org/2001/XMLSchema"
 >
-    <label>AccountTWNameChange</label>
+    <label>ContactSetAccDescTWAction (Contact)</label>
     <protected>false</protected>
+    <values>
+        <field>Apex_Class__c</field>
+        <value xsi:type="xsd:string">ContactSetAccDescTWAction</value>
+    </values>
+    <values>
+        <field>Description__c</field>
+        <value
+      xsi:type="xsd:string"
+    >Sets the parent account description to a comma-separated list of its contacts' names when a contact's name changes.</value>
+    </values>
     <values>
         <field>Active__c</field>
         <value xsi:type="xsd:boolean">true</value>
     </values>
     <values>
         <field>SObject_Name__c</field>
-        <value xsi:type="xsd:string">Account</value>
+        <value xsi:type="xsd:string">Contact</value>
     </values>
     <values>
         <field>Order__c</field>

@@ -4,8 +4,16 @@
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xmlns:xsd="http://www.w3.org/2001/XMLSchema"
 >
-    <label>ContactSetAccDescTWAction</label>
+    <label>ContactEmailTWAction (Contact)</label>
     <protected>false</protected>
+    <values>
+        <field>Apex_Class__c</field>
+        <value xsi:type="xsd:string">ContactEmailTWAction</value>
+    </values>
+    <values>
+        <field>Description__c</field>
+        <value xsi:type="xsd:string">Sets a new contact's email from their first and last name.</value>
+    </values>
     <values>
         <field>Active__c</field>
         <value xsi:type="xsd:boolean">true</value>
@@ -16,6 +24,6 @@
     </values>
     <values>
         <field>Order__c</field>
-        <value xsi:type="xsd:string">2</value>
+        <value xsi:type="xsd:string">1</value>
     </values>
 </CustomMetadata>

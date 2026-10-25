@@ -4,15 +4,23 @@
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xmlns:xsd="http://www.w3.org/2001/XMLSchema"
 >
-    <label>ContactEmailTWAction</label>
+    <label>AccountDescriptionTWAction (Account)</label>
     <protected>false</protected>
+    <values>
+        <field>Apex_Class__c</field>
+        <value xsi:type="xsd:string">AccountDescriptionTWAction</value>
+    </values>
+    <values>
+        <field>Description__c</field>
+        <value xsi:type="xsd:string">Sets the account description to a comma-separated list of its contacts' names.</value>
+    </values>
     <values>
         <field>Active__c</field>
         <value xsi:type="xsd:boolean">true</value>
     </values>
     <values>
         <field>SObject_Name__c</field>
-        <value xsi:type="xsd:string">Contact</value>
+        <value xsi:type="xsd:string">Account</value>
     </values>
     <values>
         <field>Order__c</field>

@@ -15,6 +15,7 @@ Trigger Weaver is a metadata-driven Apex trigger framework for Salesforce. Each 
   - [Action API](#action-api)
   - [Bypassing Actions](#bypassing-actions)
 - [Plugins](#plugins)
+- [Action Manager](#action-manager)
 - [Project Structure](#project-structure)
 - [Development](#development)
   - [Scripts](#scripts)
@@ -79,26 +80,27 @@ public with sharing class AccountTWNameChange extends TW_Action {
 
 ### 3. Register the action
 
-Create a `TW_Action__mdt` record. The record's **DeveloperName must match the Apex class name**.
+Create a `TW_Action__mdt` record and set `Apex_Class__c` to the action's class. Name the record `<SObject>_<Class>`, the convention the [Action Manager](#action-manager) tab uses, such as `Account_AccountTWNameChange`. To run one class, such as a logger, for more than one SObject, create a record for each SObject. If `Apex_Class__c` is blank, the handler uses the record's DeveloperName as the class name.
 
 | Field             | Description                                                                 |
 | ----------------- | --------------------------------------------------------------------------- |
+| `Apex_Class__c`   | Apex class that runs. Leave blank to use the record's DeveloperName.        |
 | `SObject_Name__c` | API name of the SObject whose trigger runs the action.                      |
 | `Order__c`        | Position in the SObject's execution order. Unique among its active actions. |
 | `Active__c`       | When checked, the action runs. Defaults to checked.                         |
-| `Description__c`  | Optional description of the action's purpose.                               |
+| `Description__c`  | Required description of the action's purpose.                               |
 
 ```xml
-<!-- customMetadata/TW_Action.AccountTWNameChange.md-meta.xml -->
+<!-- customMetadata/TW_Action.Account_AccountTWNameChange.md-meta.xml -->
 <?xml version="1.0" encoding="UTF-8" ?>
 <CustomMetadata xmlns="http://soap.sforce.com/2006/04/metadata"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-    <label>AccountTWNameChange</label>
+    <label>AccountTWNameChange (Account)</label>
     <protected>false</protected>
     <values>
-        <field>Active__c</field>
-        <value xsi:type="xsd:boolean">true</value>
+        <field>Apex_Class__c</field>
+        <value xsi:type="xsd:string">AccountTWNameChange</value>
     </values>
     <values>
         <field>SObject_Name__c</field>
@@ -107,6 +109,14 @@ Create a `TW_Action__mdt` record. The record's **DeveloperName must match the Ap
     <values>
         <field>Order__c</field>
         <value xsi:type="xsd:string">1</value>
+    </values>
+    <values>
+        <field>Active__c</field>
+        <value xsi:type="xsd:boolean">true</value>
+    </values>
+    <values>
+        <field>Description__c</field>
+        <value xsi:type="xsd:string">Records the previous name in the description when an account's name changes.</value>
     </values>
 </CustomMetadata>
 ```
@@ -120,7 +130,7 @@ When `TW_Handler.execute()` runs:
 3. **Execute.** For each action, the handler calls the handler method for the current operation once per filtered record.
 4. **Plugins.** The handler invokes plugin hooks around each stage. The handler constructor creates the plugins. See [Plugins](#plugins).
 
-Actions run in ascending `Order__c`. The handler compares values one character at a time by Unicode value, so `10` sorts before `9` and uppercase letters sort before lowercase. Each active action for an SObject needs its own order. If two share an order, the SObject's trigger throws `TW_ActionRegistry.InvalidActionConfigException`. It does the same for a record whose `DeveloperName` matches no Apex class, and these errors affect no other SObject. An active record whose `SObject_Name__c` is not a valid SObject throws the same exception in every trigger that uses the framework, because the handler can't match it to one SObject.
+Actions run in ascending `Order__c`. The handler compares values one character at a time by Unicode value, so `10` sorts before `9` and uppercase letters sort before lowercase. Each active action for an SObject needs its own order. If two share an order, the SObject's trigger throws `TW_ActionRegistry.InvalidActionConfigException`. It does the same for a record that names an Apex class that doesn't exist, and these errors affect no other SObject. An active record whose `SObject_Name__c` is not a valid SObject throws the same exception in every trigger that uses the framework, because the handler can't match it to one SObject.
 
 Every filter runs before any handler method runs. Because one action instance handles all records in an execution, actions can cache bulk query results in instance variables. Query once for all `newRecords()` on first use, then read from the cache for each record.
 
@@ -207,12 +217,30 @@ dml.enqueueUpdate(new Account(Id = accountId, Name = 'New Name'));
 - **`TW_Plugin_DML`** collects DML from all actions and performs one bulk statement per operation in `afterExecute`.
 - **`TW_Plugin_Logging`** logs the operation, the number of actions that ran, and the SOQL and DML used.
 
+## Action Manager
+
+The **Trigger Weaver** tab lists every SObject whose trigger calls `TW_Handler`, with its number of actions, so you can reorder and create actions without editing `TW_Action__mdt` records by hand.
+
+To use it, assign the **Trigger Weaver Action Manager** permission set. Saving deploys metadata, so the user also needs the Customize Application permission.
+
+- **View actions.** Expand an SObject to list its actions in execution order, with each action's Apex class, description, and a filled (active) or hollow (inactive) status dot. One SObject expands at a time. The list flags actions with a duplicate or missing order and actions whose Apex class does not extend `TW_Action`. An SObject that has actions but no framework trigger shows a warning.
+- **Reorder actions.** In the expanded SObject, drag an action by its grip, use its arrow buttons, or select its position number and type a new position. Then select **Save Order**. The tab keeps each action's `Order__c` value where it still fits the new order and generates values between neighbours for the rest. Moving one action updates one record, unless no value fits between its neighbours, such as between `1` and `10`. The tab then renumbers that object's actions. Until you save or cancel the new order, you can't edit actions, create actions or switch objects.
+- **Create an action.** Expand an SObject and select **Add Action**, choose whether the action is active and an Apex class that extends `TW_Action`, then enter a description. The SObject comes from the expanded row. One class can run for any number of SObjects, once for each. The tab orders the new action after the object's existing actions. An SObject without a framework trigger can't get new actions.
+- **Edit an action.** Select the edit button next to an action to change its active setting or description. To delete an action, select the button beside edit to open the record in Setup, then delete it there.
+
+The tab generates each new record's name and label from the SObject and class, so the same action gets the same name in every org. The name is `<SObject>_<Class>` with special characters replaced by underscores, such as `Account_AccountTWNameChange`. The tab cuts a name longer than 40 characters to 31 and adds a hash of the full SObject and class, such as `Account_MySuper_SuperLongClassN_66dce1e2`. The label is the last part of the class name followed by the SObject, such as `AccountTWNameChange (Account)`.
+
+Changes deploy in the background. The tab reports the result when the deployment finishes. If it hears nothing within two minutes, it tells you to check Setup > Deployment Status.
+
+The tab changes records in the org, not in your project. Retrieve the `TW_Action__mdt` records before your next deployment from source control, or that deployment overwrites the changes.
+
 ## Project Structure
 
 ```
 force-app/
 ├── src/        Framework package: TW_Handler, TW_Action, TW_Plugin, TW_Context,
-│               executors, and the TW_Action__mdt custom metadata type
+│               executors, the TW_Action__mdt custom metadata type, and the
+│               Action Manager tab
 ├── example/    Sample triggers, actions, plugins, plugin registry, and metadata records
 └── test/       Unit and integration tests (requires Apex Mockery)
 docs/           VitePress documentation site

@@ -1,0 +1,52 @@
+<template>
+  <div class="tw-lookup" onkeydown={handleKeyDown}>
+    <lightning-input
+      type="search"
+      label={label}
+      value={searchText}
+      required={required}
+      disabled={disabled}
+      placeholder={placeholder}
+      field-level-help={fieldLevelHelp}
+      autocomplete="off"
+      onfocus={handleFocus}
+      onblur={handleBlur}
+      onchange={handleInput}
+    ></lightning-input>
+    <template lwc:if={isOpen}>
+      <div class="tw-results" role="listbox" aria-label={label}>
+        <template lwc:if={hasResults}>
+          <template for:each={results} for:item="option">
+            <div
+              key={option.value}
+              class={option.cssClass}
+              role="option"
+              aria-selected={option.isSelected}
+              data-value={option.value}
+              onmousedown={handleOptionMouseDown}
+              onclick={handleOptionClick}
+            >
+              <div class="slds-grid slds-grid_vertical-align-center">
+                <div class="slds-col slds-truncate">
+                  <span class="slds-text-title_bold">{option.label}</span>
+                  <template lwc:if={option.sublabel}>
+                    <span class="slds-text-color_weak"> {option.sublabel}</span>
+                  </template>
+                </div>
+                <template lwc:if={option.badge}>
+                  <lightning-badge label={option.badge} class="slds-m-left_x-small"></lightning-badge>
+                </template>
+              </div>
+            </div>
+          </template>
+          <template lwc:if={moreResultsText}>
+            <p class="slds-p-around_x-small slds-text-color_weak">{moreResultsText}</p>
+          </template>
+        </template>
+        <template lwc:else>
+          <p class="slds-p-around_x-small slds-text-color_weak">{noResultsText}</p>
+        </template>
+      </div>
+    </template>
+  </div>
+</template>
