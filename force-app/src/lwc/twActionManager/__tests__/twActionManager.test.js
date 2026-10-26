@@ -1188,6 +1188,62 @@ describe("c-tw-action-manager", () => {
     });
   });
 
+  describe("reloading", () => {
+    // Starts a deployment from the Account section and finishes it with the reload left pending
+    async function reloadAfterDeployment(element, { collapse = false } = {}) {
+      ActionModal.open.mockResolvedValue({ jobId: JOB_ID, className: "AccountTWNameChange", sObjectName: "Account" });
+      await expand(element, "Account");
+      await click(rowButton(element, "account", 0, "Edit"));
+      if (collapse) {
+        await expand(element, "Account");
+      }
+      let finishReload;
+      getSObjectOptions.mockReturnValue(new Promise((resolve) => (finishReload = () => resolve(options()))));
+      publishDeployment({ Job_Id__c: JOB_ID, Success__c: true });
+      await flushPromises();
+      return async () => {
+        finishReload();
+        await flushPromises();
+      };
+    }
+
+    const sectionSpinner = (element, apiName) =>
+      [...sObjectItem(element, apiName).querySelectorAll("lightning-spinner")].find((s) => s.alternativeText === "Loading actions");
+
+    it("shows a spinner in each expanded SObject, keeping the list in place", async () => {
+      const element = await createManager();
+      await expand(element, "Contact");
+      const finishReload = await reloadAfterDeployment(element);
+      expect(sectionSpinner(element, "Account")).not.toBeUndefined();
+      expect(sectionSpinner(element, "Contact")).not.toBeUndefined();
+      expect(spinner(element, "Loading objects")).toBeUndefined();
+      expect(sectionButton(element, "Account", "Add Action")).toBeUndefined();
+      expect(classNames(element, "account")).toEqual(["AccountTWNameChange", "AccountTWRating", "AccountTWOwner"]);
+
+      await finishReload();
+      expect(queryAll(element, "lightning-spinner")).toHaveLength(0);
+      expect(sectionButton(element, "Account", "Add Action")).toBeDefined();
+    });
+
+    it("shows the list's spinner when no SObject is expanded", async () => {
+      const element = await createManager();
+      const finishReload = await reloadAfterDeployment(element, { collapse: true });
+      expect(spinner(element, "Loading objects")).toBeDefined();
+      expect(queryAll(element, ".tw-sobject-label")).toHaveLength(3);
+
+      await finishReload();
+      expect(spinner(element, "Loading objects")).toBeUndefined();
+    });
+
+    it("stops the spinner when the reload fails", async () => {
+      const element = await createManager();
+      getActionsBySObject.mockRejectedValue({ body: { message: "Reload failed" } });
+      await reloadAfterDeployment(element);
+      expect(errorAlert(element).textContent).toBe("Reload failed");
+      expect(queryAll(element, "lightning-spinner")).toHaveLength(0);
+    });
+  });
+
   it("is accessible", async () => {
     const element = await createManager();
     await expand(element, "Account");

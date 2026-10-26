@@ -33,7 +33,7 @@ Trigger Weaver is a metadata-driven Apex trigger framework for Salesforce. Each 
 
 ## Requirements
 
-- An org on Salesforce API version 65.0 or later
+- An org on Salesforce API version 68.0 or later
 - [Salesforce CLI](https://developer.salesforce.com/tools/salesforcecli) (`sf`)
 - Node.js and npm, for formatting, linting, and docs
 
@@ -264,17 +264,26 @@ npm run scratch:new
 
 ### Scripts
 
-| Script                  | Description                                                         |
-| ----------------------- | ------------------------------------------------------------------- |
-| `npm test`              | Run all local Apex tests in the default org.                        |
-| `npm run test:coverage` | Run tests with detailed code coverage.                              |
-| `npm run lint`          | Run PMD rules from `apex-ruleset.xml` and lint the README.          |
-| `npm run prettier`      | Format the project.                                                 |
-| `npm run scratch:new`   | Create a scratch org, install dependencies, and deploy the project. |
-| `npm run docs:dev`      | Generate the API reference and start the docs site locally.         |
-| `npm run docs:build`    | Generate the API reference and build the docs site.                 |
+| Script                       | Description                                                                 |
+| ---------------------------- | --------------------------------------------------------------------------- |
+| `npm run test:apex`          | Run all local Apex tests in the default org.                                |
+| `npm run test:apex:coverage` | Run the Apex tests with detailed code coverage.                             |
+| `npm run test:unit`          | Run the Lightning web component Jest tests.                                 |
+| `npm run test:unit:watch`    | Run the Jest tests again whenever a file changes.                           |
+| `npm run test:unit:debug`    | Run the Jest tests in debug mode.                                           |
+| `npm run test:unit:coverage` | Run the Jest tests with code coverage.                                      |
+| `npm run lint`               | Run all linters: `lint:apex`, `lint:lwc` and `lint:doc`.                    |
+| `npm run lint:apex`          | Run the PMD rules from `apex-ruleset.xml` on the Apex classes.              |
+| `npm run lint:lwc`           | Run ESLint on the Lightning web components, their tests and the Jest mocks. |
+| `npm run lint:doc`           | Lint the README.                                                            |
+| `npm run prettier`           | Format the project.                                                         |
+| `npm run prettier:verify`    | Check the project's formatting without changing files.                      |
+| `npm run scratch:new`        | Create a scratch org, install dependencies, and deploy the project.         |
+| `npm run docs:dev`           | Generate the API reference and start the docs site locally.                 |
+| `npm run docs:build`         | Generate the API reference and build the docs site.                         |
+| `npm run docs:preview`       | Preview the built docs site.                                                |
 
-Tests use [Apex Mockery](https://github.com/salesforce/apex-mockery), which `scratch:install` installs.
+Tests use [Apex Mockery](https://github.com/salesforce/apex-mockery), which `scratch:install` installs. Lightning web component tests run in Jest with [sfdx-lwc-jest](https://github.com/salesforce/sfdx-lwc-jest) and don't need an org. They sit in a `__tests__` folder beside each component. The mocks for `lightning/*` modules are in `force-app/test/jest-mocks`, and `jest.config.js` maps each module to its mock.
 
 ### Documentation
 
@@ -283,6 +292,6 @@ Run `npm run docs:dev` to view the documentation site. [ApexDocs](https://github
 ## Contributing
 
 1. Create a branch from `main`.
-2. Make your changes and add tests under `force-app/test`.
+2. Make your changes and add tests: Apex tests under `force-app/test`, and Jest tests in the component's `__tests__` folder.
 3. Commit using [Conventional Commits](https://www.conventionalcommits.org/). The project includes a commitlint config for the format. A Husky pre-commit hook runs Prettier and the linters.
 4. Open a pull request against `main`.

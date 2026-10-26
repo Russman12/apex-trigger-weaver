@@ -2,7 +2,7 @@
 
 ## Installation
 
-Deploy the framework package directory to your org. It requires Salesforce API version 65.0 or later.
+Deploy the framework package directory to your org. It requires Salesforce API version 68.0 or later.
 
 ```sh
 sf project deploy start --source-dir force-app/src --target-org <your-org>

@@ -157,6 +157,11 @@ export default class TwActionManager extends NavigationMixin(LightningElement) {
     return !this.isLoading && !this.hasSObjects;
   }
 
+  // Expanded SObjects show their own spinner while loading, so this one shows only when none is expanded
+  get showLoadingSpinner() {
+    return this.isLoading && Object.keys(this.expanded).length === 0;
+  }
+
   isDirty(key) {
     return names(this.actionsBySObject[key]) !== names(this.savedBySObject[key]);
   }
@@ -781,7 +786,9 @@ export default class TwActionManager extends NavigationMixin(LightningElement) {
     this.refresh();
   }
 
+  // The list stays in place while it reloads, with a spinner in each expanded SObject
   refresh() {
+    this.isLoading = true;
     this.load();
   }
 
