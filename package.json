@@ -50,5 +50,12 @@
     "prettier-plugin-apex": "^2.2.0",
     "vitepress": "^1.6.4",
     "write-good": "^1.0.8"
+  },
+  "overrides": {
+    "basic-ftp": "^6.2.3",
+    "js-yaml@^4": "^4.3.2",
+    "vitepress": {
+      "vite": "^6.4.5"
+    }
   }
 }
