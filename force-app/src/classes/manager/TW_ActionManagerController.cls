@@ -52,10 +52,21 @@ public with sharing class TW_ActionManagerController {
       }
     }
 
+    Map<SObjectOption, List<TW_Action__mdt>> recordsByOption = new Map<SObjectOption, List<TW_Action__mdt>>();
     for (TW_Action__mdt r : records()) {
       SObjectOption option = String.isBlank(r.SObject_Name__c) ? null : optionsByName.get(r.SObject_Name__c.toLowerCase());
       if (option != null) {
         option.actionCount++;
+        if (!recordsByOption.containsKey(option)) {
+          recordsByOption.put(option, new List<TW_Action__mdt>());
+        }
+        recordsByOption.get(option).add(r);
+      }
+    }
+    // Counted with the same checks actions uses, so the count matches the problems listed
+    for (SObjectOption option : recordsByOption.keySet()) {
+      for (ActionRow row : rows(recordsByOption.get(option))) {
+        option.problemCount += row.problems.size();
       }
     }
 
@@ -87,14 +98,32 @@ public with sharing class TW_ActionManagerController {
   }
 
   /**
-   * @description Returns every action configured for the given SObject, active or not, in execution
-   * order. Actions without an order are listed last.
-   * @param sObjectName The SObject API name.
-   * @return The actions, each with any configuration problems found.
+   * @description Returns every action, active or not, grouped by SObject. Each SObject's actions are
+   * in execution order, with actions that have no order last.
+   * @return The actions with any configuration problems found, by lowercase SObject API name.
    */
   @AuraEnabled
-  public static List<ActionRow> actions(String sObjectName) {
-    List<TW_Action__mdt> records = recordsFor(sObjectName);
+  public static Map<String, List<ActionRow>> actionsBySObject() {
+    Map<String, List<TW_Action__mdt>> recordsBySObject = new Map<String, List<TW_Action__mdt>>();
+    for (TW_Action__mdt r : records()) {
+      String sObjectName = r.SObject_Name__c == null ? '' : r.SObject_Name__c.toLowerCase();
+      if (!recordsBySObject.containsKey(sObjectName)) {
+        recordsBySObject.put(sObjectName, new List<TW_Action__mdt>());
+      }
+      recordsBySObject.get(sObjectName).add(r);
+    }
+
+    Map<String, List<ActionRow>> rowsBySObject = new Map<String, List<ActionRow>>();
+    for (String sObjectName : recordsBySObject.keySet()) {
+      List<TW_Action__mdt> sObjectRecords = recordsBySObject.get(sObjectName);
+      sObjectRecords.sort(new ExecutionOrder());
+      rowsBySObject.put(sObjectName, rows(sObjectRecords));
+    }
+    return rowsBySObject;
+  }
+
+  // One SObject's records as rows, in the given order, with their configuration problems
+  private static List<ActionRow> rows(List<TW_Action__mdt> records) {
     Map<String, List<String>> namesByOrder = new Map<String, List<String>>();
     for (TW_Action__mdt r : records) {
       if (String.isNotBlank(r.Order__c)) {
@@ -415,6 +444,8 @@ public with sharing class TW_ActionManagerController {
     public Boolean hasFrameworkTrigger = false;
     @AuraEnabled
     public Integer actionCount = 0;
+    @AuraEnabled
+    public Integer problemCount = 0;
 
     private SObjectOption(String apiName, String label) {
       this.apiName = apiName;

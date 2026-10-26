@@ -13,7 +13,10 @@ public class TW_ActionManagerControllerTest {
     TW_ActionManagerController.actionRecords = new List<TW_Action__mdt>{
       record('AccountTWNameChange', 'Account', '1'),
       record('AccountDescriptionTWAction', 'account', '2'),
-      record('ContactEmailTWAction', 'Task', '1')
+      record('ContactEmailTWAction', 'Task', '1'),
+      // Two problems on Task: a shared order, and a class that does not exist
+      record('ContactSetAccDescTWAction', 'Task', '1'),
+      record('TW_DoesNotExist', 'Task', '2')
     };
 
     Test.startTest();
@@ -25,8 +28,11 @@ public class TW_ActionManagerControllerTest {
 
     System.Assert.isTrue(optionsByName.get('Account').hasFrameworkTrigger, 'Account trigger not detected');
     System.Assert.areEqual(2, optionsByName.get('Account').actionCount, 'unexpected Account action count');
-    // Listed for its action whether or not the org has a Task trigger
-    System.Assert.areEqual(1, optionsByName.get('Task').actionCount, 'unexpected Task action count');
+    System.Assert.areEqual(0, optionsByName.get('Account').problemCount, 'unexpected Account problem count');
+    // Listed for its actions whether or not the org has a Task trigger
+    System.Assert.areEqual(3, optionsByName.get('Task').actionCount, 'unexpected Task action count');
+    // The shared order is a problem on each of the two actions, plus the missing class
+    System.Assert.areEqual(3, optionsByName.get('Task').problemCount, 'unexpected Task problem count');
     for (TW_ActionManagerController.SObjectOption o : optionsByName.values()) {
       System.Assert.isTrue(o.hasFrameworkTrigger || o.actionCount > 0, o.apiName + ' has no framework trigger or actions');
     }
@@ -50,7 +56,7 @@ public class TW_ActionManagerControllerTest {
   }
 
   /**
-   * Ensures actions returns the SObject's actions in execution order with any problems
+   * Ensures actionsBySObject returns each SObject's actions in execution order with any problems
    */
   @IsTest
   static void actions() {
@@ -65,7 +71,7 @@ public class TW_ActionManagerControllerTest {
     };
 
     Test.startTest();
-    List<TW_ActionManagerController.ActionRow> rows = TW_ActionManagerController.actions('account');
+    List<TW_ActionManagerController.ActionRow> rows = TW_ActionManagerController.actionsBySObject().get('account');
     Test.stopTest();
 
     List<String> names = new List<String>();
@@ -89,6 +95,33 @@ public class TW_ActionManagerControllerTest {
       rows[3].problems,
       'problems not reported'
     );
+  }
+
+  /**
+   * Ensures actionsBySObject groups actions by SObject regardless of the case of the SObject name
+   */
+  @IsTest
+  static void actionsBySObjectGrouping() {
+    TW_Action__mdt named = record('Contact_Logger', 'contact', '1');
+    named.Apex_Class__c = 'ContactEmailTWAction';
+    TW_ActionManagerController.actionRecords = new List<TW_Action__mdt>{
+      record('AccountTWNameChange', 'Account', '2'),
+      named,
+      record('AccountDescriptionTWAction', 'ACCOUNT', '1')
+    };
+
+    Test.startTest();
+    Map<String, List<TW_ActionManagerController.ActionRow>> rowsBySObject = TW_ActionManagerController.actionsBySObject();
+    Test.stopTest();
+
+    System.Assert.areEqual(new Set<String>{ 'account', 'contact' }, rowsBySObject.keySet(), 'unexpected SObjects');
+    System.Assert.areEqual(2, rowsBySObject.get('account').size(), 'Account actions not grouped');
+    System.Assert.areEqual(
+      'AccountDescriptionTWAction',
+      rowsBySObject.get('account')[0].developerName,
+      'actions not in execution order'
+    );
+    System.Assert.areEqual('ContactEmailTWAction', rowsBySObject.get('contact')[0].apexClass, 'class not resolved');
   }
 
   /**

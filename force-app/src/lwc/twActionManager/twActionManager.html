@@ -1,197 +1,285 @@
 <template>
-  <lightning-card title="Trigger Weaver Actions" icon-name="standard:process">
-    <div class="slds-p-horizontal_medium" ondragover={handleAreaDragOver} ondrop={handleDrop}>
-      <template lwc:if={error}>
-        <div class="slds-notify slds-notify_alert slds-alert_error slds-m-bottom_small" role="alert">{error}</div>
-      </template>
-
-      <template lwc:if={isDeploying}>
-        <div class="slds-is-relative tw-loading">
-          <lightning-spinner size="small" alternative-text="Deploying"></lightning-spinner>
+  <article class="slds-card">
+    <div ondragover={handleAreaDragOver} ondrop={handleDrop}>
+      <div class="slds-card__header slds-grid">
+        <header class="slds-media slds-media_center slds-has-flexi-truncate">
+          <div class="slds-media__figure">
+            <lightning-icon icon-name="standard:process" size="small"></lightning-icon>
+          </div>
+          <div class="slds-media__body">
+            <h2 class="slds-card__header-title">Trigger Weaver Actions</h2>
+          </div>
+        </header>
+      </div>
+      <div class="slds-card__body slds-card__body_inner">
+        <div class="tw-search">
+          <lightning-input
+            type="search"
+            label="Search actions"
+            variant="label-hidden"
+            class="tw-search-input"
+            placeholder="Search by class, description or object"
+            value={searchInput}
+            onchange={handleSearchChange}
+            onkeydown={handleSearchKeyDown}
+          ></lightning-input>
         </div>
-        <p class="slds-m-bottom_small slds-text-align_center slds-text-color_weak">
-          Deploying the changes. This usually takes a few seconds.
-        </p>
-      </template>
 
-      <template lwc:if={isLoadingSObjects}>
-        <div class="slds-is-relative tw-loading">
-          <lightning-spinner size="small" alternative-text="Loading objects"></lightning-spinner>
-        </div>
-      </template>
+        <!-- Pinned to the window so the match count and buttons stay in view while scrolling -->
+        <template lwc:if={isSearching}>
+          <div class="tw-find" role="region" aria-label="Search matches">
+            <span class="tw-find-summary" aria-live="polite">{searchSummary}</span>
+            <lightning-button-icon
+              icon-name="utility:chevronup"
+              variant="bare"
+              alternative-text="Previous match"
+              title="Previous match (Shift+Enter)"
+              disabled={hasNoMatches}
+              onclick={handlePreviousMatch}
+            ></lightning-button-icon>
+            <lightning-button-icon
+              icon-name="utility:chevrondown"
+              variant="bare"
+              alternative-text="Next match"
+              title="Next match (Enter)"
+              disabled={hasNoMatches}
+              onclick={handleNextMatch}
+            ></lightning-button-icon>
+            <span class="tw-separator" aria-hidden="true"></span>
+            <lightning-button-icon
+              icon-name="utility:close"
+              variant="bare"
+              alternative-text="Clear search"
+              title="Clear search"
+              onclick={handleClearSearch}
+            ></lightning-button-icon>
+          </div>
+        </template>
 
-      <template lwc:if={showNoSObjects}>
-        <p class="slds-text-color_weak">No object has a trigger that uses TW_Handler.</p>
-      </template>
+        <template lwc:if={error}>
+          <div class="slds-notify slds-notify_alert slds-alert_error slds-m-bottom_small" role="alert">{error}</div>
+        </template>
 
-      <template lwc:if={hasSObjects}>
-        <ul class="tw-sobjects">
-          <template for:each={sObjects} for:item="sObject">
-            <li key={sObject.apiName} class="tw-sobject">
-              <div class="tw-sobject-header">
-                <button
-                  class="slds-button tw-toggle"
-                  aria-expanded={sObject.isExpanded}
-                  aria-controls={sObject.sectionId}
-                  data-name={sObject.apiName}
-                  disabled={sObject.toggleDisabled}
-                  onclick={handleToggle}
-                >
-                  <lightning-icon icon-name={sObject.chevron} size="x-small" class="slds-m-right_x-small"></lightning-icon>
-                  <span class="tw-sobject-label">{sObject.label}</span>
-                  <span class="slds-text-color_weak slds-m-left_x-small">{sObject.apiName}</span>
-                  <lightning-badge label={sObject.countLabel} class="slds-m-left_small"></lightning-badge>
-                  <template lwc:if={sObject.missingTrigger}>
-                    <lightning-badge
-                      label="No framework trigger"
-                      icon-name="utility:warning"
-                      class="slds-theme_warning"
-                    ></lightning-badge>
-                  </template>
-                </button>
-              </div>
+        <template lwc:if={isDeploying}>
+          <div class="slds-is-relative tw-loading">
+            <lightning-spinner size="small" alternative-text="Deploying"></lightning-spinner>
+          </div>
+          <p class="slds-m-bottom_small slds-text-align_center slds-text-color_weak">
+            Deploying the changes. This usually takes a few seconds.
+          </p>
+        </template>
 
-              <template lwc:if={sObject.isExpanded}>
-                <div id={sObject.sectionId} class="tw-section">
-                  <template lwc:if={sObject.showLoading}>
-                    <div class="slds-is-relative tw-loading">
-                      <lightning-spinner size="small" alternative-text="Loading actions"></lightning-spinner>
-                    </div>
-                  </template>
-                  <template lwc:if={sObject.showSectionBar}>
-                    <div class="tw-section-bar">
-                      <p class="slds-col slds-text-color_weak">{sObject.sectionText}</p>
-                      <lightning-button
-                        label="Add Action"
-                        icon-name="utility:add"
-                        title={sObject.addTitle}
-                        data-name={sObject.apiName}
-                        disabled={sObject.addDisabled}
-                        onclick={handleAddAction}
-                      ></lightning-button>
-                    </div>
-                  </template>
-                  <ol class="tw-actions" aria-label="Actions in execution order">
-                    <template for:each={sObject.actions} for:item="action">
-                      <li
-                        key={action.developerName}
-                        class={action.cssClass}
-                        draggable={action.draggable}
-                        data-index={action.index}
-                        ondragstart={handleDragStart}
-                        ondragover={handleDragOver}
-                        ondragend={handleDragEnd}
-                        onmouseup={handleDragEnd}
-                      >
-                        <div class="tw-position">
-                          <span class="tw-grip" title="Drag to reorder" data-index={action.index} onmousedown={handleGripDown}>
-                            <lightning-icon icon-name="utility:drag_and_drop" size="x-small" alternative-text="Drag to reorder">
-                            </lightning-icon>
-                          </span>
-                          <template lwc:if={action.isEditingPosition}>
-                            <input
-                              type="number"
-                              class="slds-input tw-position-input"
-                              min="1"
-                              max={action.positionMax}
-                              step="1"
-                              value={action.position}
-                              aria-label="New position"
-                              onkeydown={handlePositionKeyDown}
-                              onblur={handlePositionBlur}
-                            />
-                          </template>
-                          <template lwc:else>
-                            <button
-                              class="tw-number"
-                              title="Change position"
-                              data-index={action.index}
-                              disabled={action.positionDisabled}
-                              onclick={handlePositionClick}
-                            >
-                              {action.position}
-                            </button>
-                            <template lwc:if={action.moved}>
-                              <span class="tw-moved" title={action.movedTitle}>{action.movedLabel}</span>
-                            </template>
-                          </template>
-                        </div>
-                        <span class={action.statusClass} title={action.statusLabel}>
-                          <span class="slds-assistive-text">{action.statusLabel}</span>
-                        </span>
-                        <span class="tw-class tw-truncate" title={action.apexClass}>{action.apexClass}</span>
-                        <span class="tw-description tw-truncate" title={action.description}>{action.description}</span>
-                        <div class="tw-buttons">
-                          <lightning-button-icon
-                            icon-name="utility:arrowup"
-                            variant="bare"
-                            alternative-text="Move up"
-                            title="Move up"
-                            data-index={action.index}
-                            disabled={action.upDisabled}
-                            onclick={handleMoveUp}
-                          ></lightning-button-icon>
-                          <lightning-button-icon
-                            icon-name="utility:arrowdown"
-                            variant="bare"
-                            alternative-text="Move down"
-                            title="Move down"
-                            data-index={action.index}
-                            disabled={action.downDisabled}
-                            onclick={handleMoveDown}
-                          ></lightning-button-icon>
-                          <span class="tw-separator" aria-hidden="true"></span>
-                          <lightning-button-icon
-                            icon-name="utility:edit"
-                            variant="bare"
-                            alternative-text="Edit"
-                            title="Edit"
-                            data-name={action.developerName}
-                            disabled={action.editDisabled}
-                            onclick={handleEdit}
-                          ></lightning-button-icon>
-                          <lightning-button-icon
-                            icon-name="utility:new_window"
-                            variant="bare"
-                            alternative-text="Open the record in Setup"
-                            title="Open the record in Setup, where it can be deleted"
-                            data-id={action.recordId}
-                            onclick={handleOpenRecord}
-                          ></lightning-button-icon>
-                        </div>
-                        <template for:each={action.problems} for:item="problem">
-                          <p key={problem} class="tw-problem slds-text-color_error">
-                            <lightning-icon
-                              icon-name="utility:warning"
-                              size="xx-small"
-                              variant="error"
-                              class="slds-m-right_xx-small"
-                            ></lightning-icon>
-                            {problem}
-                          </p>
-                        </template>
-                      </li>
+        <template lwc:if={isLoading}>
+          <div class="slds-is-relative tw-loading">
+            <lightning-spinner size="small" alternative-text="Loading objects"></lightning-spinner>
+          </div>
+        </template>
+
+        <template lwc:if={showNoSObjects}>
+          <p class="slds-text-color_weak">No object has a trigger that uses TW_Handler.</p>
+        </template>
+
+        <template lwc:if={hasSObjects}>
+          <ul class="tw-sobjects">
+            <template for:each={sObjects} for:item="sObject">
+              <li key={sObject.apiName} class={sObject.cssClass}>
+                <div class="tw-sobject-header">
+                  <button
+                    class="slds-button tw-toggle"
+                    aria-expanded={sObject.isExpanded}
+                    aria-controls={sObject.sectionId}
+                    data-name={sObject.apiName}
+                    disabled={sObject.toggleDisabled}
+                    onclick={handleToggle}
+                  >
+                    <lightning-icon icon-name={sObject.chevron} size="x-small" class="slds-m-right_x-small"></lightning-icon>
+                    <span class="tw-sobject-label">{sObject.label}</span>
+                    <span class="slds-text-color_weak slds-m-left_x-small">{sObject.apiName}</span>
+                    <lightning-badge label={sObject.countLabel} class="slds-m-left_small"></lightning-badge>
+                    <template lwc:if={sObject.showMatchCount}>
+                      <lightning-badge
+                        label={sObject.matchLabel}
+                        icon-name="utility:search"
+                        class="slds-badge_inverse"
+                      ></lightning-badge>
                     </template>
-                  </ol>
-                  <template lwc:if={sObject.showOrderButtons}>
-                    <div class="slds-grid slds-grid_vertical-align-center slds-m-vertical_small">
-                      <p class="slds-col slds-text-color_weak">Save or cancel the new order to edit actions or switch objects.</p>
-                      <lightning-button label="Cancel" disabled={isDeploying} onclick={handleCancelOrder}></lightning-button>
-                      <lightning-button
-                        variant="brand"
-                        label="Save Order"
-                        class="slds-m-left_x-small"
-                        disabled={isDeploying}
-                        onclick={handleSaveOrder}
-                      ></lightning-button>
-                    </div>
-                  </template>
+                    <template lwc:if={sObject.hasProblems}>
+                      <lightning-badge
+                        label={sObject.problemLabel}
+                        icon-name="utility:error"
+                        class="slds-theme_error"
+                      ></lightning-badge>
+                    </template>
+                    <template lwc:if={sObject.missingTrigger}>
+                      <lightning-badge
+                        label="No framework trigger"
+                        icon-name="utility:warning"
+                        class="slds-theme_warning"
+                      ></lightning-badge>
+                    </template>
+                  </button>
                 </div>
-              </template>
-            </li>
-          </template>
-        </ul>
-      </template>
+
+                <template lwc:if={sObject.isExpanded}>
+                  <div id={sObject.sectionId} class="tw-section">
+                    <template lwc:if={sObject.showLoading}>
+                      <div class="slds-is-relative tw-loading">
+                        <lightning-spinner size="small" alternative-text="Loading actions"></lightning-spinner>
+                      </div>
+                    </template>
+                    <template lwc:if={sObject.showSectionBar}>
+                      <div class="tw-section-bar">
+                        <p class="slds-col slds-text-color_weak">{sObject.sectionText}</p>
+                        <lightning-button
+                          label="Add Action"
+                          icon-name="utility:add"
+                          title={sObject.addTitle}
+                          data-name={sObject.apiName}
+                          disabled={sObject.addDisabled}
+                          onclick={handleAddAction}
+                        ></lightning-button>
+                      </div>
+                    </template>
+                    <ol class="tw-actions" data-key={sObject.key} aria-label="Actions in execution order">
+                      <template for:each={sObject.actions} for:item="action">
+                        <li
+                          key={action.developerName}
+                          class={action.cssClass}
+                          data-row-key={action.rowKey}
+                          data-key={action.key}
+                          draggable={action.draggable}
+                          data-index={action.index}
+                          ondragstart={handleDragStart}
+                          ondragover={handleDragOver}
+                          ondragend={handleDragEnd}
+                          onmouseup={handleDragEnd}
+                        >
+                          <div class="tw-position">
+                            <span
+                              class="tw-grip"
+                              title="Drag to reorder"
+                              data-key={action.key}
+                              data-index={action.index}
+                              onmousedown={handleGripDown}
+                            >
+                              <lightning-icon icon-name="utility:drag_and_drop" size="x-small" alternative-text="Drag to reorder">
+                              </lightning-icon>
+                            </span>
+                            <template lwc:if={action.isEditingPosition}>
+                              <input
+                                type="number"
+                                class="slds-input tw-position-input"
+                                min="1"
+                                max={action.positionMax}
+                                step="1"
+                                value={action.position}
+                                aria-label="New position"
+                                onkeydown={handlePositionKeyDown}
+                                onblur={handlePositionBlur}
+                              />
+                            </template>
+                            <template lwc:else>
+                              <button
+                                class="tw-number"
+                                title="Change position"
+                                data-key={action.key}
+                                data-index={action.index}
+                                disabled={action.positionDisabled}
+                                onclick={handlePositionClick}
+                              >
+                                {action.position}
+                              </button>
+                              <template lwc:if={action.moved}>
+                                <span class="tw-moved" title={action.movedTitle}>{action.movedLabel}</span>
+                              </template>
+                            </template>
+                          </div>
+                          <span class={action.statusClass} title={action.statusLabel}>
+                            <span class="slds-assistive-text">{action.statusLabel}</span>
+                          </span>
+                          <span class="tw-class tw-truncate" title={action.apexClass}>{action.apexClass}</span>
+                          <span class="tw-description tw-truncate" title={action.description}>{action.description}</span>
+                          <div class="tw-buttons">
+                            <lightning-button-icon
+                              icon-name="utility:arrowup"
+                              variant="bare"
+                              alternative-text="Move up"
+                              title="Move up"
+                              data-key={action.key}
+                              data-index={action.index}
+                              disabled={action.upDisabled}
+                              onclick={handleMoveUp}
+                            ></lightning-button-icon>
+                            <lightning-button-icon
+                              icon-name="utility:arrowdown"
+                              variant="bare"
+                              alternative-text="Move down"
+                              title="Move down"
+                              data-key={action.key}
+                              data-index={action.index}
+                              disabled={action.downDisabled}
+                              onclick={handleMoveDown}
+                            ></lightning-button-icon>
+                            <span class="tw-separator" aria-hidden="true"></span>
+                            <lightning-button-icon
+                              icon-name="utility:edit"
+                              variant="bare"
+                              alternative-text="Edit"
+                              title="Edit"
+                              data-key={action.key}
+                              data-name={action.developerName}
+                              disabled={action.editDisabled}
+                              onclick={handleEdit}
+                            ></lightning-button-icon>
+                            <lightning-button-icon
+                              icon-name="utility:new_window"
+                              variant="bare"
+                              alternative-text="Open the record in Setup"
+                              title="Open the record in Setup, where it can be deleted"
+                              data-id={action.recordId}
+                              onclick={handleOpenRecord}
+                            ></lightning-button-icon>
+                          </div>
+                          <template for:each={action.problems} for:item="problem">
+                            <p key={problem} class="tw-problem slds-text-color_error">
+                              <lightning-icon
+                                icon-name="utility:warning"
+                                size="xx-small"
+                                variant="error"
+                                class="slds-m-right_xx-small"
+                              ></lightning-icon>
+                              {problem}
+                            </p>
+                          </template>
+                        </li>
+                      </template>
+                    </ol>
+                    <template lwc:if={sObject.showOrderButtons}>
+                      <div class="slds-grid slds-grid_vertical-align-center slds-m-vertical_small">
+                        <p class="slds-col slds-text-color_weak">Save or cancel the new order to edit or add actions here.</p>
+                        <lightning-button
+                          label="Cancel"
+                          data-key={sObject.key}
+                          disabled={isDeploying}
+                          onclick={handleCancelOrder}
+                        ></lightning-button>
+                        <lightning-button
+                          variant="brand"
+                          label="Save Order"
+                          class="slds-m-left_x-small"
+                          data-key={sObject.key}
+                          disabled={isDeploying}
+                          onclick={handleSaveOrder}
+                        ></lightning-button>
+                      </div>
+                    </template>
+                  </div>
+                </template>
+              </li>
+            </template>
+          </ul>
+        </template>
+      </div>
     </div>
-  </lightning-card>
+  </article>
 </template>

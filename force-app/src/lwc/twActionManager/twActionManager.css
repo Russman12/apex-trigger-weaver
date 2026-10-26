@@ -208,3 +208,48 @@
 .tw-loading {
   height: 3rem;
 }
+
+/* Search highlights matches and dims everything else; nothing is hidden */
+.tw-search {
+  margin-bottom: 0.75rem;
+}
+
+/* Pinned near the bottom-right of the window while searching. The top of the window is covered by
+   the Salesforce header, whose height a component can't know; the bottom margin clears an app's
+   utility bar. It sits below modals, which use z-index 9001 and up */
+.tw-find {
+  position: fixed;
+  right: 1.5rem;
+  bottom: 3.5rem;
+  z-index: 9000;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem 0.25rem 1rem;
+  border: 1px solid var(--slds-g-color-border-base-1, #c9c9c9);
+  border-radius: 1.25rem;
+  background: var(--slds-g-color-neutral-base-100, #fff);
+  box-shadow: 0 2px 6px 0 rgba(0, 0, 0, 0.16);
+}
+
+.tw-find-summary {
+  margin-right: 0.25rem;
+  white-space: nowrap;
+}
+
+.tw-sobject_dimmed .tw-toggle {
+  opacity: 0.45;
+}
+
+.tw-action_match {
+  background: var(--slds-g-color-palette-yellow-95, #fbf3e0);
+}
+
+/* Dims the row's cells but not the drop bar, which is drawn by the row itself */
+.tw-action_dimmed > * {
+  opacity: 0.45;
+}
+
+.tw-action_current {
+  box-shadow: inset 0 0 0 2px var(--slds-g-color-brand-base-50, #0176d3);
+}
