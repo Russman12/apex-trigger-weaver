@@ -4,21 +4,26 @@
 @IsTest
 public class TW_ActionRegistryTest {
   /**
-   * Ensures activeActions returns active actions for given SObject based on TW_Action__mdt
+   * Ensures activeActions loads the org's TW_Action__mdt records. The org can have records beyond
+   * those in source, such as ones added in the Trigger Weaver Manager, so the expected actions come
+   * from the org's records. activeActionsSorted covers the order
    */
   @IsTest
   static void activeActions() {
+    Set<System.Type> expected = new Set<System.Type>();
+    for (TW_Action__mdt r : TW_Action__mdt.getAll().values()) {
+      if (r.Active__c && r.SObject_Name__c?.equalsIgnoreCase('Account') == true) {
+        expected.add(System.Type.forName(TW_ActionRegistry.className(r)));
+      }
+    }
     TW_ActionRegistry registry = new TW_ActionRegistry();
 
     Test.startTest();
     List<System.Type> types = registry.activeActions(Account.getSObjectType());
     Test.stopTest();
 
-    System.Assert.areEqual(
-      new List<System.Type>{ AccountDescriptionTWAction.class, AccountTWNameChange.class },
-      types,
-      'active actions not returned as expected'
-    );
+    System.Assert.isTrue(expected.contains(AccountDescriptionTWAction.class), 'source record not deployed to the org');
+    System.Assert.areEqual(expected, new Set<System.Type>(types), 'active actions not returned as expected');
   }
 
   /**
