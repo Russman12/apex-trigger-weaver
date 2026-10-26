@@ -730,7 +730,7 @@ export default class TwActionManager extends NavigationMixin(LightningElement) {
   async subscribeToDeployments() {
     try {
       this.subscription = await subscribe(DEPLOYMENT_CHANNEL, -1, (message) => this.handleDeploymentResult(message.data.payload));
-    } catch (e) {
+    } catch {
       // Without the event the timeout below still ends the wait and reloads the list
       this.subscription = undefined;
     }

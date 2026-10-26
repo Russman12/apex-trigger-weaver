@@ -107,7 +107,7 @@ export default class TwActionModal extends LightningModal {
       if (request === this.previewRequest) {
         this.previewName = name;
       }
-    } catch (e) {
+    } catch {
       this.previewName = undefined;
     }
   }
