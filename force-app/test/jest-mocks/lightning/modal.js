@@ -10,6 +10,9 @@ const LIGHTNING_MODAL_HEADER = "lightning-modal-header";
 const LIGHTNING_MODAL_BODY = "lightning-modal-body";
 const LIGHTNING_MODAL_FOOTER = "lightning-modal-footer";
 
+// Records each close(result) call. Reset it between tests, such as with jest.clearAllMocks()
+export const mockClose = jest.fn();
+
 function getSlotNodes(template, element) {
   const child = template.querySelector(element).shadowRoot.children[0];
   if (child) {
@@ -61,10 +64,13 @@ export default class LightningModal extends LightningElement {
 
   @api size;
   @api label;
+  @api description;
+  @api disableClose = false;
 
   @api
-  close(result) {
-    this.closeValue = result;
+  close(...args) {
+    this.closeValue = args[0];
+    mockClose(...args);
   }
 
   /**

@@ -10,7 +10,9 @@ module.exports = defineConfig([
   // Global ignores
   {
     ignores: [
-      "force-app/test/jest-mocks/lightning/modal.js" // Ignore modal mock as it contains decorators (unsupported by ESLint)
+      // Ignore mocks that contain decorators (unsupported by ESLint)
+      "force-app/test/jest-mocks/lightning/modal.js",
+      "force-app/test/jest-mocks/lightning/modalHeader/modalHeader.js"
     ]
   },
 

@@ -6,6 +6,7 @@ module.exports = {
   moduleNameMapper: {
     // Jest mocks
     "^lightning/modal$": "<rootDir>/force-app/test/jest-mocks/lightning/modal",
+    "^lightning/modalHeader$": "<rootDir>/force-app/test/jest-mocks/lightning/modalHeader/modalHeader",
     "^lightning/navigation$": "<rootDir>/force-app/test/jest-mocks/lightning/navigation",
     "^lightning/platformShowToastEvent$": "<rootDir>/force-app/test/jest-mocks/lightning/platformShowToastEvent"
   },
