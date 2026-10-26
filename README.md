@@ -14,6 +14,7 @@ Trigger Weaver is a metadata-driven Apex trigger framework for Salesforce. Each 
 - [How It Works](#how-it-works)
   - [Action API](#action-api)
   - [Bypassing Actions](#bypassing-actions)
+  - [Bypassing Without Code](#bypassing-without-code)
 - [Plugins](#plugins)
 - [Action Manager](#action-manager)
 - [Project Structure](#project-structure)
@@ -123,12 +124,13 @@ Create a `TW_Action__mdt` record and set `Apex_Class__c` to the action's class. 
 
 ## How It Works
 
-When `TW_Handler.execute()` runs:
+The trigger's `new TW_Handler(...)` creates the plugins, before the handler loads any actions. When `TW_Handler.execute()` runs:
 
-1. **Resolve actions.** The handler loads active `TW_Action__mdt` records for the SObject, sorts them by `Order__c`, and caches them for the transaction. It removes any bypassed actions and creates a new instance of each remaining action. If no actions remain, the handler exits without invoking any plugins.
-2. **Filter.** For each action, the handler calls the filter for the current operation on every trigger record and keeps the records that pass.
-3. **Execute.** For each action, the handler calls the handler method for the current operation once per filtered record.
-4. **Plugins.** The handler invokes plugin hooks around each stage. The handler constructor creates the plugins. See [Plugins](#plugins).
+1. **Initialize.** The handler invokes each plugin's `OnInit` hook, in every execution.
+2. **Resolve actions.** The handler loads active `TW_Action__mdt` records for the SObject, sorts them by `Order__c`, and caches them for the transaction. It removes any bypassed actions, including bypasses added in `OnInit`, and creates a new instance of each remaining action. If no actions remain, the handler exits without invoking any other plugin hooks.
+3. **Filter.** For each action, the handler calls the filter for the current operation on every trigger record and keeps the records that pass.
+4. **Execute.** For each action, the handler calls the handler method for the current operation once per filtered record.
+5. **Plugins.** The handler invokes plugin hooks around each stage. See [Plugins](#plugins).
 
 Actions run in ascending `Order__c`. The handler compares values one character at a time by Unicode value, so `10` sorts before `9` and uppercase letters sort before lowercase. Each active action for an SObject needs its own order. If two share an order, the SObject's trigger throws `TW_ActionRegistry.InvalidActionConfigException`. It does the same for a record that names an Apex class that doesn't exist, and these errors affect no other SObject. An active record whose `SObject_Name__c` is not a valid SObject throws the same exception in every trigger that uses the framework, because the handler can't match it to one SObject.
 
@@ -157,20 +159,36 @@ update accounts; // AccountTWNameChange does not run
 TW_Handler.removeBypass(AccountTWNameChange.class);
 ```
 
-`TW_Handler.clearBypasses()` removes all bypasses.
+`TW_Handler.isBypassed(type)` reports whether a bypass applies to an action, and `TW_Handler.clearBypasses()` removes all bypasses.
+
+### Bypassing Without Code
+
+`addBypass` is an Apex method, so it can't help when no Apex runs before record changes. Data Loader, the Bulk API, and external integrations write records through the standard APIs. Other trigger frameworks handle this problem by providing a switch that admins set without code. The common solutions are a custom permission that skips actions for the users who hold it or a hierarchy custom setting.
+
+While these solutions function, they introduce issues:
+
+- **Different users get different results.** With a per-user bypass, two users who save the same record can get different results, and nothing on the record shows why. That makes problems hard to troubleshoot and code execution unpredictable.
+- **Configuration would spread out.** Actions live in `TW_Action__mdt`. A bypass would add permission sets or a custom setting as more places to check when an action doesn't run.
+- **Bypassed records skip business logic.** Records loaded with a bypass can leave data in an incorrect state and make related records and integrations out of sync.
+- **A bypass acts like a privilege.** When actions enforce rules, the right to skip them must stay with the users who need it, but permission set assignments tend to spread.
+
+Personally, I think this is a bad idea to have such a bypass. An org that accepts the trade-offs above can build the switch itself. A plugin's `OnInit` hook runs before the handler resolves the actions, so it can call `TW_Handler.addBypass` for the actions to skip in that execution. The org then owns the bypass and its configuration. `force-app/example` includes `TW_Plugin_Bypass`, which bypasses actions for users with a custom permission, as set in the example `Trigger_Bypass__mdt` records. See [Plugins](#plugins).
 
 ## Plugins
 
 A plugin implements one or more of the hook interfaces nested in `TW_Plugin`. The handler calls each hook a plugin declares and skips the rest:
 
-| Interface                 | Method                                | When it runs                                                   |
-| ------------------------- | ------------------------------------- | -------------------------------------------------------------- |
-| `TW_Plugin.OnStart`       | `onStart(ctx, actions)`               | Once, after the handler resolves actions and applies bypasses. |
-| `TW_Plugin.OnActionSetup` | `onActionSetup(ctx, action, records)` | Once per action that has at least one record after filtering.  |
-| `TW_Plugin.BeforeExecute` | `beforeExecute(ctx)`                  | Once, after all filters and before any action logic.           |
-| `TW_Plugin.AfterExecute`  | `afterExecute(ctx)`                   | Once, after all action logic completes.                        |
-| `TW_Plugin.OnError`       | `onError(ctx, e)`                     | When an exception occurs. The handler rethrows the exception.  |
-| `TW_Plugin.OnFinish`      | `onFinish(ctx)`                       | Once at the end, even if an exception occurred.                |
+| Interface                 | Method                                | When it runs                                                                |
+| ------------------------- | ------------------------------------- | --------------------------------------------------------------------------- |
+| `TW_Plugin.OnInit`        | `onInit(ctx)`                         | Once, at the start of every execution, before the handler resolves actions. |
+| `TW_Plugin.OnStart`       | `onStart(ctx, actions)`               | Once, after the handler resolves actions and applies bypasses.              |
+| `TW_Plugin.OnActionSetup` | `onActionSetup(ctx, action, records)` | Once per action that has at least one record after filtering.               |
+| `TW_Plugin.BeforeExecute` | `beforeExecute(ctx)`                  | Once, after all filters and before any action logic.                        |
+| `TW_Plugin.AfterExecute`  | `afterExecute(ctx)`                   | Once, after all action logic completes.                                     |
+| `TW_Plugin.OnError`       | `onError(ctx, e)`                     | When an exception occurs. The handler rethrows the exception.               |
+| `TW_Plugin.OnFinish`      | `onFinish(ctx)`                       | Once at the end, even if an exception occurred.                             |
+
+`OnInit` runs even when the SObject has no actions, and anything it changes, such as bypasses, applies to the actions resolved for the same execution. `ctx.getSObjectType()` and `ctx.getOperation()` describe the execution. An exception in `OnInit` reaches the trigger without invoking `OnError` or `OnFinish`, because the execution hasn't started. The other hooks run when at least one action remains.
 
 Every hook interface extends `TW_Plugin.Plugin`. A plugin that provides services to actions without using any hooks implements `TW_Plugin.Plugin` directly. Plugins use interfaces rather than inheritance, so a plugin class is free to extend another class.
 
@@ -212,8 +230,9 @@ TW_Plugin_DML dml = (TW_Plugin_DML) getPlugin(TW_Plugin_DML.class);
 dml.enqueueUpdate(new Account(Id = accountId, Name = 'New Name'));
 ```
 
-`force-app/example` includes two sample plugins, listed in its `TW_PluginRegistry`:
+`force-app/example` includes three sample plugins, listed in its `TW_PluginRegistry`:
 
+- **`TW_Plugin_Bypass`** bypasses actions for users with a custom permission. Each `Trigger_Bypass__mdt` record names a custom permission, an action class and, optionally, an SObject. A blank SObject matches every SObject. In `OnInit`, the plugin calls `TW_Handler.addBypass` for the matching actions, and removes the bypasses it added for an earlier SObject. The example record skips `AccountTWNameChange` on Account for users with the **Bypass Account Name Change** permission set.
 - **`TW_Plugin_DML`** collects DML from all actions and performs one bulk statement per operation in `afterExecute`.
 - **`TW_Plugin_Logging`** logs the operation, the number of actions that ran, and the SOQL and DML used.
 

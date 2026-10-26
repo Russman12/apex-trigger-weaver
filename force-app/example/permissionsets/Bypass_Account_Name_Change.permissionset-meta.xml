@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
+    <customPermissions>
+        <enabled>true</enabled>
+        <name>Bypass_Account_Name_Change</name>
+    </customPermissions>
+    <description
+  >Example permission set for TW_Plugin_Bypass. Users with it skip the AccountTWNameChange action on Account.</description>
+    <hasActivationRequired>false</hasActivationRequired>
+    <label>Bypass Account Name Change</label>
+</PermissionSet>

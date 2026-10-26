@@ -258,12 +258,26 @@ public with sharing class TW_ContextTest {
   }
 
   /**
+   * Ensures getSObjectType returns the SObject type the context was created with
+   */
+  @IsTest
+  static void getSObjectType() {
+    TW_Context ctx = new TW_Context(Account.SObjectType, new Map<System.Type, TW_Plugin.Plugin>());
+
+    Test.startTest();
+    Schema.SObjectType actual = ctx.getSObjectType();
+    Test.stopTest();
+
+    System.Assert.areEqual(Account.SObjectType, actual, 'unexpected SObject type returned');
+  }
+
+  /**
    * Ensures getPlugin returns the plugin registered under the type
    */
   @IsTest
   static void getPlugin() {
     TW_Plugin.Plugin plugin = new MyPlugin();
-    TW_Context ctx = new TW_Context(new Map<System.Type, TW_Plugin.Plugin>{ MyPlugin.class => plugin });
+    TW_Context ctx = new TW_Context(Account.SObjectType, new Map<System.Type, TW_Plugin.Plugin>{ MyPlugin.class => plugin });
 
     Test.startTest();
     TW_Plugin.Plugin actual = ctx.getPlugin(MyPlugin.class);

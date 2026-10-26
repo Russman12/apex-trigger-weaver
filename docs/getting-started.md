@@ -53,5 +53,5 @@ Create a `TW_Action__mdt` record and set `Apex_Class__c` to the action's class. 
 
 - Reorder and create actions from the **Trigger Weaver** tab. Assign the **Trigger Weaver Action Manager** permission set to see it.
 - Hook into the trigger lifecycle with plugins, which run for every SObject once listed in a `TW_PluginRegistry` class. See [TW_Plugin](/framework/TW_Plugin).
-- Turn off an action for the rest of a transaction with `TW_Handler.addBypass`. See [TW_Handler](/framework/TW_Handler).
+- Turn off an action for the rest of a transaction with `TW_Handler.addBypass`. See [TW_Handler](/framework/TW_Handler). Trigger Weaver has no bypass that admins can set without code, by design. The README's [Bypassing Without Code](https://github.com/Russman12/apex-trigger-weaver#bypassing-without-code) section explains why, and what to use instead.
 - See the [API Reference Guide](/#reference-guide) for every public method.

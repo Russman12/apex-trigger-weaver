@@ -30,6 +30,8 @@ public with sharing class TW_Context {
   private Boolean isUpdate = Trigger.isUpdate;
   @TestVisible
   private Map<System.Type, TW_Plugin.Plugin> plugins = new Map<System.Type, TW_Plugin.Plugin>();
+  @TestVisible
+  private Schema.SObjectType sObjType;
 
   /**
    * @description The record currently being filtered or executed. Set by the framework before each
@@ -45,12 +47,14 @@ public with sharing class TW_Context {
   }
 
   /**
-   * @description Creates a new TW_Context instance from the running trigger with the plugins for the
-   * execution, keyed by their type. For framework use; TW_Handler creates the context for each
-   * execution.
+   * @description Creates a new TW_Context instance from the running trigger with the SObject type and
+   * the plugins for the execution, keyed by their type. For framework use; TW_Handler creates the
+   * context for each execution.
+   * @param sObjType The SObject type the trigger is running on.
    * @param plugins The plugins for the execution.
    */
-  public TW_Context(Map<System.Type, TW_Plugin.Plugin> plugins) {
+  public TW_Context(Schema.SObjectType sObjType, Map<System.Type, TW_Plugin.Plugin> plugins) {
+    this.sObjType = sObjType;
     this.plugins = plugins;
   }
 
@@ -70,6 +74,18 @@ public with sharing class TW_Context {
       throw new MissingPluginException('No plugin registered for ' + pluginType);
     }
     return plugin;
+  }
+
+  /**
+   * @description Returns the SObject type the trigger is running on.
+   * @return The SObject type.
+   * @example
+   * ```
+   * Boolean isAccount = ctx.getSObjectType() == Account.SObjectType;
+   * ```
+   */
+  public Schema.SObjectType getSObjectType() {
+    return sObjType;
   }
 
   /**

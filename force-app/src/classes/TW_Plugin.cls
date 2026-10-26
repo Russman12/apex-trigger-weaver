@@ -6,8 +6,9 @@
  *
  * Plugins are listed by the org's plugin registry, a class named `TW_PluginRegistry` that implements
  * `TW_Plugin.Registry`. Every listed plugin runs for every SObject using the framework, in the order
- * listed. Without a registry, no plugins run. Hooks are only invoked when at least one non-bypassed
- * action is registered for the SObject.
+ * listed. Without a registry, no plugins run. The handler creates the plugins before it resolves the
+ * SObject's actions. `OnInit` hooks are invoked in every execution, and the other hooks only when at
+ * least one active, non-bypassed action is registered for the SObject.
  *
  * One instance is created per trigger execution and shared by every action in that execution.
  * Public methods added to the plugin are available to actions through `TW_Action.getPlugin`,
@@ -82,6 +83,30 @@ public abstract class TW_Plugin {
      * @return The plugin types to run.
      */
     List<System.Type> plugins();
+  }
+
+  /**
+   * @description Hook invoked once at the start of each execution, before the handler resolves the
+   * SObject's actions and before any other hook. Changes made here, such as calls to
+   * `TW_Handler.addBypass`, apply to the actions resolved for the same execution. It is invoked even
+   * when the SObject has no actions. An exception thrown here reaches the trigger without invoking
+   * `OnError` or `OnFinish`, since the execution has not started.
+   * @example
+   * ```
+   * public with sharing class SetupPlugin implements TW_Plugin.OnInit {
+   *   public void onInit(TW_Context ctx) {
+   *     System.debug(ctx.getSObjectType() + ' ' + ctx.getOperation() + ' starting');
+   *   }
+   * }
+   * ```
+   */
+  public interface OnInit extends Plugin {
+    /**
+     * @description Invoked once at the start of each execution, before the handler resolves the
+     * SObject's actions.
+     * @param ctx The trigger context. `getSObjectType` and `getOperation` describe the execution.
+     */
+    void onInit(TW_Context ctx);
   }
 
   /**

@@ -42,6 +42,15 @@ public class TW_Handler {
   }
 
   /**
+   * @description Returns whether the given action is bypassed.
+   * @param action The TW_Action type to check.
+   * @return True if the action is bypassed.
+   */
+  public static Boolean isBypassed(System.Type action) {
+    return BYPASSES.contains(action);
+  }
+
+  /**
    * @description Removes all bypasses so every active action runs in subsequent handler executions.
    */
   public static void clearBypasses() {
@@ -74,7 +83,7 @@ public class TW_Handler {
 
     this.sObjType = sObjType;
     registerPlugins();
-    this.ctx = new TW_Context(pluginsByType);
+    this.ctx = new TW_Context(sObjType, pluginsByType);
     this.executorFactory = new TW_ExecutorFactory(this.ctx);
   }
 
@@ -146,11 +155,19 @@ public class TW_Handler {
 
   /**
    * @description Runs the active, non-bypassed actions for the SObject against the current trigger
-   * operation. Each action's filter is evaluated for every record first, then each action's handler
-   * method runs for its filtered records. Plugin hooks are invoked at each lifecycle event. Does
-   * nothing, including invoking plugins, if no active, non-bypassed actions exist.
+   * operation. `OnInit` plugin hooks are invoked first, before the actions are resolved, so bypasses
+   * they add apply to this execution. Each action's filter is evaluated for every record first, then
+   * each action's handler method runs for its filtered records. Plugin hooks are invoked at each
+   * lifecycle event. Does nothing more, including invoking the other plugin hooks, if no active,
+   * non-bypassed actions exist.
    */
   public void execute() {
+    for (TW_Plugin.Plugin p : plugins) {
+      if (p instanceof TW_Plugin.OnInit) {
+        ((TW_Plugin.OnInit) p).onInit(ctx);
+      }
+    }
+
     List<TW_Action> registeredActions = registeredActions();
     if (registeredActions.isEmpty()) {
       System.debug(LoggingLevel.FINE, 'No registered TW Actions, exiting');

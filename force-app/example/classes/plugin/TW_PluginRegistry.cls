@@ -4,9 +4,9 @@
  */
 public with sharing class TW_PluginRegistry implements TW_Plugin.Registry {
   /**
-   * Bulk DML and execution logging for every trigger
+   * Permission-based bypasses, bulk DML and execution logging for every trigger
    */
   public List<System.Type> plugins() {
-    return new List<System.Type>{ TW_Plugin_DML.class, TW_Plugin_Logging.class };
+    return new List<System.Type>{ TW_Plugin_Bypass.class, TW_Plugin_DML.class, TW_Plugin_Logging.class };
   }
 }

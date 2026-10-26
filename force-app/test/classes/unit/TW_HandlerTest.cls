@@ -358,7 +358,7 @@ public class TW_HandlerTest {
     Test.stopTest();
 
     System.Assert.areEqual(
-      new List<String>{ 'onStart:2', 'onActionSetup:1', 'beforeExecute', 'afterExecute', 'onFinish' },
+      new List<String>{ 'onInit', 'onStart:2', 'onActionSetup:1', 'beforeExecute', 'afterExecute', 'onFinish' },
       plugin.calls,
       'hooks not invoked as expected'
     );
@@ -394,7 +394,7 @@ public class TW_HandlerTest {
     Test.stopTest();
 
     System.Assert.areEqual(
-      new List<String>{ 'onStart:1', 'onActionSetup:1', 'beforeExecute', 'onError:boom', 'onFinish' },
+      new List<String>{ 'onInit', 'onStart:1', 'onActionSetup:1', 'beforeExecute', 'onError:boom', 'onFinish' },
       plugin.calls,
       'hooks not invoked as expected'
     );
@@ -427,7 +427,7 @@ public class TW_HandlerTest {
   }
 
   /**
-   * Ensures plugin hooks are not invoked when there are no actions
+   * Ensures only the OnInit hooks are invoked when there are no actions
    */
   @IsTest
   static void executePluginNoActions() {
@@ -443,7 +443,56 @@ public class TW_HandlerTest {
     handler.execute();
     Test.stopTest();
 
-    System.Assert.isTrue(plugin.calls.isEmpty(), 'hooks should not be invoked');
+    System.Assert.areEqual(new List<String>{ 'onInit' }, plugin.calls, 'only onInit should be invoked');
+  }
+
+  /**
+   * Ensures OnInit hooks run before the actions are resolved, so a bypass added there applies to
+   * the same execution, and receive the execution's context
+   */
+  @IsTest
+  static void executeOnInitBeforeActions() {
+    List<SObject> filteredRecs = new List<SObject>{ new Account(Name = 'acc1') };
+
+    EXEC_FACTORY_MOCK.spyOn('make').returns(EXEC_STUB);
+    ACTION_REG_MOCK.spyOn('activeActions').returns(new List<System.Type>{ MyAction1.class, MyAction2.class });
+    EXEC_MOCK.spyOn('filteredRecords').returns(filteredRecs);
+    MethodSpy execSpy = EXEC_MOCK.spyOn('execute');
+
+    TW_Handler.actionRegistry = ACTION_REG_STUB;
+    TW_Handler handler = handlerWithPlugins(new List<System.Type>{ BypassingInitPlugin.class, RecordingPlugin.class });
+    handler.ctx = CTX_STUB;
+    handler.executorFactory = EXEC_FACTORY_STUB;
+    BypassingInitPlugin initPlugin = (BypassingInitPlugin) handler.plugins[0];
+    RecordingPlugin plugin = (RecordingPlugin) handler.plugins[1];
+
+    Test.startTest();
+    handler.execute();
+    Test.stopTest();
+
+    System.Assert.areEqual(CTX_STUB, initPlugin.initCtx, 'onInit not given the execution context');
+    System.Assert.areEqual(
+      new List<String>{ 'onInit', 'onStart:1' },
+      new List<String>{ plugin.calls[0], plugin.calls[1] },
+      'onInit not run first'
+    );
+    Expect.that(execSpy).hasBeenCalledTimes(1);
+  }
+
+  /**
+   * Ensures isBypassed reports whether an action is bypassed
+   */
+  @IsTest
+  static void isBypassed() {
+    TW_Handler.addBypass(MyAction1.class);
+
+    Test.startTest();
+    Boolean bypassed = TW_Handler.isBypassed(MyAction1.class);
+    Boolean notBypassed = TW_Handler.isBypassed(MyAction2.class);
+    Test.stopTest();
+
+    System.Assert.isTrue(bypassed, 'bypassed action not reported');
+    System.Assert.isFalse(notBypassed, 'action reported as bypassed');
   }
 
   private static TW_Handler handlerWithPlugins(List<System.Type> pluginTypes) {
@@ -460,9 +509,22 @@ public class TW_HandlerTest {
   private class MyAction2 extends TW_Action {
   }
 
-  private class RecordingPlugin implements TW_Plugin.OnStart, TW_Plugin.OnActionSetup, TW_Plugin.BeforeExecute, TW_Plugin.AfterExecute, TW_Plugin.OnError, TW_Plugin.OnFinish {
+  // Bypasses MyAction1 when the execution starts
+  private class BypassingInitPlugin implements TW_Plugin.OnInit {
+    public TW_Context initCtx;
+
+    public void onInit(TW_Context ctx) {
+      initCtx = ctx;
+      TW_Handler.addBypass(MyAction1.class);
+    }
+  }
+
+  private class RecordingPlugin implements TW_Plugin.OnInit, TW_Plugin.OnStart, TW_Plugin.OnActionSetup, TW_Plugin.BeforeExecute, TW_Plugin.AfterExecute, TW_Plugin.OnError, TW_Plugin.OnFinish {
     public List<String> calls = new List<String>();
 
+    public void onInit(TW_Context ctx) {
+      calls.add('onInit');
+    }
     public void onStart(TW_Context ctx, List<TW_Action> actions) {
       calls.add('onStart:' + actions.size());
     }

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description
+  >Example configuration for TW_Plugin_Bypass. Users with the custom permission in Permission__c skip the action in Apex_Class__c on the SObject in SObject_Name__c, or on every SObject when SObject_Name__c is blank.</description>
+    <label>Trigger Bypass</label>
+    <pluralLabel>Trigger Bypasses</pluralLabel>
+    <visibility>Public</visibility>
+</CustomObject>

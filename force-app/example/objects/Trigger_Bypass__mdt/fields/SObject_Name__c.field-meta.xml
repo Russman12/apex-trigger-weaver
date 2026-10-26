@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>SObject_Name__c</fullName>
+    <description>API name of the SObject on which the action is skipped. Leave blank to skip it on every SObject.</description>
+    <externalId>false</externalId>
+    <fieldManageability>SubscriberControlled</fieldManageability>
+    <inlineHelpText>SObject on which the action is skipped. Leave blank for every SObject.</inlineHelpText>
+    <label>SObject Name</label>
+    <length>255</length>
+    <required>false</required>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>
