@@ -1,13 +1,13 @@
 /**
  * @description Entry point for trigger weaver.
  * @usage Create a handler in an SObject's trigger and call execute to run the active actions
- * configured for that SObject, along with the org's plugins. Plugins are listed by the org's plugin
+ * configured for that SObject, which the handler reads from the running trigger, along with the org's plugins. Plugins are listed by the org's plugin
  * registry, a class named `TW_PluginRegistry` that implements `TW_Plugin.Registry`, and run for
  * every SObject.
  * @example
  * ```
  * trigger AccountTrigger on Account(before insert, after insert, before update, after update) {
- *   new TW_Handler(Account.getSObjectType()).execute();
+ *   new TW_Handler().execute();
  * }
  * ```
  * @group Framework
@@ -69,26 +69,33 @@ public class TW_Handler {
   private final Map<System.Type, TW_Plugin.Plugin> pluginsByType = new Map<System.Type, TW_Plugin.Plugin>();
 
   /**
-   * @description Creates a handler for the given SObject type from the running trigger and creates a
-   * new instance of each plugin listed by the org's plugin registry, shared by every action in this
-   * execution. Throws InvalidContextException if called outside a trigger, and InvalidPluginException
-   * if the registry does not implement TW_Plugin.Registry or lists an invalid or duplicate plugin type.
-   * @param sObjType The SObject type the trigger is running on.
+   * @description Creates a handler for the running trigger's SObject type and creates a new instance
+   * of each plugin listed by the org's plugin registry, shared by every action in this execution.
+   * Throws InvalidContextException if called outside a trigger, and InvalidPluginException if the
+   * registry does not implement TW_Plugin.Registry or lists an invalid or duplicate plugin type.
    */
-  public TW_Handler(Schema.SObjectType sObjType) {
+  public TW_Handler() {
     //throw execption if not in trigger context
     if (!Trigger.isExecuting) {
       throw new InvalidContextException('Unable to create TW_Handler outside of a trigger context');
     }
 
-    this.sObjType = sObjType;
+    this.sObjType = sObjectTypeOf(Trigger.new, Trigger.old);
     registerPlugins();
     this.ctx = new TW_Context(sObjType, pluginsByType);
     this.executorFactory = new TW_ExecutorFactory(this.ctx);
   }
 
+  // For tests, which run outside a trigger, so they supply the SObject type
   @TestVisible
-  private TW_Handler() {
+  private TW_Handler(Schema.SObjectType sObjType) {
+    this.sObjType = sObjType;
+  }
+
+  // Every trigger has at least one record: new records, or only old ones when deleting
+  @TestVisible
+  private static Schema.SObjectType sObjectTypeOf(List<SObject> newRecs, List<SObject> oldRecs) {
+    return (newRecs != null ? newRecs : oldRecs)[0].getSObjectType();
   }
 
   @TestVisible

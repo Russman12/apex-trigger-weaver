@@ -14,7 +14,7 @@ Create one trigger per SObject that subscribes to every operation and hands cont
 
 ```apex
 trigger Account on Account(before insert, before update, before delete, after insert, after update, after delete, after undelete) {
-  new TW_Handler(Account.getSObjectType()).execute();
+  new TW_Handler().execute();
 }
 ```
 

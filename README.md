@@ -58,7 +58,7 @@ Create one trigger per SObject that subscribes to every operation and hands cont
 
 ```apex
 trigger Account on Account(before insert, before update, before delete, after insert, after update, after delete, after undelete) {
-  new TW_Handler(Account.getSObjectType()).execute();
+  new TW_Handler().execute();
 }
 ```
 
@@ -124,7 +124,7 @@ Create a `TW_Action__mdt` record and set `Apex_Class__c` to the action's class. 
 
 ## How It Works
 
-The trigger's `new TW_Handler(...)` creates the plugins, before the handler loads any actions. When `TW_Handler.execute()` runs:
+The trigger's `new TW_Handler()` creates the plugins, before the handler loads any actions. When `TW_Handler.execute()` runs:
 
 1. **Initialize.** The handler invokes each plugin's `OnInit` hook, in every execution.
 2. **Resolve actions.** The handler loads active `TW_Action__mdt` records for the SObject, sorts them by `Order__c`, and caches them for the transaction. It removes any bypassed actions, including bypasses added in `OnInit`, and creates a new instance of each remaining action. If no actions remain, the handler exits without invoking any other plugin hooks.

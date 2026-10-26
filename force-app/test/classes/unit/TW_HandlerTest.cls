@@ -60,12 +60,29 @@ public class TW_HandlerTest {
   static void constructorException() {
     Test.startTest();
     try {
-      TW_Handler handler = new TW_Handler(Schema.Account.getSObjectType());
+      TW_Handler handler = new TW_Handler();
       System.Assert.fail('expected exception not thrown');
     } catch (Exception e) {
       System.Assert.isInstanceOfType(e, TW_Handler.InvalidContextException.class, 'unexpected exception thrown');
     }
     Test.stopTest();
+  }
+
+  /**
+   * Ensures the SObject type comes from the new records, or the old records when there are none
+   */
+  @IsTest
+  static void sObjectTypeOf() {
+    List<SObject> accounts = new List<SObject>{ new Account(Name = 'acc1') };
+    List<SObject> contacts = new List<SObject>{ new Contact(LastName = 'con1') };
+
+    Test.startTest();
+    Schema.SObjectType fromNew = TW_Handler.sObjectTypeOf(accounts, contacts);
+    Schema.SObjectType fromOld = TW_Handler.sObjectTypeOf(null, contacts);
+    Test.stopTest();
+
+    System.Assert.areEqual(Account.SObjectType, fromNew, 'type not taken from the new records');
+    System.Assert.areEqual(Contact.SObjectType, fromOld, 'type not taken from the old records');
   }
 
   /**
@@ -88,7 +105,7 @@ public class TW_HandlerTest {
     MethodSpy execSpy = EXEC_MOCK.spyOn('execute');
 
     TW_Handler.actionRegistry = ACTION_REG_STUB;
-    TW_Handler handler = new TW_Handler();
+    TW_Handler handler = new TW_Handler(Account.SObjectType);
     handler.ctx = CTX_STUB;
     handler.executorFactory = EXEC_FACTORY_STUB;
 
@@ -123,7 +140,7 @@ public class TW_HandlerTest {
 
     TW_Handler.actionRegistry = ACTION_REG_STUB;
     TW_Handler.BYPASSES.add(MyAction1.class);
-    TW_Handler handler = new TW_Handler();
+    TW_Handler handler = new TW_Handler(Account.SObjectType);
     handler.ctx = CTX_STUB;
     handler.executorFactory = EXEC_FACTORY_STUB;
 
@@ -157,7 +174,7 @@ public class TW_HandlerTest {
     MethodSpy execSpy = EXEC_MOCK.spyOn('execute');
 
     TW_Handler.actionRegistry = ACTION_REG_STUB;
-    TW_Handler handler = new TW_Handler();
+    TW_Handler handler = new TW_Handler(Account.SObjectType);
     handler.ctx = CTX_STUB;
     handler.executorFactory = EXEC_FACTORY_STUB;
 
@@ -178,7 +195,7 @@ public class TW_HandlerTest {
     activeActionsSpy.returns(new List<System.Type>{});
 
     TW_Handler.actionRegistry = ACTION_REG_STUB;
-    TW_Handler handler = new TW_Handler();
+    TW_Handler handler = new TW_Handler(Account.SObjectType);
     handler.ctx = CTX_STUB;
     handler.executorFactory = EXEC_FACTORY_STUB;
 
@@ -196,7 +213,7 @@ public class TW_HandlerTest {
     activeActionsSpy.returns(null);
 
     TW_Handler.actionRegistry = ACTION_REG_STUB;
-    TW_Handler handler = new TW_Handler();
+    TW_Handler handler = new TW_Handler(Account.SObjectType);
     handler.ctx = CTX_STUB;
     handler.executorFactory = EXEC_FACTORY_STUB;
 
@@ -232,7 +249,7 @@ public class TW_HandlerTest {
   static void registerPluginsNoRegistry() {
     TW_Handler.pluginRegistry = null;
     TW_Handler.pluginRegistryLoaded = true;
-    TW_Handler handler = new TW_Handler();
+    TW_Handler handler = new TW_Handler(Account.SObjectType);
 
     Test.startTest();
     handler.registerPlugins();
@@ -498,7 +515,7 @@ public class TW_HandlerTest {
   private static TW_Handler handlerWithPlugins(List<System.Type> pluginTypes) {
     TW_Handler.pluginRegistry = new TestRegistry(pluginTypes);
     TW_Handler.pluginRegistryLoaded = true;
-    TW_Handler handler = new TW_Handler();
+    TW_Handler handler = new TW_Handler(Account.SObjectType);
     handler.registerPlugins();
     return handler;
   }
